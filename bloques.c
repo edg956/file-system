@@ -1,8 +1,12 @@
 #include "bloques.h"
 
+//Variables globales.
+
+static int descriptor = 0; 
+
 /*
-    Función que llama a la función open para obtener el descriptor de fichero de
-    obtener el descriptor de fichero que se utilizará como dispositivo virtual.
+    Función que llama a la función open para obtener el descriptor de fichero 
+    que se utilizará como dispositivo virtual.
     
     Parámetros:
         +camino: String que indica el path del fichero a abrir
@@ -10,7 +14,19 @@
         +Descriptor de fichero solicitado.
         +(-1): En caso de error.
 */
-int bmount(const char *camino) {}
+int bmount(const char *camino) {
+
+    descriptor = open(camino, O_RDWR|O_CREAT, 666);
+
+    if (descriptor == -1) {
+
+        return -1; 
+
+    }
+
+    return descriptor; 
+
+}
 
 /*
     Función que llama a la función close con el descriptor de fichero obtenido
@@ -20,7 +36,17 @@ int bmount(const char *camino) {}
         +0: En funcionamiento correcto.
         +(-1): En caso de error.
 */
-int bumount() {}
+int bumount() {
+
+    if (close(descriptor)==-1) {
+
+        return -1; 
+
+    }
+
+    return 0; 
+
+}
 
 /*
     Escribe el contenido de un buffer de memoria en el bloque del dispositivo
@@ -33,7 +59,11 @@ int bumount() {}
         +El número de bytes que ha escrito.
         +(-1): En caso de error.
 */
-int bwrite(unsigned int nbloque, const void *buf) {}
+int bwrite(unsigned int nbloque, const void *buf) {
+
+     lseek(descriptor, nbloque*BLOCKSIZE, SEEK_SET);
+
+}
 
 /*
     Lee desde el dispositivo virtual el bloque de memoria especificado y
@@ -47,4 +77,8 @@ int bwrite(unsigned int nbloque, const void *buf) {}
         +El número de bytes que ha leído.
         +(-1): En caso de error.
 */
-int bread(unsigned int nbloque, void *buf) {}
+int bread(unsigned int nbloque, void *buf) {
+
+
+
+}

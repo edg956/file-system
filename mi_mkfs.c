@@ -6,5 +6,32 @@
 
     $ ./mi_mkfs <nombre_dispositivo> <nbloques>
 */
+#include <string.h>
 
-int main(int argc, char **argv) {}
+int main(int argc, char **argv) {
+
+    //Comprobar si se ha realizado la llamada correctamente. 
+    if ((argv[1] =='\0') || (argv[2]=='\0')) {
+
+        printf("ERROR: La ejecución del programa no se ha realizado correctamente.\n");
+        printf("Requisitos para la ejecución del programa: \n");
+        printf("Primer parámetro -> nombre_del_dispositivo.\n");
+        printf("Segundo parámetro -> número_de_bloques.\n"); 
+        printf("Ejemplo: \n");
+        printf("./mi_mkfs nombre_del_dispositivo número_de_bloques");
+        return -1;
+    }
+/*
+    if (bmount(argv[1])==-1) {
+
+        printf("Error");
+        
+    }
+
+    for(int i = 0; i < argv[2]; i++) {
+        
+        bwrite();
+
+    }*/
+
+}
