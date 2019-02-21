@@ -79,7 +79,13 @@ int bwrite(unsigned int nbloque, const void *buf) {
         +(-1): En caso de error.
 */
 int bread(unsigned int nbloque, void *buf) {
-
-
-
+ int bbread;
+    if (lseek(descriptor,nbloque*BLOCKSIZE,SEEK_SET) != nbloque*BLOCKSIZE){
+        return -1;
+    }
+    bbread = (int)read(descriptor, buf, BLOCKSIZE);
+    if (read(descriptor, buf, BLOCKSIZE) == -1){
+        return -1;
+    }
+    return bbread;
 }
