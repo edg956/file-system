@@ -9,6 +9,10 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <bloques.h>
+
+#define INITIALIZATION_VALUE 0
+
 
 int main(int argc, char **argv) {
 
@@ -25,15 +29,19 @@ int main(int argc, char **argv) {
     }
 
     if (bmount(argv[1])==-1) {
-
-        printf("Error");
-        
+        printf("Se ha producido un error al montar el dispositivo virtual.");
+        exit(-1);
     }
 
     for(int i = 0; i < argv[2]; i++) {
         
-        bwrite();
+        unsigned char buffer[BLOCKSIZE];
+        memset(buffer, INITIALIZATION_VALUE, BLOCKSIZE);
+
+        bwrite(i, buffer);
 
     }
+
+    bumount();
 
 }
