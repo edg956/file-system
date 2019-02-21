@@ -47,4 +47,6 @@ int bwrite(unsigned int nbloque, const void *buf) {}
         +El número de bytes que ha leído.
         +(-1): En caso de error.
 */
-int bread(unsigned int nbloque, void *buf) {}
+int bread(unsigned int nbloque, void *buf) {
+    
+}
