@@ -9,7 +9,7 @@
 #include <stdlib.h>  //exit(), EXIT_SUCCESS, EXIT_FAILURE, atoi()
 #include <unistd.h> // SEEK_SET, read(), write(), open(), close(), lseek()
 #include <errno.h>  //errno
-#include <string.h> // strerror()
+#include <string.h> //strerror()
 
 #define BLOCKSIZE 1024 // bytes
 

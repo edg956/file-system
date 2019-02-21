@@ -1,18 +1,22 @@
 #include "bloques.h"
 
 //Variables globales.
-
 static int descriptor = 0; 
 
 /*
-    Función que llama a la función open para obtener el descriptor de fichero 
-    que se utilizará como dispositivo virtual.
+    Descripción: 
+        Función que llama a la función open para obtener el descriptor de fichero 
+        que se utilizará como dispositivo virtual.
     
-    Parámetros:
-        +camino: String que indica el path del fichero a abrir
-    Devuelve:
-        +Descriptor de fichero solicitado.
-        +(-1): En caso de error.
+    Funciones desde dónde es llamado: 
+        + mi_mkfs.c - main()
+
+    Parámetros de entrada:
+        + camino: String que indica el path del fichero a abrir
+    
+    Parámetros de salida: 
+        + Descriptor de fichero solicitado.
+        + (-1): En caso de error.
 */
 int bmount(const char *camino) {
 
@@ -24,12 +28,16 @@ int bmount(const char *camino) {
 }
 
 /*
-    Función que llama a la función close con el descriptor de fichero obtenido
-    por bmount() para liberarlo.
+    Descripción: 
+        Función que llama a la función close con el descriptor de fichero obtenido
+        por bmount() para liberarlo.
+
+    Funciones desde dónde es llamado: 
+        + mi_mkfs.c - main()
     
-    Devuelve:
-        +0: En funcionamiento correcto.
-        +(-1): En caso de error.
+    Parámetros de salida:
+        + 0: En funcionamiento correcto.
+        + (-1): En caso de error.
 */
 int bumount() {
 
@@ -38,15 +46,20 @@ int bumount() {
 }
 
 /*
-    Escribe el contenido de un buffer de memoria en el bloque del dispositivo
-    virtual especificado. Realiza llamadas a las funciones write() y lseek()
+    Descripción: 
+        Escribe el contenido de un buffer de memoria en el bloque del dispositivo
+        virtual especificado. Realiza llamadas a las funciones write() y lseek()
+        
+    Funciones desde dónde es llamado: 
+        + mi_mkfs.c - main()
 
-    Parámetros:
-        +nbloque: El número de bloque donde volcar el contenido del buffer.
-        +buf: Puntero al buffer de memoria a volcar.
-    Devuelve:
-        +El número de bytes que ha escrito.
-        +(-1): En caso de error.
+    Parámetros de entrada:
+        + nbloque: El número de bloque donde volcar el contenido del buffer.
+        + *buf: Puntero al buffer de memoria a volcar.
+
+    Parámetros de salida:
+        + El número de bytes que ha escrito.
+        + (-1): En caso de error.
 */
 int bwrite(unsigned int nbloque, const void *buf) {
 
@@ -66,17 +79,21 @@ int bwrite(unsigned int nbloque, const void *buf) {
     return bwritten;
 }
 
-/*
-    Lee desde el dispositivo virtual el bloque de memoria especificado y
-    copia su contenido en un buffer. Realiza llamadas a las funciones read()
-    y lseek()
+/*  Descripción: 
+        Lee desde el dispositivo virtual el bloque de memoria especificado y
+        copia su contenido en un buffer. Realiza llamadas a las funciones read()
+        y lseek()
+    
+    Funciones desde dónde es llamado: 
+        + mi_mkfs.c - main()
 
-    Parámetros:
-        +nbloque: El número de bloque desde el cual leer información.
-        +buf: Puntero al buffer en memoria donde copiar los datos.
-    Devuelve:
-        +El número de bytes que ha leído.
-        +(-1): En caso de error.
+    Parámetros de entrada:
+        + nbloque: El número de bloque desde el cual leer información.
+        + buf: Puntero al buffer en memoria donde copiar los datos.
+    
+    Parámetros de salida: 
+        + El número de bytes que ha leído.
+        + (-1): En caso de error.
 */
 int bread(unsigned int nbloque, void *buf) {
  int bbread;
