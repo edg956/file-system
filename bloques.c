@@ -61,7 +61,7 @@ int bumount() {
 */
 int bwrite(unsigned int nbloque, const void *buf) {
 
-     lseek(descriptor, nbloque*BLOCKSIZE, SEEK_SET);
+ //    lseek(descriptor, nbloque*BLOCKSIZE, SEEK_SET);
 
 }
 
