@@ -16,13 +16,8 @@ static int descriptor = 0;
 */
 int bmount(const char *camino) {
 
-    descriptor = open(camino, O_RDWR|O_CREAT, 666);
-
-    if (descriptor == -1) {
-
-        return -1; 
-
-    }
+    //Obtener file descriptor
+    descriptor = open(camino, O_RDWR|O_CREAT, 0666);
 
     return descriptor; 
 
@@ -38,13 +33,7 @@ int bmount(const char *camino) {
 */
 int bumount() {
 
-    if (close(descriptor)==-1) {
-
-        return -1; 
-
-    }
-
-    return 0; 
+    return close(descriptor); 
 
 }
 
@@ -61,8 +50,20 @@ int bumount() {
 */
 int bwrite(unsigned int nbloque, const void *buf) {
 
- //    lseek(descriptor, nbloque*BLOCKSIZE, SEEK_SET);
+    int bwritten;
 
+    //Mover puntero de escritura/lectura hasta el bloque deseado
+    if (lseek(descriptor, nbloque*BLOCKSIZE, SEEK_SET) != nbloque*BLOCKSIZE) {
+        return -1;  //Check for errors
+    }
+
+    //Escribir contenido del buffer en el bloque indicado
+    bwritten = write(descriptor, buf, BLOCKSIZE);
+    if (bwritten != BLOCKSIZE) {
+        return -1;  //Check for errors
+    }
+
+    return bwritten;
 }
 
 /*
