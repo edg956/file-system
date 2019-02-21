@@ -7,4 +7,6 @@
     $ ./mi_mkfs <nombre_dispositivo> <nbloques>
 */
 
+#include "ficheros_basico.h"
+
 int main(int argc, char **argv) {}

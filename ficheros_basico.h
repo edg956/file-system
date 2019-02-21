@@ -7,6 +7,17 @@
 #include <string.h> // strerror()
 
 #define BLOCKSIZE 1024 // bytes
+#define INODOSIZE 128  // bytes
+
+/*
+    Definición de estructura superbloque
+*/
+//aqui plis
+
+/*
+    Definición de estructura inodo
+*/
+//aquí plis
 
 int tamMB(unsigned int nbloques);
 int tamAI(unsigned int ninodos);
