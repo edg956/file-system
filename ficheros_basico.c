@@ -150,12 +150,17 @@ int initMB(){
     //Estructura de apoyo
 	struct superbloque SB;
 
+<<<<<<< Updated upstream
     //Obtener información del superbloque
 	//memset(&SB,0,BLOCKSIZE);          necessary?
 	if (bread(posSB,&SB) == -1) {
         printf("Error obteniendo información de superbloque al inicializar mapa de bits\n.");
         return -1;
     }
+=======
+	memset(&SB,0,BLOCKSIZE);    //Asignamos de golpe todos los valores del array
+	bread(posSB,&SB);   
+>>>>>>> Stashed changes
 
     //Obtener posiciones entre las cuales escribir
 	firstMB = SB.posPrimerBloqueMB;

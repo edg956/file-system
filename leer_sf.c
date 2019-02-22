@@ -28,4 +28,22 @@ int main(int argc, char **argv) {
 
     printf("DATOS DEL SUPERBLOQUE\n");
     printf("posPrimerBloqueMB = %d",1);
+
+
+    int i;
+    struct superbloque SB;
+    bread(posSB,&SB);
+    printf("Posición del primer bloque del mapa de bits: %i\n",SB.posPrimerBloqueMB);
+    printf("Posición del último bloque del mapa de bits: %i\n",SB.posUltimoBloqueMB);
+    printf("Posición del primer bloque del array de inodos: %i\n",SB.posPrimerBloqueAI);
+    printf("Posición del último bloque del array de inodos: %i\n",SB.posUltimoBloqueAI);
+    printf("Posición del primer bloque de datos: %i\n",SB.posPrimerBloqueDatos);
+    printf("Posición del último bloque de datos: %i\n",SB.posUltimoBloqueDatos);
+    printf("Posición del inodo del directorio raiz: %i\n", SB.posInodoRaiz);
+    printf("Posición del primer inodo libre: %i\n",SB.posPrimerInodoLibre);
+    printf("Cantidad de bloques libres: %i\n",SB.cantBloquesLibres);
+    printf("Cantidad de inodos libres: %i\n",SB.cantInodosLibres);
+    printf("Cantidad total de bloques: %i\n",SB.totBloques);
+    printf("Cantidad total de inodos: %i\n"S)
+
 }
