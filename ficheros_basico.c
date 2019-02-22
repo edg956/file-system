@@ -195,12 +195,26 @@ int initMB(){
         + (-1): En caso contrario.
 */
 int initAI() {
-   struct superbloque SB;
-   inodo [] inodos = new inodo[BLOCKSIZE];
-   int contInodos = SB.posPrimerInodoLibre+1;
+    //Estructuras y variables de apoyo
+    struct superbloque SB;
+    int contInodos;
+    int numInPerBloq = BLOCKSIZE/INODOSIZE; //Número de inodos por bloque
+    inodo [] inodos = inodos[numInPerBloq]; //No tiene sentido 1024 inodos si solo se llenan 8 siempre ???
+    /*Llenar 8 inodos (que ocupan un blocksize) y luego escribirlo
+    en el bloque indicado por i en el primer for.*/
 
-   for(int i = SB.posPrimerBloqueAI; i <= SB.posUltimoBloqueAI; i++) {
-       for(int j = 0; j < BLOCKSIZE/INODOSIZE; j++) {
+
+    if (bread(0,&SB) == -1) {
+        printf("Error obteniendo información de superbloque al inicializar array de inodos\n.");
+        return -1;
+    }
+
+    /*Pos. del inodo enlazado al primer inodo*/
+    contInodos = SB.posPrimerBloqueAI + 1;
+
+    //Inicialización de numInPerBloq inodos por cada bloque
+    for(int i = SB.posPrimerBloqueAI; i <= SB.posUltimoBloqueAI; i++) {
+        for(int j = 0; j < numInPerBloq && contInodos <= SB.totInodos; j++) {
            inodos[j].tipo = 'l'
            
            if (contInodos < SB.totInodos) {
@@ -208,15 +222,17 @@ int initAI() {
                inodos[j].punterosDirectos[0] = contInodos; 
                contInodos++;
 
-           }else{
+            } else {
 
                inodos[j].punterosDirectos[0] = UINT_MAX;
 
            }
+        }
 
-       }
-
-       //Falta escribir los datos !! 
-       bwrite(i, );
-   }
+        //Falta escribir los datos !! 
+        if (bwrite(i, &inodos) == -1) {
+            printf("Error escribiendo datos de inodos en FS");
+            return -1;
+        }
+    }
 }
