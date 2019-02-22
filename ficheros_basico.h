@@ -26,7 +26,6 @@ struct superbloque{
 	unsigned int totInodos; //Cantidad total de inodos 
 	char padding[BLOCKSIZE-12*sizeof(unsigned int)]; //Relleno
 };
-//aqui plis
 
 /*
     Definición de estructura inodo

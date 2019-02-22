@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "bloques.h"
+#include "ficheros_basico.h"
 
 //Defines.
 #define INITIALIZATION_VALUE 0
@@ -55,7 +56,7 @@ int main(int argc, char **argv) {
 
     //Realizar el montaje del disco virtual.
     if (bmount(file_name)==-1) {
-        printf("Se ha producido un error al montar el dispositivo virtual.");
+        printf("Se ha producido un error al montar el dispositivo virtual.\n");
         exit(-1);
     }
     
@@ -68,10 +69,31 @@ int main(int argc, char **argv) {
         bwrite(i, buffer);
     }
 
-    //Desmontar el dispositivo virtual. 
-    if (bumount()==-1) {
-        printf("Se ha producido un error al desmontar el dispositivo virtual.");
+    //Inicializar superbloque del sistema de ficheros
+    if (initSB == -1) { //Check errores
+        printf("Se ha producido un error inicializando el superbloque.\n");
         exit(-1);
     }
+    
+    //Inicializar mapa de bits del sistema de ficheros
+    if (initMB == -1) { //Check errores
+        printf("Se ha producido un error inicializando el mapa de bits.\n");
+        exit(-1);
+    }
+
+    //Inicializar array de inodos del sistema de ficheros
+    if (initAI == -1) { //Check errores
+        printf("Se ha producido un error inicializando el array de inodos.\n");
+        exit(-1);
+    }
+
+    //Desmontar el dispositivo virtual. 
+    if (bumount()==-1) {
+        printf("Se ha producido un error al desmontar el dispositivo virtual.\n");
+        exit(-1);
+    }
+
+
+
     return 0;
 }

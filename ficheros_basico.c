@@ -16,23 +16,23 @@
     Parámetros de salida:
         + Número de bloques necesario para el mapa de bits.
 */
-
 int tamMB(unsigned int nbloques){
-    int size;
+
     if (((nbloques / 8) % BLOCKSIZE) != 0){
-        size = ((nbloques / 8) / BLOCKSIZE) + 1; //El modulo es diferente de 0 y por lo tanto hemos de añadir
-                                                 //un bloque adicional para los bytes (el resto de la división)
+        /*El modulo es diferente de 0 y por lo tanto hemos de añadir
+        un bloque adicional para los bytes (el resto de la división)*/
+        return ((nbloques / 8) / BLOCKSIZE) + 1;
+
+    } else{ 
+        //El modulo es igual a 0 por lo tanto el numero de bloques será exacto
+        return ((nbloques / 8) / BLOCKSIZE); 
     }
-    else{
-        size = ((nbloques / 8) / BLOCKSIZE); //El modulo es igual a 0 por lo tanto el numero de bloques será exacto
-    }
-    printf("tamMB: %i\n", size);
-    return size;
 }
+
 /*
     Descripción:
-        Función que calcula el número de inodos en bloques que tendrá el
-        sistema de ficheros.
+        Función que calcula el número en bloques necesarios para los inodos que 
+        tendrá el sistema de ficheros.
         Lo hace mediante la fórmula: (Número de inodos / INODOSIZE) / BLOCKSIZE
 
     Funciones desde donde es llamado:
@@ -45,16 +45,19 @@ int tamMB(unsigned int nbloques){
         + Número de bloques necesarios para el número de inodos del sistema.
 */
 int tamAI(unsigned int ninodos){
-    int size;
+
     if (((ninodos * INODOSIZE) % BLOCKSIZE) != 0){
-        size = ninodos * INODOSIZE / BLOCKSIZE + 1; //El modulo es diferente de 0 y por lo tanto necesitamos
-                                                    //añadir un bloque adicional para los bytes (resto de la división)
+        /*El modulo es diferente de 0 y por lo tanto necesitamos
+        añadir un bloque adicional para los bytes (resto de la división)*/
+        return ninodos * INODOSIZE / BLOCKSIZE + 1; 
+                                                    
     }
     else{
-        size = ninodos * INODOSIZE / BLOCKSIZE; //El modulo es igual a 0 por lo que el número de bloque es exacto.
+        //El modulo es igual a 0 por lo que el número de bloque es exacto.
+        return ninodos * INODOSIZE / BLOCKSIZE; 
     }
-    return size;
 }
+
 /*
     Descripción:
         Función que inicializa los metadados contenidos en el superbloque a
@@ -79,23 +82,42 @@ int tamAI(unsigned int ninodos){
 int initSB(unsigned int nbloques, unsigned int ninodos){
     struct superbloque SB;
 
-    SB.posPrimerBloqueMB = posSB + 1; //Posición del primer bloque del mapa de bits
-    //printf("Posicio primer BloqueMB: %i\n",SB.posPrimerBloqueMB);
-	SB.posUltimoBloqueMB = SB.posPrimerBloqueMB + tamMB(nbloques) -1; //Posición del último bloque del mapa de bits 
-	//printf("Posicio ultim BloqueMB: %i\n",SB.posUltimoBloqueMB);
-	SB.posPrimerBloqueAI = (SB.posUltimoBloqueMB +1); //Posición del primer bloque del array de inodos 
- 	SB.posUltimoBloqueAI = (SB.posUltimoBloqueMB + tamAI(ninodos)); //Posición del último bloque del array de inodos 
- 	SB.posPrimerBloqueDatos = (SB.posUltimoBloqueAI +1); //Posición del primer bloque de datos 
- 	SB.posUltimoBloqueDatos = (nbloques -1); //Posición del último bloque de datos 
- 	SB.posInodoRaiz = 0; //Posición del inodo del directorio raíz 
- 	SB.posPrimerInodoLibre = 0; //Posición del primer inodo libre 
- 	SB.cantBloquesLibres = (nbloques - tamMB(nbloques) - tamAI(ninodos) -1); //Cantidad de bloques libres
- 	SB.cantInodosLibres = ninodos; //Cantidad de inodos libres 
- 	SB.totBloques = nbloques; //Cantidad total de bloques 
- 	SB.totInodos = ninodos; //Cantidad total de inodos 
+    //Posición del primer bloque del mapa de bits
+    SB.posPrimerBloqueMB = posSB + 1;
+    //Posición del último bloque del mapa de bits
+	SB.posUltimoBloqueMB = SB.posPrimerBloqueMB + tamMB(nbloques) -1;
+    //Posición del primer bloque del array de inodos
+	SB.posPrimerBloqueAI = (SB.posUltimoBloqueMB +1);
+    //Posición del último bloque del array de inodos
+ 	SB.posUltimoBloqueAI = (SB.posUltimoBloqueMB + tamAI(ninodos) -1);
+    //Posición del primer bloque de datos
+ 	SB.posPrimerBloqueDatos = (SB.posUltimoBloqueAI +1);
+    //Posición del último bloque de datos
+ 	SB.posUltimoBloqueDatos = (nbloques -1);
+    //Posición del inodo del directorio raíz
+ 	SB.posInodoRaiz = 0;
+    //Posición del primer inodo libre 
+ 	SB.posPrimerInodoLibre = 0;
+    //Cantidad de bloques libres
+    SB.cantBloquesLibres = nbloques;
+ 	/*nivel 3
+     SB.cantBloquesLibres = (nbloques - tamMB(nbloques) - tamAI(ninodos) -1);
+    */
+    //Cantidad de inodos libres
+ 	SB.cantInodosLibres = ninodos;
+    //Cantidad total de bloques 
+ 	SB.totBloques = nbloques;
+    //Cantidad total de inodos
+ 	SB.totInodos = ninodos;
+
+    //Escribir superbloque en a partir del bloque indicado
  	if (bwrite(0,&SB)==-1){
+        //Check errores
 		printf("Error de escritura en el dispositivo en ficheros_basicos.c\n");
+        return -1;
 	}
+
+    return 0;
 }
 
 /*
@@ -116,25 +138,37 @@ int initSB(unsigned int nbloques, unsigned int ninodos){
         + (-1): En caso contrario.
 */
 int initMB(){
-    int i;
+    //Variables de apoyo
 	int firstMB;
 	int lastMB;
+
+    //Buffer de apoyo inicializado
 	unsigned char initCero[BLOCKSIZE];
-
-	struct superbloque SB;
-
-	memset(&SB,0,BLOCKSIZE);
-	bread(posSB,&SB);
-
-	firstMB = SB.posPrimerBloqueMB;
-
-	lastMB = SB.posUltimoBloqueMB;
-	
 	memset(initCero,0,BLOCKSIZE);
 
-	for (i = firstMB; i <= lastMB; i++){
-	    bwrite(i,initCero);
+    //Estructura de apoyo
+	struct superbloque SB;
+
+    //Obtener información del superbloque
+	//memset(&SB,0,BLOCKSIZE);          necessary?
+	if (bread(posSB,&SB) == -1) {
+        printf("Error obteniendo información de superbloque al inicializar mapa de bits\n.");
+        return -1;
+    }
+
+    //Obtener posiciones entre las cuales escribir
+	firstMB = SB.posPrimerBloqueMB;
+	lastMB = SB.posUltimoBloqueMB;
+	
+    //Escribir bloque a bloque dentro del sistema de ficheros
+	for (int i = firstMB; i <= lastMB; i++){
+	    if (bwrite(i,initCero) == -1) {
+            printf("Error en inicialización de mapa de bits.");
+            return -1;
+        }
 	}
+
+    return 0;
 }
 
 /*
