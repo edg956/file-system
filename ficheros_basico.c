@@ -1,4 +1,5 @@
 #include "ficheros_basico.h"
+#include <limits.h>
 
 /*
     Descripción:
@@ -154,4 +155,29 @@ int initMB(){
         + 0: En ejecución correcta,
         + (-1): En caso contrario.
 */
-int initAI() {}
+int initAI() {
+   struct superbloque SB;
+   inodo [] inodos = new inodo[BLOCKSIZE];
+   int contInodos = SB.posPrimerInodoLibre+1;
+
+   for(int i = SB.posPrimerBloqueAI; i <= SB.posUltimoBloqueAI; i++) {
+       for(int j = 0; j < BLOCKSIZE/INODOSIZE; j++) {
+           inodos[j].tipo = 'l'
+           
+           if (contInodos < SB.totInodos) {
+
+               inodos[j].punterosDirectos[0] = contInodos; 
+               contInodos++;
+
+           }else{
+
+               inodos[j].punterosDirectos[0] = UINT_MAX;
+
+           }
+
+       }
+
+       //Falta escribir los datos !! 
+       bwrite(i, );
+   }
+}
