@@ -112,7 +112,7 @@ int initSB(unsigned int nbloques, unsigned int ninodos){
  	SB.totInodos = ninodos;
 
     //Escribir superbloque en a partir del bloque indicado
- 	if (bwrite(0,&SB)==-1){
+ 	if (bwrite(posSB,&SB)==-1){
         //Check errores
 		printf("Error de escritura en el dispositivo en ficheros_basicos.c\n");
         return -1;
@@ -194,7 +194,7 @@ int initAI() {
     struct superbloque SB;
     int contInodos;
     int numInPerBloq = BLOCKSIZE/INODOSIZE; //Número de inodos por bloque
-    inodo [] inodos = inodos[numInPerBloq]; //No tiene sentido 1024 inodos si solo se llenan 8 siempre ???
+    struct inodo inodos[numInPerBloq]; //No tiene sentido 1024 inodos si solo se llenan 8 siempre ???
     /*Llenar 8 inodos (que ocupan un blocksize) y luego escribirlo
     en el bloque indicado por i en el primer for.*/
 
@@ -210,7 +210,7 @@ int initAI() {
     //Inicialización de numInPerBloq inodos por cada bloque
     for(int i = SB.posPrimerBloqueAI; i <= SB.posUltimoBloqueAI; i++) {
         for(int j = 0; j < numInPerBloq && contInodos <= SB.totInodos; j++) {
-           inodos[j].tipo = 'l'
+           inodos[j].tipo = 'l';
            
            if (contInodos < SB.totInodos) {
 
@@ -230,4 +230,5 @@ int initAI() {
             return -1;
         }
     }
+    return 0;
 }

@@ -6,7 +6,7 @@
 #include <errno.h>  //errno
 #include <string.h> // strerror()
 #include "bloques.h"
-#include <types.h>
+#include <sys/types.h>
 
 #define BLOCKSIZE 1024 // bytes
 #define INODOSIZE 128  // bytes

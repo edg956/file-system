@@ -70,19 +70,19 @@ int main(int argc, char **argv) {
     }
 
     //Inicializar superbloque del sistema de ficheros
-    if (initSB == -1) { //Check errores
+    if (initSB(number_of_blocks, number_of_blocks/4) == -1) { //Check errores
         printf("Se ha producido un error inicializando el superbloque.\n");
         exit(-1);
     }
     
     //Inicializar mapa de bits del sistema de ficheros
-    if (initMB == -1) { //Check errores
+    if (initMB() == -1) { //Check errores
         printf("Se ha producido un error inicializando el mapa de bits.\n");
         exit(-1);
     }
 
     //Inicializar array de inodos del sistema de ficheros
-    if (initAI == -1) { //Check errores
+    if (initAI() == -1) { //Check errores
         printf("Se ha producido un error inicializando el array de inodos.\n");
         exit(-1);
     }
