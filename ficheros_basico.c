@@ -90,7 +90,7 @@ int initSB(unsigned int nbloques, unsigned int ninodos){
     //Posición del primer bloque del array de inodos
 	SB.posPrimerBloqueAI = (SB.posUltimoBloqueMB +1);
     //Posición del último bloque del array de inodos
- 	SB.posUltimoBloqueAI = (SB.posUltimoBloqueMB + tamAI(ninodos) -1);
+ 	SB.posUltimoBloqueAI = (SB.posPrimerBloqueAI + tamAI(ninodos) -1);
     //Posición del primer bloque de datos
  	SB.posPrimerBloqueDatos = (SB.posUltimoBloqueAI +1);
     //Posición del último bloque de datos
@@ -112,7 +112,7 @@ int initSB(unsigned int nbloques, unsigned int ninodos){
  	SB.totInodos = ninodos;
 
     //Escribir superbloque en a partir del bloque indicado
- 	if (bwrite(posSB,&SB)==-1){
+ 	if (bwrite(posSB, &SB)==-1){
         //Check errores
 		printf("Error de escritura en el dispositivo en ficheros_basicos.c\n");
         return -1;
@@ -152,7 +152,7 @@ int initMB(){
 
     //Obtener información del superbloque
 	//memset(&SB,0,BLOCKSIZE);          necessary?
-	if (bread(posSB,&SB) == -1) {
+	if (bread(posSB, &SB) == -1) {
         printf("Error obteniendo información de superbloque al inicializar mapa de bits\n.");
         return -1;
     }
@@ -198,34 +198,35 @@ int initAI() {
     /*Llenar 8 inodos (que ocupan un blocksize) y luego escribirlo
     en el bloque indicado por i en el primer for.*/
 
-
-    if (bread(0,&SB) == -1) {
+    if (bread(0, &SB) == -1) {
         printf("Error obteniendo información de superbloque al inicializar array de inodos\n.");
         return -1;
     }
 
     /*Pos. del inodo enlazado al primer inodo*/
-    contInodos = SB.posPrimerBloqueAI + 1;
+    contInodos = SB.posPrimerInodoLibre + 1;
 
     //Inicialización de numInPerBloq inodos por cada bloque
     for(int i = SB.posPrimerBloqueAI; i <= SB.posUltimoBloqueAI; i++) {
-        for(int j = 0; j < numInPerBloq && contInodos <= SB.totInodos; j++) {
-           inodos[j].tipo = 'l';
+        for(int j = 0; j < numInPerBloq; j++) {
+            inodos[j].tipo = 'l';
            
-           if (contInodos < SB.totInodos) {
+            if (contInodos < SB.totInodos) {
 
-               inodos[j].punterosDirectos[0] = contInodos; 
-               contInodos++;
+                inodos[j].punterosDirectos[0] = contInodos; 
+                contInodos++;
 
             } else {
 
-               inodos[j].punterosDirectos[0] = UINT_MAX;
+                inodos[j].punterosDirectos[0] = UINT_MAX;
+                break;
 
-           }
+            }
+
         }
 
         //Falta escribir los datos !! 
-        if (bwrite(i, &inodos) == -1) {
+        if (bwrite(i, &inodos[0]) == -1) {
             printf("Error escribiendo datos de inodos en FS");
             return -1;
         }

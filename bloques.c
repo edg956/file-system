@@ -23,6 +23,11 @@ int bmount(const char *camino) {
     //Obtener file descriptor
     descriptor = open(camino, O_RDWR|O_CREAT, 0666);
 
+    if (descriptor == -1) {
+        puts("Error instalando disco.");
+        return -1;
+    }
+
     return descriptor; 
 
 }
@@ -104,7 +109,7 @@ int bread(unsigned int nbloque, void *buf) {
     }
 
     bbread = (int)read(descriptor, buf, BLOCKSIZE);
-    if (read(descriptor, buf, BLOCKSIZE) == -1){
+    if (bbread != BLOCKSIZE){
         return -1;
     }
 

@@ -18,11 +18,6 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    if (bmount(argv[1]) == -1) {
-        printf("Error: no se ha podido abrir la ruta especificada.\n");
-        exit(-1);
-    }
-
     //Estructuras y variables de apoyo
     struct superbloque SB;
 
@@ -48,24 +43,28 @@ int main(int argc, char **argv) {
     printf("sizeof struct superbloque: %li\n",sizeof(struct superbloque));
     printf("sizeof struct inodo: %li\n",sizeof(struct inodo));
 
+    puts("");
     printf("RECORRIDO LISTA ENLAZADA DE INODOS LIBRES:\n");
     
-    struct inodo inodos[SB.totInodos];
+    struct inodo inodos[BLOCKSIZE/INODOSIZE];
 
-    if (bread(SB.posPrimerBloqueAI, &inodos) == -1) {
-        printf("Error: no se ha podido obtener información del array de inodos del FS\n");
-        exit(-1);
-    }
+    //Lectura del array de inodos, obteniendolo bloque por bloque
+    for (int i = SB.posPrimerBloqueAI; i <= SB.posUltimoBloqueAI; i++) {
+        if (bread(i, &inodos[0]) == -1) {
+            printf("Error: no se ha podido obtener información del array de inodos del FS\n");
+            exit(-1);
+        }
 
-    for (int i = 0; i < SB.totInodos; i++) {
-        printf("%i ",inodos[i].punterosDirectos[0]);
+        for (int i = 0; i < BLOCKSIZE/INODOSIZE; i++) {
+            printf("%i ",inodos[i].punterosDirectos[0]);
+
+        }
     }
+    
+    puts("");
 
     if (bumount() == -1) {
         printf("Error: no se ha podido cerrar el fichero.\n");
         exit(-1);
     }
-
-
-
 }
