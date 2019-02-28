@@ -230,6 +230,40 @@ int initAI() {
     }
     return 0;
 }
+/*
+    Descripción: 
+        Esta función escribe el valor indicado por el parámetro bit: 
+        0 (libre) ó 1 (ocupado) en un determinado bit del MB que representa el bloque nbloque.
+ 
+    Funciones a las que llama: 
+        + bwrite()
+
+    Funciones desde donde es llamado: 
+
+    Parámetros de entrada: 
+        + unsigned int nbloque: 
+        + unsigned int bit: 
+    
+    Parámetros de salida: 
+        + int
+
+
+ */
+int escribir_bit(unsigned int nbloque, unsigned int bit) {
+
+    //Declaraciones
+    struct superbloque SB;
+    int posbyte, posbit, nbloqueMB, nbloqueabs;
+
+    //Cálculo de valores.
+    posbyte = nbloque/8; 
+    posbit = nbloque % 8;
+    nbloqueMB = posbyte/BLOCKSIZE;
+    nbloqueabs = nbloqueMB + SB.posPrimerBloqueMB;
+
+    //Lectura del bloque correspondiente 
+
+}
 
 /*
     Descripción: 
