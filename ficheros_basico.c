@@ -1,6 +1,8 @@
 #include "ficheros_basico.h"
 #include <limits.h>
 
+/*FUNCIONES DE NIVEL 2*/
+
 /*
     Descripción:
         Función que calcula el número de bloques necesarios para el mapa de
@@ -230,6 +232,9 @@ int initAI() {
     }
     return 0;
 }
+
+/*FUNCIONES DE NIVEL 3*/
+
 /*
     Descripción: 
         Esta función escribe el valor indicado por el parámetro bit: 
@@ -279,10 +284,80 @@ int escribir_bit(unsigned int nbloque, unsigned int bit) {
     Parámetros de entrada: 
         + nbloque: El número de bloque del cual se desea consultar su estado
 
-      Parámetros de salida: 
-    +
+    Parámetros de salida: 
+        +
 */
 unsigned char leer_bit(unsigned int nbloque) {
+
+    //Estructura de apoyo
+    struct superbloque SB;
+
+    if (bread(posSB, &SB) == -1) {
+        printf("Error: no se ha podido obtener información del superbloque en leer_bit\n");
+        return -1;
+    }
+
     int posByte = nbloque/8;
     int posBit = nbloque%8;
+    int nbloqueMB = posByte/BLOCKSIZE;
+    int nbloqueMBabs = nbloque + SB.posPrimerBloqueMB;
+
+    char bufferMB[BLOCKSIZE];
+
+}
+
+/*
+    Descripción: 
+        Escribe el contenido del inodo que recibe por paráḿetros dentro del
+        inodo correspondiente en el array de inodos del sistema de ficheros.
+
+    Funciones a las que llama: 
+        
+    Parámetros de entrada: 
+        + ninodo: El número de inodo donde escribir el contenido de inodo.
+        + inodo: El inodo desde el cual copiar la información a escribir en 
+                 inodo ninodo.
+
+    Parámetros de salida: 
+        +
+*/
+int escribir_inodo(unsigned int ninodo, struct inodo inodo) {
+
+}
+
+/*
+    Descripción: 
+        lee un determinado inodo del array de inodos para volcarlo en una
+        variable de tipo struct inodo pasada por referencia.
+
+    Funciones a las que llama: 
+        
+    Parámetros de entrada: 
+        + ninodo: El número de inodo a obtener.
+        + inodo: El inodo al cual copiar la información a leer del inodo ninodo.
+
+    Parámetros de salida: 
+        +
+*/
+int leer_inodo(unsigned int ninodo, struct inodo *inodo){
+
+}
+
+/*
+    Descripción: 
+        Escribe el contenido del inodo que recibe por paráḿetros dentro del
+        inodo correspondiente en el array de inodos del sistema de ficheros.
+
+    Funciones a las que llama: 
+        
+    Parámetros de entrada: 
+        + tipo: el tipo de inodo ('d': directorio | 'f': fichero | 'l': libre)
+        + permisos: los permisos de lectura/escritura/ejecución:
+                    ('r': lectura | 'w': escritura | 'x': ejecución).
+
+    Parámetros de salida: 
+        +
+*/
+int reservar_inodo(unsigned char tipo, unsigned char permisos) {
+
 }
