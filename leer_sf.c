@@ -9,7 +9,7 @@
 int main(int argc, char **argv) {
 
     if (argc != 2) {
-        printf("Error: número de argumentos excedido.\n");
+        printf("Error: formato de comando: ./nombre_de_programa <nombre_de_fichero_disco>\n");
         exit(-1);
     }
 
@@ -43,8 +43,7 @@ int main(int argc, char **argv) {
     printf("sizeof struct superbloque: %li\n",sizeof(struct superbloque));
     printf("sizeof struct inodo: %li\n",sizeof(struct inodo));
 
-    puts("");
-    printf("RECORRIDO LISTA ENLAZADA DE INODOS LIBRES:\n");
+    printf("\nRECORRIDO LISTA ENLAZADA DE INODOS LIBRES:\n");
     
     struct inodo inodos[BLOCKSIZE/INODOSIZE];
 

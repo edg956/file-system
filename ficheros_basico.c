@@ -151,7 +151,6 @@ int initMB(){
 	struct superbloque SB;
 
     //Obtener información del superbloque
-	//memset(&SB,0,BLOCKSIZE);          necessary?
 	if (bread(posSB, &SB) == -1) {
         printf("Error obteniendo información de superbloque al inicializar mapa de bits\n.");
         return -1;
@@ -194,9 +193,7 @@ int initAI() {
     struct superbloque SB;
     int contInodos;
     int numInPerBloq = BLOCKSIZE/INODOSIZE; //Número de inodos por bloque
-    struct inodo inodos[numInPerBloq]; //No tiene sentido 1024 inodos si solo se llenan 8 siempre ???
-    /*Llenar 8 inodos (que ocupan un blocksize) y luego escribirlo
-    en el bloque indicado por i en el primer for.*/
+    struct inodo inodos[numInPerBloq]; 
 
     if (bread(0, &SB) == -1) {
         printf("Error obteniendo información de superbloque al inicializar array de inodos\n.");
@@ -225,7 +222,7 @@ int initAI() {
 
         }
 
-        //Falta escribir los datos !! 
+        //Escritura de datos en el bloque correspondiente
         if (bwrite(i, &inodos[0]) == -1) {
             printf("Error escribiendo datos de inodos en FS");
             return -1;
