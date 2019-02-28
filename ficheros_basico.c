@@ -230,3 +230,25 @@ int initAI() {
     }
     return 0;
 }
+
+/*
+    Descripción: 
+        Lee un determinado bit del mapa de bits y devuelve el valor del bit
+        leído.
+
+        La función accede al byte correspondiente, dentro del bloque correspond-
+        diente al que contiene el bit del bloque cuyo estado se quiere consultar
+        dentro del mapa de bits del sistema de ficheros.
+
+    Funciones a las que llama: 
+        
+    Parámetros de entrada: 
+        + nbloque: El número de bloque del cual se desea consultar su estado
+
+      Parámetros de salida: 
+    +
+*/
+unsigned char leer_bit(unsigned int nbloque) {
+    int posByte = nbloque/8;
+    int posBit = nbloque%8;
+}
