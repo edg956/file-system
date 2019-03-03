@@ -116,7 +116,7 @@ int initSB(unsigned int nbloques, unsigned int ninodos){
     //Escribir superbloque en a partir del bloque indicado
  	if (bwrite(posSB, &SB)==-1){
         //Check errores
-		printf("Error de escritura en el dispositivo en ficheros_basicos.c\n");
+		perror("Error de escritura en el dispositivo en ficheros_basicos.c\n");
         return -1;
 	}
 
@@ -154,7 +154,7 @@ int initMB(){
 
     //Obtener información del superbloque
 	if (bread(posSB, &SB) == -1) {
-        printf("Error obteniendo información de superbloque al inicializar mapa de bits\n.");
+        perror("Error obteniendo información de superbloque al inicializar mapa de bits\n.");
         return -1;
     }
 
@@ -165,7 +165,7 @@ int initMB(){
     //Escribir bloque a bloque dentro del sistema de ficheros
 	for (int i = firstMB; i <= lastMB; i++){
 	    if (bwrite(i,initCero) == -1) {
-            printf("Error en inicialización de mapa de bits.");
+            perror("Error en inicialización de mapa de bits.");
             return -1;
         }
 	}
@@ -198,7 +198,7 @@ int initAI() {
     struct inodo inodos[numInPerBloq]; 
 
     if (bread(0, &SB) == -1) {
-        printf("Error obteniendo información de superbloque al inicializar array de inodos\n.");
+        perror("Error obteniendo información de superbloque al inicializar array de inodos\n.");
         return -1;
     }
 
@@ -226,7 +226,7 @@ int initAI() {
 
         //Escritura de datos en el bloque correspondiente
         if (bwrite(i, &inodos[0]) == -1) {
-            printf("Error escribiendo datos de inodos en FS");
+            perror("Error escribiendo datos de inodos en FS");
             return -1;
         }
     }
@@ -240,7 +240,8 @@ int initAI() {
         Esta función escribe el valor indicado por el parámetro bit: 
         0 (libre) ó 1 (ocupado) en un determinado bit del MB que representa el bloque nbloque.
  
-    Funciones a las que llama: 
+    Funciones a las que llama:
+        + bread()
         + bwrite()
 
     Funciones desde donde es llamado: 
@@ -250,7 +251,7 @@ int initAI() {
         + unsigned int bit: 
     
     Parámetros de salida: 
-        + int
+        + 
 
 
  */
@@ -259,15 +260,26 @@ int escribir_bit(unsigned int nbloque, unsigned int bit) {
     //Declaraciones
     struct superbloque SB;
     int posbyte, posbit, nbloqueMB, nbloqueabs;
+    char bytes[BLOCKSIZE];
 
     //Cálculo de valores.
     posbyte = nbloque/8; 
     posbit = nbloque % 8;
     nbloqueMB = posbyte/BLOCKSIZE;
+    
+    //Lectura del bloque correspondiente
+    if (bread(posSB, &SB) == -1) {
+        perror("Error: imposible leer superbloque en ficheros_basico.c - escribir_bit()");
+        return -1;
+    }
+
+    //Posición absoluta del bloque en el cual escribir
     nbloqueabs = nbloqueMB + SB.posPrimerBloqueMB;
 
-    //Lectura del bloque correspondiente 
-
+    if (bread(nbloqueabs, &bytes) == -1) {
+        perror("Error: imposible leer información del MB en ficheros_basico.c - escribir_bit()");
+        return -1;
+    }
 }
 
 /*

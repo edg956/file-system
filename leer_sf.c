@@ -9,12 +9,12 @@
 int main(int argc, char **argv) {
 
     if (argc != 2) {
-        printf("Error: formato de comando: ./nombre_de_programa <nombre_de_fichero_disco>\n");
+        perror("Error: formato de comando: ./nombre_de_programa <nombre_de_fichero_disco>\n");
         exit(-1);
     }
 
     if (bmount(argv[1]) == -1) {
-        printf("Error: no se ha podido abrir el directorio indicado.\n");
+        perror("Error: no se ha podido abrir el directorio indicado.\n");
         exit(-1);
     }
 
@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
     struct superbloque SB;
 
     if (bread(posSB, &SB) == -1) {
-        printf("Error: no se ha podido obtener información del superbloque del FS\n");
+        perror("Error: no se ha podido obtener información del superbloque del FS\n");
         exit(-1);
     }
 
@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
     //Lectura del array de inodos, obteniendolo bloque por bloque
     for (int i = SB.posPrimerBloqueAI; i <= SB.posUltimoBloqueAI; i++) {
         if (bread(i, &inodos[0]) == -1) {
-            printf("Error: no se ha podido obtener información del array de inodos del FS\n");
+            perror("Error: no se ha podido obtener información del array de inodos del FS\n");
             exit(-1);
         }
 
@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
     puts("");
 
     if (bumount() == -1) {
-        printf("Error: no se ha podido cerrar el fichero.\n");
+        perror("Error: no se ha podido cerrar el fichero.\n");
         exit(-1);
     }
 }

@@ -41,12 +41,12 @@ int main(int argc, char **argv) {
     //Comprobar si se ha realizado la llamada correctamente. 
     if ((argv[1]==NULL)||(argv[2]==NULL)) {
 
-        printf("ERROR: La ejecución del programa no se ha realizado correctamente.\n");
-        printf("Requisitos para la ejecución del programa: \n");
-        printf("Primer parámetro -> nombre_del_dispositivo.\n");
-        printf("Segundo parámetro -> número_de_bloques.\n"); 
-        printf("Ejemplo: \n");
-        printf("./mi_mkfs nombre_del_dispositivo número_de_bloques\n");
+        perror("ERROR: La ejecución del programa no se ha realizado correctamente.\n");
+        perror("Requisitos para la ejecución del programa: \n");
+        perror("Primer parámetro -> nombre_del_dispositivo.\n");
+        perror("Segundo parámetro -> número_de_bloques.\n"); 
+        perror("Ejemplo: \n");
+        perror("./mi_mkfs nombre_del_dispositivo número_de_bloques\n");
         exit(-1);
     }
 
@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
 
     //Realizar el montaje del disco virtual.
     if (bmount(file_name)==-1) {
-        printf("Se ha producido un error al montar el dispositivo virtual.\n");
+        perror("Se ha producido un error al montar el dispositivo virtual.\n");
         exit(-1);
     }
     
@@ -66,34 +66,35 @@ int main(int argc, char **argv) {
 
     //Inicializar el dispositivo virtual. 
     for(int i = 0; i <number_of_blocks; i++) {
-        bwrite(i, buffer);
+        if (bwrite(i, buffer) == -1) {
+            perror("Se ha producido un error escribiendo los bloques\n");
+            exit(-1);
+        }
     }
 
     //Inicializar superbloque del sistema de ficheros
     if (initSB(number_of_blocks, number_of_blocks/4) == -1) { //Check errores
-        printf("Se ha producido un error inicializando el superbloque.\n");
+        perror("Se ha producido un error inicializando el superbloque.\n");
         exit(-1);
     }
     
     //Inicializar mapa de bits del sistema de ficheros
     if (initMB() == -1) { //Check errores
-        printf("Se ha producido un error inicializando el mapa de bits.\n");
+        perror("Se ha producido un error inicializando el mapa de bits.\n");
         exit(-1);
     }
 
     //Inicializar array de inodos del sistema de ficheros
     if (initAI() == -1) { //Check errores
-        printf("Se ha producido un error inicializando el array de inodos.\n");
+        perror("Se ha producido un error inicializando el array de inodos.\n");
         exit(-1);
     }
 
     //Desmontar el dispositivo virtual. 
     if (bumount()==-1) {
-        printf("Se ha producido un error al desmontar el dispositivo virtual.\n");
+        perror("Se ha producido un error al desmontar el dispositivo virtual.\n");
         exit(-1);
     }
-
-
 
     return 0;
 }
