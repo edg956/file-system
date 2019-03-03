@@ -308,6 +308,44 @@ unsigned char leer_bit(unsigned int nbloque) {
 
 /*
     Descripción: 
+        Encuentra el primer bloque libre consultando el mapa de bits, actualiza
+        su estado dentro del mapa de bits y devuelve su posición.
+
+    Funciones a las que llama: 
+        + ficheros_basico.c - escribir_bit()
+
+    Funciones desde donde es llamado:
+        +
+
+    Parámetros de salida: 
+        +
+*/
+int reservar_bloque() {
+
+}
+
+/*
+    Descripción: 
+        Libera el bloque indicado por parámetro para su nueva reutilización.
+
+    Funciones a las que llama: 
+        + ficheros_basico.c - escribir_bit()
+
+    Funciones desde donde es llamado:
+        +
+
+    Parámetros de entrada: 
+        + nbloque: El número de bloque del cual se desea liberar
+
+    Parámetros de salida: 
+        +
+*/
+int liberar_bloque(unsigned int nbloque) {
+
+}
+
+/*
+    Descripción: 
         Escribe el contenido del inodo que recibe por paráḿetros dentro del
         inodo correspondiente en el array de inodos del sistema de ficheros.
 
@@ -327,7 +365,7 @@ int escribir_inodo(unsigned int ninodo, struct inodo inodo) {
 
 /*
     Descripción: 
-        lee un determinado inodo del array de inodos para volcarlo en una
+        Lee un determinado inodo del array de inodos para volcarlo en una
         variable de tipo struct inodo pasada por referencia.
 
     Funciones a las que llama: 
