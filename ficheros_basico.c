@@ -256,11 +256,18 @@ int initAI() {
 
  */
 int escribir_bit(unsigned int nbloque, unsigned int bit) {
+    //Comprobación previa de errores. -------------------------> Consultar si realmente es necesario. 
+    if ((bit!=0) && (bit!=1)) {
+        perror("Error: Un bit solo puede tener valor 1 o 0. Función -> escribir_bit()");
+        return -1;
+    }
 
     //Declaraciones
     struct superbloque SB;
     int posbyte, posbit, nbloqueMB, nbloqueabs;
     char bytes[BLOCKSIZE];
+    int *bufferMB;
+    unsigned char mascara = 128;
 
     //Cálculo de valores.
     posbyte = nbloque/8; 
@@ -276,10 +283,37 @@ int escribir_bit(unsigned int nbloque, unsigned int bit) {
     //Posición absoluta del bloque en el cual escribir
     nbloqueabs = nbloqueMB + SB.posPrimerBloqueMB;
 
-    if (bread(nbloqueabs, &bytes) == -1) {
+    //Leemos el bloque que lo contiene y cargamos el contenido en el buffer. 
+    *bufferMB = bread(nbloqueabs, &bytes); 
+
+    //Comprobación de errores. 
+    if (bufferMB == -1) {
         perror("Error: imposible leer información del MB en ficheros_basico.c - escribir_bit()");
         return -1;
     }
+
+    posbyte = posbyte % BLOCKSIZE;
+
+    //Desplazamiento de posbit bits a la derecha. 
+    mascara >>= posbit; 
+
+    //Poner a 0 o a 1 el bit. 
+    if (bit == 0) {
+
+        bufferMB[posbyte] &= ~mascara; 
+
+    }else{
+
+        bufferMB[posbyte] |= mascara;
+
+    }
+
+    //Escribir buffer del MB en el dispositivo virtual
+    if (bwrite(nbloqueabs, bufferMB) == -1) {
+        perror("Error: No se ha podido escribir en el dispositivo virtual en ficheros_basico.c - escribir_bit()");
+        return -1;
+    }
+//----------------------------------------> pendiente actualizar la función initMB();
 }
 
 /*
@@ -408,6 +442,8 @@ int escribir_inodo(unsigned int ninodo, struct inodo inodo) {
         +
 */
 int leer_inodo(unsigned int ninodo, struct inodo *inodo){
+
+    
 
 }
 
