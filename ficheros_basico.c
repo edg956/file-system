@@ -344,16 +344,33 @@ int reservar_bloque() {
         + ficheros_basico.c - escribir_bit()
 
     Funciones desde donde es llamado:
-        +
+        + 
 
     Parámetros de entrada: 
-        + nbloque: El número de bloque del cual se desea liberar
+        + nbloque: El número de bloque del cual se desea liberar.
 
     Parámetros de salida: 
-        +
+        + nbloque liberado. 
+        + (-1) si se ha producido algún error durante el proceso. 
 */
 int liberar_bloque(unsigned int nbloque) {
 
+    //Declaraciones
+    struct superbloque SB; 
+
+    //Poner a 0 el bit del MB correspondiente al bloque nbloque. 
+    if (escribir_bit(nbloque, 0)==-1) {
+
+        printf("Error: no se ha podido liberar el bloque. Función -> liberar_bloque()\n");
+        return -1; 
+
+    }
+
+    //Incrementar cantidad de bloques libres. 
+    SB.cantBloquesLibres++;
+
+    //Devolver el número de bloque liberado. 
+    return nbloque; 
 }
 
 /*
@@ -362,7 +379,8 @@ int liberar_bloque(unsigned int nbloque) {
         inodo correspondiente en el array de inodos del sistema de ficheros.
 
     Funciones a las que llama: 
-        
+        + ficheros_basico.c - escribir_inodo()
+
     Parámetros de entrada: 
         + ninodo: El número de inodo donde escribir el contenido de inodo.
         + inodo: El inodo desde el cual copiar la información a escribir en 
@@ -399,6 +417,8 @@ int leer_inodo(unsigned int ninodo, struct inodo *inodo){
         inodo correspondiente en el array de inodos del sistema de ficheros.
 
     Funciones a las que llama: 
+        + 
+
         
     Parámetros de entrada: 
         + tipo: el tipo de inodo ('d': directorio | 'f': fichero | 'l': libre)
@@ -409,5 +429,54 @@ int leer_inodo(unsigned int ninodo, struct inodo *inodo){
         +
 */
 int reservar_inodo(unsigned char tipo, unsigned char permisos) {
+    //Declaraciones
+    struct superbloque SB; 
+    struct inodo i; 
+    int posInodoReservado; 
 
+    //Comprobar si hay inodos libres. 
+    if (SB.cantInodosLibres<1) {
+        printf("Error: No quedan inodos libres. Función -> reservar_inodo()\n");
+        return -1; 
+    }
+
+    //Reservar el primer inodo libre. 
+    posInodoReservado = SB.posPrimerInodoLibre;
+
+    //Hacer que el superbloque apunte al siguiente inodo de la lista. 
+    SB.posPrimerInodoLibre++;
+
+    //Inicialización de los campos del inodo. 
+    //Tipo
+    i.tipo = tipo; 
+
+    //Permisos
+    i.permisos = permisos;
+
+    //Cantidad de enlaces de entradas en directorio. 
+    i.nlinks = 1; 
+
+    //Tamaño en bytes lógicos.
+    i.tamEnBytesLog = 0; 
+
+    //timestamp de creación para todos los campos de fecha y hora. 
+    i.atime = time(NULL);
+    i.ctime = time(NULL); 
+    i.mtime = time(NULL);
+    
+    //Cantidad de bloques ocupados en la zona de datos. 
+    i.numBloquesOcupados = 0; 
+
+    //Punteros a bloques directos. 
+    i.punterosDirectos = 0; 
+
+    //Punteros a bloques indirectos. 
+    i.punterosIndirectos = 0;
+
+    //Escribir inodo. 
+
+    //Actualizar cantidad de inodos libres. 
+
+    //Devolver posInodoReservado. 
+    return posInodoReservado;
 }
