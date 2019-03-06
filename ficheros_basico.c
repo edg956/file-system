@@ -367,7 +367,71 @@ unsigned char leer_bit(unsigned int nbloque) {
         +
 */
 int reservar_bloque() {
+    struct superbloque SB;
+    unsigned char bufferAux[BLOCKSIZE];
+    unsigned char bufferMB[BLOCKSIZE];
+    //Miramos si hay error al llamar bread y no encontramos el bloque deseado
+    if (bread(posSB,&SB) < 0) {
+        return -1;
+    }
+    //Miramos si quedan bloques libres
+    if (SB.cantBloquesLibres <= 0) {
+        return -1;
+    }
+    
+    //Inicializamos a 1s el bufferAux
+    memset(bufferAux,255,BLOCKSIZE);
 
+    int posBloqueMB = SB.posPrimerBloqueMB;
+
+    //Miramos si hay error al leer el mapa de bits
+    if (bread(posBloqueMB,bufferMB) < 0) {
+        return -1;
+    }
+    
+    //Comparamos cada bloque leído del MB, bufferMB, coon ese buffer auxiliar inicializado a 1s
+    while (memcmp(bufferAux,bufferMB,BLOCKSIZE) == 0){
+        posBloqueMB++;
+        //Comprovamos que no haya error al leer el mapa de bits
+        if(bread(posBloqueMB,bufferMB) < 0){
+            return -1;
+        }
+    }
+
+    unsigned char byte = 255;
+    unsigned char mascara = 128; //10000000
+    int posByte = 0, posBit = 0, end = 0;
+
+    
+    while (posByte < BLOCKSIZE && !end){
+        //Miramos si hay bits a 0 en el byte
+        if (byte < 255){
+            //Operador AND para bits
+            while (bufferMB[posByte] & mascara){
+                posBit++;
+                bufferMB[posByte] <<= 1;    //desplazamiento de bits a la izquierda
+            }
+            end = 1;    //como hemos de localizar el primer bit dentro del byte que vale 0, una vez la encontramos ya.
+        }else{
+            posByte++;  //si el byte no contiene 0s, vamos al siguiente
+        }
+        
+    }
+
+    int nBloque = ((posBloqueMB - SB.posPrimerBloqueMB) * BLOCKSIZE + posByte) * 8 + posBit;
+
+    //Comprovamos que no haya error al escribir bit
+    if (escribir_bit(nBloque,1) < 0){
+        return -1;
+    }
+    SB.cantBloquesLibres--;
+    
+    //Comprovamos si hay error en el bwrite
+    if (bwrite(posSB,&SB) < 0){
+        return -1;
+    }
+
+    return nBloque;
 }
 
 /*
