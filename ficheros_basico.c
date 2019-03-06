@@ -326,30 +326,54 @@ int escribir_bit(unsigned int nbloque, unsigned int bit) {
         dentro del mapa de bits del sistema de ficheros.
 
     Funciones a las que llama: 
+        + bloques.h - bread()
         
     Parámetros de entrada: 
         + nbloque: El número de bloque del cual se desea consultar su estado
 
     Parámetros de salida: 
-        +
+        + $00: Si el bloque está libre
+        + $01: Si el bloque está ocupado
+        + $FF: Error
 */
 unsigned char leer_bit(unsigned int nbloque) {
 
     //Estructura de apoyo
     struct superbloque SB;
 
-    if (bread(posSB, &SB) == -1) {
-        printf("Error: no se ha podido obtener información del superbloque en leer_bit\n");
+    //Obtener información del superbloque
+    if (bread(posSB, &SB) == -1) { //Check for errors
+        perror("Error: no se ha podido obtener información del superbloque en leer_bit\n");
         return -1;
     }
 
-    int posByte = nbloque/8;
-    int posBit = nbloque%8;
-    int nbloqueMB = posByte/BLOCKSIZE;
-    int nbloqueMBabs = nbloque + SB.posPrimerBloqueMB;
-
+    //Variables de apoyo
+    /*Se quiere calcular la posición del byte que contiene al bit que representa
+    a nbloque dentro del conjunto de bytes del mapa de bits.*/
+    int posByte = nbloque/8;    //Posición del byte que contiene el bit
+    int posBit = nbloque%8;     //Posición del bit dentro de ese byte
+    int nbloqueMB = posByte/BLOCKSIZE;  //Posición del bloque contiene el byte
+    int nbloqueMBabs = nbloque + SB.posPrimerBloqueMB;  //Pos. Absoluta del bloq
+   
+    //Buffer de apoyo
     char bufferMB[BLOCKSIZE];
 
+    //Obtener el bloque que contiene el byte buscado
+    if (bread(nbloqueMBabs, &bufferMB) == -1) {
+        perror("Error de lectura para el buffer de MB");
+        return -1;
+    }
+
+    //Preparación de mascara y variables para obtener el bit
+    unsigned char mask = 128;    //10000000
+
+    mask >>= posBit;        //Desplazamiento a la derecha
+    mask &= bufferMB[posByte%BLOCKSIZE];            //AND con mascara
+    mask >>= (7-posBit);    //Desplazamiento a la derecha
+
+    /*El LSB de mask tiene el estado del bit buscado*/
+
+    return mask;
 }
 
 /*
