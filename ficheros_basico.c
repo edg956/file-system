@@ -509,9 +509,39 @@ int liberar_bloque(unsigned int nbloque) {
                  inodo ninodo.
 
     Parámetros de salida: 
-        +
+        + 0: Ejecución correcta
+        + (-1): Error
 */
 int escribir_inodo(unsigned int ninodo, struct inodo inodo) {
+    //Estructura de superbloque para obtener información del FS
+    struct superbloque SB;
+
+    //Leer información del superbloque
+    if (bread(posSB, &SB) == -1) {
+        perror("Error en lectura de superbloque.");
+        return -1;
+    }
+
+    //Variables de apoyo
+    unsigned int posInodo = ninodo / NUMINPRBLQ;  //Nº de bloque que contiene el inodo
+    struct inodo bufferIn[NUMINPRBLQ];   //Buffer de inodos
+
+    //Leer información del array de inodos
+    if (bread(posInodo + SB.posPrimerBloqueAI, &bufferIn) == -1) {
+        perror("Error en lectura desde el array de inodos.");
+        return -1;
+    }
+
+    //Nº de inodo sobre el que escribir
+    bufferIn[ninodo % NUMINPRBLQ] = inodo;
+
+    //Escritura sobre el array de inodos
+    if (bwritte(posInodo + SB.posPrimerBloqueAI, &bufferIn) == -1) {
+        perror("Error en escritura al array de inodos.");
+        return -1;
+    }
+
+    return 0;
 
 }
 
