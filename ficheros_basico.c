@@ -739,3 +739,22 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos) {
     //Devolver posInodoReservado. 
     return posInodoReservado;
 }
+
+
+/*----------------------------FUNCIONES DE NIVEL 4----------------------------*/
+
+/*
+    Descripción:
+
+    Funciones a las que llama:
+
+    Funciones desde donde es llamado:
+
+    Parámetros de entrada:
+
+    Parámetros de salida:
+
+*/
+int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, char reservar) {
+    
+}

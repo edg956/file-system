@@ -64,3 +64,8 @@ int liberar_bloque(unsigned int nbloque);
 int escribir_inodo(unsigned int ninodo, struct inodo inodo);
 int leer_inodo(unsigned int ninodo, struct inodo *inodo);
 int reservar_inodo(unsigned char tipo, unsigned char permisos);
+
+/*FUNCIONES NIVEL 4*/
+int obtener_nrangoBL(struct inodo inodo, unsigned int nblogico, unsigned int *ptr);
+int obtener_indice(int nblogico, int nivel_punteros); 
+int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, char reservar);
