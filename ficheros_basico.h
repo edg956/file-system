@@ -13,11 +13,11 @@
 #define NUMINPRBLQ BLOCKSIZE % INODOSIZE    //Nº de inodos por bloque
 #define posSB 0        //el superbloque se escribe en el primer bloque de nuestro FS
 
-#define NPUNTEROS (BLOCKSIZE/sizeof(unsigned int)) //256
-#define DIRECTOS 12   
-#define INDIRECTOS0 (NPUNTEROS + DIRECTOS)    //268   
-#define INDIRECTOS1 (NPUNTEROS * NPUNTEROS + INDIRECTOS0)   //65.804   
-#define INDIRECTOS2 (NPUNTEROS * NPUNTEROS * NPUNTEROS + INDIRECTOS1) //16.843.020 
+#define NPUNTEROS BLOCKSIZE / sizeof(unsigned int)
+#define DIRECTOS 12
+#define INDIRECTOS0 NPUNTEROS + DIRECTOS
+#define INDIRECTOS1 NPUNTEROS * NPUNTEROS + INDIRECTOS0
+#define INDIRECTOS2 NPUNTEROS * NPUNTEROS * NPUNTEROS + INDIRECTOS1 
 
 struct superbloque{
 	unsigned int posPrimerBloqueMB; //Posición del primer bloque del mapa de bits 
