@@ -329,6 +329,8 @@ int escribir_bit(unsigned int nbloque, unsigned int bit) {
         perror("Error: No se ha podido escribir en el dispositivo virtual en ficheros_basico.c - escribir_bit()");
         return -1;
     }
+
+    return 0;
 }
 
 /*
