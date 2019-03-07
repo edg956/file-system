@@ -573,9 +573,12 @@ int escribir_inodo(unsigned int ninodo, struct inodo inodo) {
     //Escritura sobre el array de inodos
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     if (bwritte(posInodo + SB.posPrimerBloqueAI, &bufferIn) == -1) {
         perror("Error en escritura al array de inodos. Función -> escribir_inodo()");
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
     if (bwrite(posInodo + SB.posPrimerBloqueAI, &bufferIn) == -1) {
