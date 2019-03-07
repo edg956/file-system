@@ -1,5 +1,6 @@
 #include "ficheros_basico.h"
 #include <limits.h>
+#include <time.h>
 
 /*----------------------------FUNCIONES DE NIVEL 2----------------------------*/
 
@@ -303,7 +304,7 @@ int escribir_bit(unsigned int nbloque, unsigned int bit) {
     *bufferMB = bread(nbloqueabs, &bytes); 
 
     //Comprobación de errores. 
-    if (bufferMB == -1) {
+    if (*bufferMB == -1) {
         perror("Error: imposible leer información del MB en ficheros_basico.c - escribir_bit()");
         return -1;
     }
@@ -369,7 +370,7 @@ unsigned char leer_bit(unsigned int nbloque) {
     a nbloque dentro del conjunto de bytes del mapa de bits.*/
     int posByte = nbloque/8;    //Posición del byte que contiene el bit
     int posBit = nbloque%8;     //Posición del bit dentro de ese byte
-    int nbloqueMB = posByte/BLOCKSIZE;  //Posición del bloque contiene el byte
+ //   int nbloqueMB = posByte/BLOCKSIZE;  //Posición del bloque contiene el byte
     int nbloqueMBabs = nbloque + SB.posPrimerBloqueMB;  //Pos. Absoluta del bloq
    
     //Buffer de apoyo
@@ -570,8 +571,13 @@ int escribir_inodo(unsigned int ninodo, struct inodo inodo) {
     bufferIn[ninodo % NUMINPRBLQ] = inodo;
 
     //Escritura sobre el array de inodos
+<<<<<<< Updated upstream
     if (bwritte(posInodo + SB.posPrimerBloqueAI, &bufferIn) == -1) {
         perror("Error en escritura al array de inodos. Función -> escribir_inodo()");
+=======
+    if (bwrite(posInodo + SB.posPrimerBloqueAI, &bufferIn) == -1) {
+        perror("Error en escritura al array de inodos.");
+>>>>>>> Stashed changes
         return -1;
     }
 

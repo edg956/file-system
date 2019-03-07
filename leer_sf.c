@@ -46,9 +46,19 @@ int main(int argc, char **argv) {
     printf("\nRECORRIDO LISTA ENLAZADA DE INODOS LIBRES:\n");
     
     struct inodo inodos[BLOCKSIZE/INODOSIZE];
+    printf("RESERVAMOS UN BLOQUE Y LUEGO LO LIBERAMOS\n");
+    int rsbloque = reservar_bloque();
+
+    if (rsbloque!=-1) {
+         printf("Se ha reservado el bloque físico nº%d que era el 1º libre indicado por el MB\n");  
+    }
+    
+    printf("SB.cantBloquesLibres = %d", SB.cantBloquesLibres);
+    liberar_bloque(rsbloque);
+    printf("Liberamos ese bloque y después SB.cantBloquesLibres = %d", SB.cantBloquesLibres);
 
     //Lectura del array de inodos, obteniendolo bloque por bloque
-    for (int i = SB.posPrimerBloqueAI; i <= SB.posUltimoBloqueAI; i++) {
+ /*   for (int i = SB.posPrimerBloqueAI; i <= SB.posUltimoBloqueAI; i++) {
         if (bread(i, &inodos[0]) == -1) {
             perror("Error: no se ha podido obtener información del array de inodos del FS\n");
             exit(-1);
@@ -60,7 +70,7 @@ int main(int argc, char **argv) {
         }
     }
     
-    puts("");
+    puts("");*/
 
     if (bumount() == -1) {
         perror("Error: no se ha podido cerrar el fichero.\n");
