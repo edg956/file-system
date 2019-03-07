@@ -409,12 +409,15 @@ int reservar_bloque() {
     struct superbloque SB;
     unsigned char bufferAux[BLOCKSIZE];
     unsigned char bufferMB[BLOCKSIZE];
+
     //Miramos si hay error al llamar bread y no encontramos el bloque deseado
     if (bread(posSB,&SB) < 0) {
+        perror("Error: no se ha podido leer del superbloque. Función -> reservar_bloque()");
         return -1;
     }
     //Miramos si quedan bloques libres
     if (SB.cantBloquesLibres <= 0) {
+        perror("Error: no hay bloques libres. Función -> reservar_bloque()");
         return -1;
     }
     
@@ -425,6 +428,7 @@ int reservar_bloque() {
 
     //Miramos si hay error al leer el mapa de bits
     if (bread(posBloqueMB,bufferMB) < 0) {
+        perror("Error: no se ha podido leer del mapa de bits. Función -> reservar_bloque()");
         return -1;
     }
     
@@ -434,6 +438,7 @@ int reservar_bloque() {
         posBloqueMB++;
         //Comprovamos que no haya error al leer el mapa de bits
         if(bread(posBloqueMB,bufferMB) < 0){
+            perror("Error: no se ha podido leer del mapa de bits para comparar. Función -> reservar_bloque()");
             return -1;
         }
     }
@@ -462,14 +467,16 @@ int reservar_bloque() {
 
     int nBloque = ((posBloqueMB - SB.posPrimerBloqueMB) * BLOCKSIZE + posByte) * 8 + posBit;
 
-    //Comprovamos que no haya error al escribir bit.
+    //Comprobamos que no haya error al escribir bit
     if (escribir_bit(nBloque,1) < 0){
+        perror("Error: no se ha podido escribir el bit correspondiente a nbloque. Función -> reservar_bloque()");
         return -1;
     }
     SB.cantBloquesLibres--;
     
-    //Comprobamos si hay error en el bwrite.
+    //Comprobamos si hay error en el bwrite
     if (bwrite(posSB,&SB) < 0){
+        perror("Error: no se ha podido escribir al superbloque. Función -> reservar_bloque()");
         return -1;
     }
 
@@ -496,12 +503,18 @@ int reservar_bloque() {
 int liberar_bloque(unsigned int nbloque) {
 
     //Declaraciones
-    struct superbloque SB; 
+    struct superbloque SB;
+
+    //Llenar superbloque
+    if (bread(posSB, &SB) == -1) {
+        perror("Error: no se ha podido leer del superbloque. Función -> liberar_bloque()");
+        return -1;
+    }
 
     //Poner a 0 el bit del MB correspondiente al bloque nbloque. 
     if (escribir_bit(nbloque, 0)==-1) {
 
-        printf("Error: no se ha podido liberar el bloque. Función -> liberar_bloque()\n");
+        perror("Error: no se ha podido liberar el bloque. Función -> liberar_bloque()");
         return -1; 
 
     }
@@ -519,7 +532,8 @@ int liberar_bloque(unsigned int nbloque) {
         inodo correspondiente en el array de inodos del sistema de ficheros.
 
     Funciones a las que llama: 
-        + ficheros_basico.c - escribir_inodo()
+        + bloques.h - bread()
+        + bloques.h - bwritte()
 
     Parámetros de entrada: 
         + ninodo: El número de inodo donde escribir el contenido de inodo.
@@ -536,19 +550,17 @@ int escribir_inodo(unsigned int ninodo, struct inodo inodo) {
 
     //Leer información del superbloque
     if (bread(posSB, &SB) == -1) {
-        perror("Error en lectura de superbloque.");
+        perror("Error en lectura de superbloque. Función -> escribir_inodo()");
         return -1;
     }
 
     //Variables de apoyo
-
-    //Nº de bloque que contiene el inodo
-    unsigned int posInodo = ninodo / NUMINPRBLQ;  
+    unsigned int posInodo = ninodo / NUMINPRBLQ; //Nº de blqs que tiene el inodo
     struct inodo bufferIn[NUMINPRBLQ];   //Buffer de inodos
 
     //Leer información del array de inodos
     if (bread(posInodo + SB.posPrimerBloqueAI, &bufferIn) == -1) {
-        perror("Error en lectura desde el array de inodos.");
+        perror("Error en lectura desde el array de inodos. Función -> escribir_inodo()");
         return -1;
     }
 
@@ -557,7 +569,7 @@ int escribir_inodo(unsigned int ninodo, struct inodo inodo) {
 
     //Escritura sobre el array de inodos
     if (bwritte(posInodo + SB.posPrimerBloqueAI, &bufferIn) == -1) {
-        perror("Error en escritura al array de inodos.");
+        perror("Error en escritura al array de inodos. Función -> escribir_inodo()");
         return -1;
     }
 
@@ -601,28 +613,38 @@ int leer_inodo(unsigned int ninodo, struct inodo *inodo){
         inodo correspondiente en el array de inodos del sistema de ficheros.
 
     Funciones a las que llama: 
-        + 
+        + bloques.h - bread()
+        + bloques.h - bwritte()
+        + ficheros_basico.h - escribir_inodo()
 
-        
     Parámetros de entrada: 
         + tipo: el tipo de inodo ('d': directorio | 'f': fichero | 'l': libre)
         + permisos: los permisos de lectura/escritura/ejecución:
                     ('r': lectura | 'w': escritura | 'x': ejecución).
 
     Parámetros de salida: 
-        +
+        + int: Posición dentro del array de inodos del inodo reservado
+        + (-1): Error
 */
 int reservar_inodo(unsigned char tipo, unsigned char permisos) {
     //Declaraciones
-    struct superbloque SB; 
-    struct inodo i; 
-    int posInodoReservado; 
+    struct superbloque SB;
+
+    //Llenar superbloque
+    if (bread(posSB, &SB) == -1) {
+        perror("Error: no se ha podido leer del superbloque. Función -> reservar_inodo()");
+        return -1;
+    }
 
     //Comprobar si hay inodos libres. 
     if (SB.cantInodosLibres<1) {
         perror("Error: No quedan inodos libres. Función -> reservar_inodo()\n");
         return -1; 
     }
+
+    //Variables de apoyo
+    struct inodo i; 
+    int posInodoReservado; 
 
     //Reservar el primer inodo libre. 
     posInodoReservado = SB.posPrimerInodoLibre;
@@ -658,14 +680,14 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos) {
 
     //Escribir inodo.
     if (escribir_inodo(posInodoReservado, i) == -1) {
-        perror("Error escribiendo inodo reservado en array de inodos.");
+        perror("Error: Escritura de inodo reservado en array de inodos fallida. Función -> reservar_inodo()");
         return -1;
     }
 
     //Actualizar cantidad de inodos libres.
     SB.cantInodosLibres--;
     if (bwrite(posSB, &SB) == -1) {
-        perror("Error actualizando superbloque después de reservar inodo.");
+        perror("Error: Actualizar superbloque fallido. Función -> reservar_inodo()");
         return -1;
     }
 
