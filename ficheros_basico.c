@@ -560,9 +560,19 @@ int escribir_inodo(unsigned int ninodo, struct inodo inodo) {
         +
 */
 int leer_inodo(unsigned int ninodo, struct inodo *inodo){
-
-    
-
+    struct superbloque SB;
+    //Leemos el superbloque para obtener la localización del array de inodos
+    bread(posSB,&SB);
+    //Obtenemos el número de bloque del array de inodos que tiene el inodo solicitado
+    int posInodo = ((ninodo*INODOSIZE)/BLOCKSIZE) + SB.posPrimerBloqueAI;
+    //Empleamos un arrau de inodos, del tamaño de la cantidad de inodos que caben en un bloque,
+    //como buffer de lectura del bloque que hemos de leer
+    struct inodo inodos[BLOCKSIZE/INODOSIZE];
+    //Encontramos la posición del inodo solicitado
+    bread(posInodo,inodo);
+    //No se si está bien la asignación?¿
+    *inodo = inodos[ninodo%(BLOCKSIZE/INODOSIZE)];
+	return 0;
 }
 
 /*
