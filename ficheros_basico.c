@@ -1,7 +1,7 @@
 #include "ficheros_basico.h"
 #include <limits.h>
 
-/*FUNCIONES DE NIVEL 2*/
+/*----------------------------FUNCIONES DE NIVEL 2----------------------------*/
 
 /*
     Descripción:
@@ -126,8 +126,8 @@ int initSB(unsigned int nbloques, unsigned int ninodos){
 /*
     Descripción:
         Función que inicializa cada bit del mapa de bits del sistema de ficheros
-        y escribe, byte a byte, cada sección inicializada del MB en el espacio de
-        memoria, dentro del bloque correspondiente, reservado para ello.
+        y escribe, byte a byte, cada sección inicializada del MB en el espacio 
+        de memoria, dentro del bloque correspondiente, reservado para ello.
 
     Funciones a las que llama:
         + bloques.h - bwrite()
@@ -169,6 +169,21 @@ int initMB(){
             return -1;
         }
 	}
+
+    //[Nivel 3] 
+    //Modificación para tener en cuenta los bloques ocupados por los metadatos,
+    //o sea el superbloque, el mapa de bits y el array de inodos. 
+    for(int i = 0; i <= SB.posUltimoBloqueAI; i++) {
+        
+        if (escribir_bit(i,1) == -1) {
+             perror("Error en la asignación de bits ocupados del mapa de bits.");
+            return -1;
+        }
+
+    }
+    
+    //Restar bloques ocupados al total de bloques libres del superbloque.    
+    SB.cantBloquesLibres = SB.cantBloquesLibres - SB.posUltimoBloqueAI;
 
     return 0;
 }
@@ -233,12 +248,13 @@ int initAI() {
     return 0;
 }
 
-/*FUNCIONES DE NIVEL 3*/
+/*----------------------------FUNCIONES DE NIVEL 3----------------------------*/
 
 /*
     Descripción: 
         Esta función escribe el valor indicado por el parámetro bit: 
-        0 (libre) ó 1 (ocupado) en un determinado bit del MB que representa el bloque nbloque.
+        0 (libre) ó 1 (ocupado) en un determinado bit del MB que representa 
+        el bloque nbloque.
  
     Funciones a las que llama:
         + bread()
@@ -256,7 +272,7 @@ int initAI() {
 
  */
 int escribir_bit(unsigned int nbloque, unsigned int bit) {
-    //Comprobación previa de errores. -------------------------> Consultar si realmente es necesario. 
+    //Comprobación previa de errores. 
     if ((bit!=0) && (bit!=1)) {
         perror("Error: Un bit solo puede tener valor 1 o 0. Función -> escribir_bit()");
         return -1;
@@ -313,7 +329,6 @@ int escribir_bit(unsigned int nbloque, unsigned int bit) {
         perror("Error: No se ha podido escribir en el dispositivo virtual en ficheros_basico.c - escribir_bit()");
         return -1;
     }
-//----------------------------------------> pendiente actualizar la función initMB();
 }
 
 /*
@@ -413,7 +428,8 @@ int reservar_bloque() {
         return -1;
     }
     
-    //Comparamos cada bloque leído del MB, bufferMB, coon ese buffer auxiliar inicializado a 1s
+    /*Comparamos cada bloque leído del MB, bufferMB, 
+    con ese buffer auxiliar inicializado a 1s*/
     while (memcmp(bufferAux,bufferMB,BLOCKSIZE) == 0){
         posBloqueMB++;
         //Comprovamos que no haya error al leer el mapa de bits
@@ -433,9 +449,11 @@ int reservar_bloque() {
             //Operador AND para bits
             while (bufferMB[posByte] & mascara){
                 posBit++;
-                bufferMB[posByte] <<= 1;    //desplazamiento de bits a la izquierda
+                bufferMB[posByte] <<= 1; //desplazamiento de bits a la izquierda
             }
-            end = 1;    //como hemos de localizar el primer bit dentro del byte que vale 0, una vez la encontramos ya.
+            end = 1;    
+            /*como hemos de localizar el primer bit 
+            dentro del byte que vale 0, una vez la encontramos ya.*/
         }else{
             posByte++;  //si el byte no contiene 0s, vamos al siguiente
         }
@@ -444,13 +462,13 @@ int reservar_bloque() {
 
     int nBloque = ((posBloqueMB - SB.posPrimerBloqueMB) * BLOCKSIZE + posByte) * 8 + posBit;
 
-    //Comprovamos que no haya error al escribir bit
+    //Comprovamos que no haya error al escribir bit.
     if (escribir_bit(nBloque,1) < 0){
         return -1;
     }
     SB.cantBloquesLibres--;
     
-    //Comprovamos si hay error en el bwrite
+    //Comprobamos si hay error en el bwrite.
     if (bwrite(posSB,&SB) < 0){
         return -1;
     }
@@ -523,7 +541,9 @@ int escribir_inodo(unsigned int ninodo, struct inodo inodo) {
     }
 
     //Variables de apoyo
-    unsigned int posInodo = ninodo / NUMINPRBLQ;  //Nº de bloque que contiene el inodo
+
+    //Nº de bloque que contiene el inodo
+    unsigned int posInodo = ninodo / NUMINPRBLQ;  
     struct inodo bufferIn[NUMINPRBLQ];   //Buffer de inodos
 
     //Leer información del array de inodos
