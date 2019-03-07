@@ -117,7 +117,7 @@ int initSB(unsigned int nbloques, unsigned int ninodos){
     //Escribir superbloque en a partir del bloque indicado
  	if (bwrite(posSB, &SB)==-1){
         //Check errores
-		perror("Error de escritura en el dispositivo en ficheros_basicos.c\n");
+		perror("Error: escritura en dispositivo incorrecta. Función -> initSB()");
         return -1;
 	}
 
@@ -155,7 +155,7 @@ int initMB(){
 
     //Obtener información del superbloque
 	if (bread(posSB, &SB) == -1) {
-        perror("Error obteniendo información de superbloque al inicializar mapa de bits\n.");
+        perror("Error: no se ha podido leer del superbloque. Función -> initMB()");
         return -1;
     }
 
@@ -166,7 +166,7 @@ int initMB(){
     //Escribir bloque a bloque dentro del sistema de ficheros
 	for (int i = firstMB; i <= lastMB; i++){
 	    if (bwrite(i,initCero) == -1) {
-            perror("Error en inicialización de mapa de bits.");
+            perror("Error: inicialización de mapa de bits incorrecta. Función -> initMB()");
             return -1;
         }
 	}
@@ -177,7 +177,7 @@ int initMB(){
     for(int i = 0; i <= SB.posUltimoBloqueAI; i++) {
         
         if (escribir_bit(i,1) == -1) {
-             perror("Error en la asignación de bits ocupados del mapa de bits.");
+            perror("Error: asignación de bits ocupados del mapa de bits incorrecta. Función -> initMB()");
             return -1;
         }
 
@@ -214,7 +214,7 @@ int initAI() {
     struct inodo inodos[numInPerBloq]; 
 
     if (bread(0, &SB) == -1) {
-        perror("Error obteniendo información de superbloque al inicializar array de inodos\n.");
+        perror("Error: no se ha podido leer del superbloque. Función -> initAI()");
         return -1;
     }
 
@@ -242,7 +242,7 @@ int initAI() {
 
         //Escritura de datos en el bloque correspondiente
         if (bwrite(i, &inodos[0]) == -1) {
-            perror("Error escribiendo datos de inodos en FS");
+            perror("Error: Escritura de datos de inodos en FS incorrecta. Función -> initAI()");
             return -1;
         }
     }
@@ -258,18 +258,19 @@ int initAI() {
         el bloque nbloque.
  
     Funciones a las que llama:
-        + bread()
-        + bwrite()
+        + bloques.h - bread()
+        + bloques.h - bwrite()
 
-    Funciones desde donde es llamado: 
+    Funciones desde donde es llamado:
+        +
 
     Parámetros de entrada: 
         + unsigned int nbloque: 
         + unsigned int bit: 
     
     Parámetros de salida: 
-        + 
-
+        + 1: Ejecución correcta
+        + (-1): Error
 
  */
 int escribir_bit(unsigned int nbloque, unsigned int bit) {
@@ -293,7 +294,7 @@ int escribir_bit(unsigned int nbloque, unsigned int bit) {
     
     //Lectura del bloque correspondiente
     if (bread(posSB, &SB) == -1) {
-        perror("Error: imposible leer superbloque en ficheros_basico.c - escribir_bit()");
+        perror("Error: no se ha podido leer del superbloque. Función -> escribir_bit()");
         return -1;
     }
 
@@ -304,8 +305,8 @@ int escribir_bit(unsigned int nbloque, unsigned int bit) {
     *bufferMB = bread(nbloqueabs, &bytes); 
 
     //Comprobación de errores. 
-    if (*bufferMB == -1) {
-        perror("Error: imposible leer información del MB en ficheros_basico.c - escribir_bit()");
+    if (bufferMB == -1) {
+        perror("Error: imposible leer información del MB. Función -> escribir_bit()");
         return -1;
     }
 
@@ -327,7 +328,7 @@ int escribir_bit(unsigned int nbloque, unsigned int bit) {
 
     //Escribir buffer del MB en el dispositivo virtual
     if (bwrite(nbloqueabs, bufferMB) == -1) {
-        perror("Error: No se ha podido escribir en el dispositivo virtual en ficheros_basico.c - escribir_bit()");
+        perror("Error: No se ha podido escribir en el array de inodos. Función -> escribir_bit()");
         return -1;
     }
 
@@ -345,6 +346,9 @@ int escribir_bit(unsigned int nbloque, unsigned int bit) {
 
     Funciones a las que llama: 
         + bloques.h - bread()
+
+    Funciones desde donde es llamado:
+        +
         
     Parámetros de entrada: 
         + nbloque: El número de bloque del cual se desea consultar su estado
@@ -361,7 +365,7 @@ unsigned char leer_bit(unsigned int nbloque) {
 
     //Obtener información del superbloque
     if (bread(posSB, &SB) == -1) { //Check for errors
-        perror("Error: no se ha podido obtener información del superbloque en leer_bit\n");
+        perror("Error: no se ha podido leer del superbloque. Función -> leer_bit()");
         return -1;
     }
 
@@ -378,7 +382,7 @@ unsigned char leer_bit(unsigned int nbloque) {
 
     //Obtener el bloque que contiene el byte buscado
     if (bread(nbloqueMBabs, &bufferMB) == -1) {
-        perror("Error de lectura para el buffer de MB");
+        perror("Error: no se ha podido leer para el buffer de MB. Función -> leer_bit()");
         return -1;
     }
 
@@ -400,13 +404,16 @@ unsigned char leer_bit(unsigned int nbloque) {
         su estado dentro del mapa de bits y devuelve su posición.
 
     Funciones a las que llama: 
-        + ficheros_basico.c - escribir_bit()
+        + ficheros_basico.h - escribir_bit()
+        + bloques.h - bread()
+        + bloques.h - bwrite()
 
     Funciones desde donde es llamado:
         +
 
     Parámetros de salida: 
-        +
+        + int: El número de bloque reservado
+        + int: (-1) en caso de error
 */
 int reservar_bloque() {
     struct superbloque SB;
@@ -439,7 +446,7 @@ int reservar_bloque() {
     con ese buffer auxiliar inicializado a 1s*/
     while (memcmp(bufferAux,bufferMB,BLOCKSIZE) == 0){
         posBloqueMB++;
-        //Comprovamos que no haya error al leer el mapa de bits
+        //Comprobamos que no haya error al leer el mapa de bits
         if(bread(posBloqueMB,bufferMB) < 0){
             perror("Error: no se ha podido leer del mapa de bits para comparar. Función -> reservar_bloque()");
             return -1;
@@ -491,7 +498,7 @@ int reservar_bloque() {
         Libera el bloque indicado por parámetro para su nueva reutilización.
 
     Funciones a las que llama: 
-        + ficheros_basico.c - escribir_bit()
+        + ficheros_basico.h - escribir_bit()
 
     Funciones desde donde es llamado:
         + 
@@ -536,7 +543,10 @@ int liberar_bloque(unsigned int nbloque) {
 
     Funciones a las que llama: 
         + bloques.h - bread()
-        + bloques.h - bwritte()
+        + bloques.h - bwrite()
+
+    Funciones desde donde es llamado:
+        +
 
     Parámetros de entrada: 
         + ninodo: El número de inodo donde escribir el contenido de inodo.
@@ -571,22 +581,11 @@ int escribir_inodo(unsigned int ninodo, struct inodo inodo) {
     bufferIn[ninodo % NUMINPRBLQ] = inodo;
 
     //Escritura sobre el array de inodos
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
     if (bwritte(posInodo + SB.posPrimerBloqueAI, &bufferIn) == -1) {
         perror("Error en escritura al array de inodos. Función -> escribir_inodo()");
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
     if (bwrite(posInodo + SB.posPrimerBloqueAI, &bufferIn) == -1) {
         perror("Error en escritura al array de inodos.");
->>>>>>> Stashed changes
         return -1;
     }
 
@@ -599,26 +598,42 @@ int escribir_inodo(unsigned int ninodo, struct inodo inodo) {
         Lee un determinado inodo del array de inodos para volcarlo en una
         variable de tipo struct inodo pasada por referencia.
 
-    Funciones a las que llama: 
+    Funciones a las que llama:
+        + bloques.h - bread() 
         
+    Funciones desde donde es llamado:
+        +
+
     Parámetros de entrada: 
         + ninodo: El número de inodo a obtener.
         + inodo: El inodo al cual copiar la información a leer del inodo ninodo.
 
     Parámetros de salida: 
-        +
+        + inodo: Contiene el inodo leído del disco (modifica puntero)
+        + int: 0 en ejecución correcta (return)
+        + int: (-1) en error (return)
 */
 int leer_inodo(unsigned int ninodo, struct inodo *inodo){
     struct superbloque SB;
     //Leemos el superbloque para obtener la localización del array de inodos
-    bread(posSB,&SB);
+    if (bread(posSB,&SB) == -1) {
+        perror("Error en lectura de superbloque. Función -> leer_inodo()");
+        return -1;
+    }
+
     //Obtenemos el número de bloque del array de inodos que tiene el inodo solicitado
     int posInodo = ((ninodo*INODOSIZE)/BLOCKSIZE) + SB.posPrimerBloqueAI;
+
     //Empleamos un arrau de inodos, del tamaño de la cantidad de inodos que caben en un bloque,
     //como buffer de lectura del bloque que hemos de leer
     struct inodo inodos[BLOCKSIZE/INODOSIZE];
+
     //Encontramos la posición del inodo solicitado
-    bread(posInodo,inodo);
+    if (bread(posInodo,inodo) == -1) {
+        perror("Error en lectura del bloque que contiene ninodo. Función -> leer_inodo()");
+        return -1;
+    }
+
     //No se si está bien la asignación?¿
     *inodo = inodos[ninodo%(BLOCKSIZE/INODOSIZE)];
 	return 0;
@@ -631,8 +646,11 @@ int leer_inodo(unsigned int ninodo, struct inodo *inodo){
 
     Funciones a las que llama: 
         + bloques.h - bread()
-        + bloques.h - bwritte()
+        + bloques.h - bwrite()
         + ficheros_basico.h - escribir_inodo()
+
+    Funciones desde donde es llamado:
+        +
 
     Parámetros de entrada: 
         + tipo: el tipo de inodo ('d': directorio | 'f': fichero | 'l': libre)
