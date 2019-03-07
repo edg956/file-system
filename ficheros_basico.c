@@ -590,7 +590,7 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos) {
 
     //Comprobar si hay inodos libres. 
     if (SB.cantInodosLibres<1) {
-        printf("Error: No quedan inodos libres. Función -> reservar_inodo()\n");
+        perror("Error: No quedan inodos libres. Función -> reservar_inodo()\n");
         return -1; 
     }
 
@@ -601,17 +601,10 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos) {
     SB.posPrimerInodoLibre++;
 
     //Inicialización de los campos del inodo. 
-    //Tipo
-    i.tipo = tipo; 
-
-    //Permisos
-    i.permisos = permisos;
-
-    //Cantidad de enlaces de entradas en directorio. 
-    i.nlinks = 1; 
-
-    //Tamaño en bytes lógicos.
-    i.tamEnBytesLog = 0; 
+    i.tipo = tipo;          //tipo
+    i.permisos = permisos;  //permisos
+    i.nlinks = 1;           //Cantidad de enlaces de entradas en directorio. 
+    i.tamEnBytesLog = 0;    //Tamaño en bytes lógicos.
 
     //timestamp de creación para todos los campos de fecha y hora. 
     i.atime = time(NULL);
@@ -621,15 +614,30 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos) {
     //Cantidad de bloques ocupados en la zona de datos. 
     i.numBloquesOcupados = 0; 
 
-    //Punteros a bloques directos. 
-    i.punterosDirectos = 0; 
+    //Punteros a bloques directos.
+    int numPtrDirect = sizeof(i.punterosDirectos) / sizeof(i.punterosDirectos[0]);
+    for (int j = 0; j < numPtrDirect; j++) {
+        i.punterosDirectos[j] = 0;
+    } 
 
     //Punteros a bloques indirectos. 
-    i.punterosIndirectos = 0;
+    numPtrDirect = sizeof(i.punterosIndirectos) / sizeof(i.punterosIndirectos[0]);
+    for (int j = 0; j < numPtrDirect; j++) {
+        i.punterosIndirectos[j] = 0;
+    } 
 
-    //Escribir inodo. 
+    //Escribir inodo.
+    if (escribir_inodo(posInodoReservado, i) == -1) {
+        perror("Error escribiendo inodo reservado en array de inodos.");
+        return -1;
+    }
 
-    //Actualizar cantidad de inodos libres. 
+    //Actualizar cantidad de inodos libres.
+    SB.cantInodosLibres--;
+    if (bwrite(posSB, &SB) == -1) {
+        perror("Error actualizando superbloque después de reservar inodo.");
+        return -1;
+    }
 
     //Devolver posInodoReservado. 
     return posInodoReservado;
