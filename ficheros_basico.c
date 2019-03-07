@@ -835,10 +835,80 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, char reser
                 if (bwrite(ptr_prev, &buffer) == -1) {
                     perror("Error: no se ha podido escribir el buffer en el "
                     "disco. Función -> traducir_bloque_inodo()");
+                    return -1;
                 }
             }
         }
+
+        //Obtener información sobre el nuevo bloque
+        if (bread(ptr, &buffer) == -1) {
+            perror("Error: no se ha podido leer del disco al buffer."
+            " Función -> traducir_bloque_inodo()");
+            return -1;
+        }
+
+        if (indice = obtener_indice(nblogico, nivel_ptr) == -1) {
+            perror("Error: no se ha podido obtener el indice para el "
+            "bloque lógico. Función -> traducir_bloque_inodo()");
+            return -1;
+        }
+
+        //Guardar puntero anterior para obtener el nuevo puntero
+        ptr_prev = ptr;
+        ptr = buffer[indice];
+        nivel_ptr--;
     }
+
+    if (ptr == 0) {     //No existe bloque de datos
+        if (reservar == 0) return -1;   //Lectura de bloque vacio
+
+        
+        svInodo = 1;    //Habilitar escritura del inodo
+
+        //Reservar siguiente bloque
+        if (ptr = reservar_bloque() == -1) {
+            perror("Error: no se ha podido reservar bloque a puntero."
+                " Función -> traducir_bloque_inodo()");
+            return -1;
+        }
+
+        //Actualizar información inodo
+        inodo.numBloquesOcupados++;
+        inodo.ctime = time(NULL);
+
+        //Si el rango cabe dentro de punteros directos: 
+        if (nRangoBL == 0) {
+            inodo.punterosDirectos[nblogico] = ptr;
+
+        printf("valor de buffer[indice] en "
+                "traducir_bloque_inodo: %d\n", ptr);
+            
+        } else {
+            //Sino, dejar a la siguiente iteración
+            buffer[indice] = ptr;
+
+            printf("valor de buffer[indice] en "
+                "traducir_bloque_inodo: %d\n", ptr);
+
+            if (bwrite(ptr_prev, &buffer) == -1) {
+                perror("Error: no se ha podido escribir el buffer en el "
+                    "disco. Función -> traducir_bloque_inodo()");
+                return -1;
+            }
+        }
+    }
+
+    //Si la escritura del inodo esta habilida:
+    if (svInodo == 1) {
+        if (escribir_inodo(ninodo, inodo) == -1) {
+            perror("Error: no se ha podido escribir el inodo. "
+            "Función -> traducir_bloque_inodo()");
+            return -1;
+        }
+    }
+
+    return ptr; //Nº de bloque físico
+
 }
 
 int obtener_nrangoBL(struct inodo inodo, unsigned int nblogico, unsigned int *ptr){
