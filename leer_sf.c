@@ -19,7 +19,10 @@ int main(int argc, char **argv) {
     }
 
     //Estructuras y variables de apoyo
+
+
     struct superbloque SB;
+
 
     if (bread(posSB, &SB) == -1) {
         perror("Error: no se ha podido obtener información del superbloque del FS\n");
@@ -39,24 +42,39 @@ int main(int argc, char **argv) {
     printf("Cantidad de inodos libres: %i\n",SB.cantInodosLibres);
     printf("Cantidad total de bloques: %i\n",SB.totBloques);
     printf("Cantidad total de inodos: %i\n",SB.totInodos);
-
-    printf("sizeof struct superbloque: %li\n",sizeof(struct superbloque));
-    printf("sizeof struct inodo: %li\n",sizeof(struct inodo));
-
-    printf("\nRECORRIDO LISTA ENLAZADA DE INODOS LIBRES:\n");
     
-    struct inodo inodos[BLOCKSIZE/INODOSIZE];
-    printf("RESERVAMOS UN BLOQUE Y LUEGO LO LIBERAMOS\n");
-    int rsbloque = reservar_bloque();
+ /*  printf("\nMOSTRAR MB\n");
+    for(int i = 0; i < 100000; i++) {
+        
+        printf("%d, ",  leer_bit(i));
 
-    if (rsbloque!=-1) {
-         printf("Se ha reservado el bloque físico nº%d que era el 1º libre indicado por el MB\n");  
+    }*/
+    
+
+
+    printf("\nRESERVAMOS UN BLOQUE Y LUEGO LO LIBERAMOS\n");
+
+    int rbloque = reservar_bloque();
+    printf("Bloque reservado: %d\n", rbloque);
+
+
+    if (bread(posSB, &SB) == -1) {
+        perror("Error: no se ha podido obtener información del superbloque del FS\n");
+        exit(-1);
     }
-    
-    printf("SB.cantBloquesLibres = %d", SB.cantBloquesLibres);
-    liberar_bloque(rsbloque);
-    printf("Liberamos ese bloque y después SB.cantBloquesLibres = %d", SB.cantBloquesLibres);
 
+    
+    printf("Cantidad de bloques libres: %i\n",SB.cantBloquesLibres);
+    printf("Liberación\n");
+
+    liberar_bloque(rbloque);
+ if (bread(posSB, &SB) == -1) {
+        perror("Error: no se ha podido obtener información del superbloque del FS\n");
+        exit(-1);
+    }
+
+    
+    printf("Cantidad de bloques libres: %i\n",SB.cantBloquesLibres);
     //Lectura del array de inodos, obteniendolo bloque por bloque
  /*   for (int i = SB.posPrimerBloqueAI; i <= SB.posUltimoBloqueAI; i++) {
         if (bread(i, &inodos[0]) == -1) {

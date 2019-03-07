@@ -90,6 +90,12 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
+    if (reservar_inodo('d', 7)==-1) {
+        perror("Se ha producido un error reservando el inodo del" 
+        " directorio raíz.\n");
+        exit(-1);
+    }
+
     //Desmontar el dispositivo virtual. 
     if (bumount()==-1) {
         perror("Se ha producido un error al desmontar el dispositivo virtual.\n");

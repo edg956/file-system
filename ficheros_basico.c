@@ -184,7 +184,13 @@ int initMB(){
     }
     
     //Restar bloques ocupados al total de bloques libres del superbloque.    
-    SB.cantBloquesLibres = SB.cantBloquesLibres - SB.posUltimoBloqueAI;
+    SB.cantBloquesLibres = SB.cantBloquesLibres - SB.posPrimerBloqueDatos;
+
+    //Escribir superbloque.
+    if (bwrite(posSB, &SB)==-1) {
+        perror("Error: Escritura del superbloque incorrecta. Función -> initMB()");
+        return -1;
+    }
 
     return 0;
 }
@@ -283,8 +289,7 @@ int escribir_bit(unsigned int nbloque, unsigned int bit) {
     //Declaraciones
     struct superbloque SB;
     int posbyte, posbit, nbloqueMB, nbloqueabs;
-    char bytes[BLOCKSIZE];
-    int *bufferMB;
+    char bufferMB[BLOCKSIZE];
     unsigned char mascara = 128;
 
     //Cálculo de valores.
@@ -301,11 +306,8 @@ int escribir_bit(unsigned int nbloque, unsigned int bit) {
     //Posición absoluta del bloque en el cual escribir
     nbloqueabs = nbloqueMB + SB.posPrimerBloqueMB;
 
-    //Leemos el bloque que lo contiene y cargamos el contenido en el buffer. 
-    *bufferMB = bread(nbloqueabs, &bytes); 
-
     //Comprobación de errores. 
-    if (bufferMB == -1) {
+    if (bread(nbloqueabs, &bufferMB)== -1) {
         perror("Error: imposible leer información del MB. Función -> escribir_bit()");
         return -1;
     }
@@ -318,7 +320,7 @@ int escribir_bit(unsigned int nbloque, unsigned int bit) {
     //Poner a 0 o a 1 el bit. 
     if (bit == 0) {
 
-        bufferMB[posbyte] &= ~mascara; 
+        *(bufferMB+posbyte) &= ~mascara; 
 
     }else{
 
@@ -374,8 +376,8 @@ unsigned char leer_bit(unsigned int nbloque) {
     a nbloque dentro del conjunto de bytes del mapa de bits.*/
     int posByte = nbloque/8;    //Posición del byte que contiene el bit
     int posBit = nbloque%8;     //Posición del bit dentro de ese byte
- //   int nbloqueMB = posByte/BLOCKSIZE;  //Posición del bloque contiene el byte
-    int nbloqueMBabs = nbloque + SB.posPrimerBloqueMB;  //Pos. Absoluta del bloq
+    int nbloqueMB = posByte/BLOCKSIZE;  //Posición del bloque contiene el byte
+    int nbloqueMBabs = nbloqueMB + SB.posPrimerBloqueMB;  //Pos. Absoluta del bloq
    
     //Buffer de apoyo
     char bufferMB[BLOCKSIZE];
@@ -581,7 +583,7 @@ int escribir_inodo(unsigned int ninodo, struct inodo inodo) {
     bufferIn[ninodo % NUMINPRBLQ] = inodo;
 
     //Escritura sobre el array de inodos
-    if (bwritte(posInodo + SB.posPrimerBloqueAI, &bufferIn) == -1) {
+    if (bwrite(posInodo + SB.posPrimerBloqueAI, &bufferIn) == -1) {
         perror("Error en escritura al array de inodos. Función -> escribir_inodo()");
 
     if (bwrite(posInodo + SB.posPrimerBloqueAI, &bufferIn) == -1) {
@@ -589,8 +591,9 @@ int escribir_inodo(unsigned int ninodo, struct inodo inodo) {
         return -1;
     }
 
-    return 0;
 
+    }
+        return 0;
 }
 
 /*
@@ -665,7 +668,7 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos) {
     //Declaraciones
     struct superbloque SB;
 
-    //Llenar superbloque
+    //Leer superbloque
     if (bread(posSB, &SB) == -1) {
         perror("Error: no se ha podido leer del superbloque. Función -> reservar_inodo()");
         return -1;
@@ -702,14 +705,14 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos) {
     i.numBloquesOcupados = 0; 
 
     //Punteros a bloques directos.
-    int numPtrDirect = sizeof(i.punterosDirectos) / sizeof(i.punterosDirectos[0]);
-    for (int j = 0; j < numPtrDirect; j++) {
+    int numPtr = sizeof(i.punterosDirectos) / sizeof(i.punterosDirectos[0]);
+    for (int j = 0; j < numPtr; j++) {
         i.punterosDirectos[j] = 0;
     } 
 
     //Punteros a bloques indirectos. 
-    numPtrDirect = sizeof(i.punterosIndirectos) / sizeof(i.punterosIndirectos[0]);
-    for (int j = 0; j < numPtrDirect; j++) {
+    numPtr = sizeof(i.punterosIndirectos) / sizeof(i.punterosIndirectos[0]);
+    for (int j = 0; j < numPtr; j++) {
         i.punterosIndirectos[j] = 0;
     } 
 
@@ -721,6 +724,8 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos) {
 
     //Actualizar cantidad de inodos libres.
     SB.cantInodosLibres--;
+
+    //Escribir superbloque.
     if (bwrite(posSB, &SB) == -1) {
         perror("Error: Actualizar superbloque fallido. Función -> reservar_inodo()");
         return -1;
