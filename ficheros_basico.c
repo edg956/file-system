@@ -397,6 +397,11 @@ unsigned char leer_bit(unsigned int nbloque) {
 
     /*El LSB de mask tiene el estado del bit buscado*/
 
+    //Mensaje para visualizar estado de variables
+    printf("[leer_bit(): nbloque: %i, posByte: %i, posBit: %i, "
+    "nbloqueMB: %i, nbloqueMBabs: %i]\n", nbloque, posByte, posBit, nbloqueMB, 
+    nbloqueMBabs);
+
     return mask;
 }
 
@@ -439,7 +444,7 @@ int reservar_bloque() {
     int posBloqueMB = SB.posPrimerBloqueMB;
 
     //Miramos si hay error al leer el mapa de bits
-    if (bread(posBloqueMB,bufferMB) < 0) {
+    if (bread(posBloqueMB,&bufferMB) < 0) {
         perror("Error: no se ha podido leer del mapa de bits. Función -> reservar_bloque()");
         return -1;
     }
@@ -449,26 +454,25 @@ int reservar_bloque() {
     while (memcmp(bufferAux,bufferMB,BLOCKSIZE) == 0){
         posBloqueMB++;
         //Comprobamos que no haya error al leer el mapa de bits
-        if(bread(posBloqueMB,bufferMB) < 0){
+        if(bread(posBloqueMB,&bufferMB) < 0){
             perror("Error: no se ha podido leer del mapa de bits para comparar. Función -> reservar_bloque()");
             return -1;
         }
     }
 
-    unsigned char byte = 255;
     unsigned char mascara = 128; //10000000
-    int posByte = 0, posBit = 0, end = 0;
+    int posByte = 0, posBit = 0;
 
     
-    while (posByte < BLOCKSIZE && !end){
+    while (posByte < BLOCKSIZE){
         //Miramos si hay bits a 0 en el byte
-        if (byte < 255){
+        if (bufferMB[posByte] < 255){
             //Operador AND para bits
             while (bufferMB[posByte] & mascara){
                 posBit++;
                 bufferMB[posByte] <<= 1; //desplazamiento de bits a la izquierda
             }
-            end = 1;    
+            break;
             /*como hemos de localizar el primer bit 
             dentro del byte que vale 0, una vez la encontramos ya.*/
         }else{
@@ -534,6 +538,13 @@ int liberar_bloque(unsigned int nbloque) {
     //Incrementar cantidad de bloques libres. 
     SB.cantBloquesLibres++;
 
+    //Escribir superbloque en SF
+    if (bwrite(posSB,&SB) == -1) {
+        perror("Error: no se ha podido escribir al superbloque. "
+        "Función -> liberar_bloque()");
+        return -1;
+    }
+
     //Devolver el número de bloque liberado. 
     return nbloque; 
 }
@@ -585,15 +596,9 @@ int escribir_inodo(unsigned int ninodo, struct inodo inodo) {
     //Escritura sobre el array de inodos
     if (bwrite(posInodo + SB.posPrimerBloqueAI, &bufferIn) == -1) {
         perror("Error en escritura al array de inodos. Función -> escribir_inodo()");
-
-    if (bwrite(posInodo + SB.posPrimerBloqueAI, &bufferIn) == -1) {
-        perror("Error en escritura al array de inodos.");
         return -1;
     }
-
-
-    }
-        return 0;
+    return 0;
 }
 
 /*
@@ -625,20 +630,20 @@ int leer_inodo(unsigned int ninodo, struct inodo *inodo) {
     }
 
     //Obtenemos el número de bloque del array de inodos que tiene el inodo solicitado
-    int posInodo = ((ninodo*INODOSIZE)/BLOCKSIZE) + SB.posPrimerBloqueAI;
+    int posInodo = (ninodo/NUMINPRBLQ) + SB.posPrimerBloqueAI;
 
     //Empleamos un arrau de inodos, del tamaño de la cantidad de inodos que caben en un bloque,
     //como buffer de lectura del bloque que hemos de leer
-    struct inodo inodos[BLOCKSIZE/INODOSIZE];
+    struct inodo inodos[NUMINPRBLQ];
 
     //Encontramos la posición del inodo solicitado
-    if (bread(posInodo,inodo) == -1) {
+    if (bread(posInodo,&inodos) == -1) {
         perror("Error en lectura del bloque que contiene ninodo. Función -> leer_inodo()");
         return -1;
     }
 
     //No se si está bien la asignación?¿
-    *inodo = inodos[ninodo%(BLOCKSIZE/INODOSIZE)];
+    *inodo = inodos[ninodo%(NUMINPRBLQ)];
 	return 0;
 }
 

@@ -8,9 +8,11 @@
 #include "bloques.h"
 #include <sys/types.h>
 
+#include <time.h>
+
 #define BLOCKSIZE 1024 // bytes
 #define INODOSIZE 128  // bytes
-#define NUMINPRBLQ BLOCKSIZE % INODOSIZE    //Nº de inodos por bloque
+#define NUMINPRBLQ BLOCKSIZE / INODOSIZE    //Nº de inodos por bloque
 #define posSB 0        //el superbloque se escribe en el primer bloque de nuestro FS
 
 struct superbloque{
