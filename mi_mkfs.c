@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
         perror("Se ha producido un error al montar el dispositivo virtual.\n");
         exit(-1);
     }
-    
+
     //Creación del buffer e inicialización a 0.
     unsigned char buffer[BLOCKSIZE];
     memset(buffer, INITIALIZATION_VALUE, BLOCKSIZE);

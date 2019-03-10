@@ -108,7 +108,7 @@ int bread(unsigned int nbloque, void *buf) {
     }
 
     bbread = (int)read(descriptor, buf, BLOCKSIZE);
-    if (bbread != BLOCKSIZE){
+    if (bbread == -1){
         return -1;
     }
 
