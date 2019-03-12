@@ -768,16 +768,28 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos) {
 /*----------------------------FUNCIONES DE NIVEL 4----------------------------*/
 
 /*
-    Descripción:
+    Descripción: Esta función se encarga de obtener el nº  de bloque físico 
+    correspondiente a un bloque lógico determinado del inodo indicado.
 
     Funciones a las que llama:
+        + ficheros_basico.h - leer_inodo()
+        + ficheros_basico.h - obtener_nrangoBL()
+        + ficheros_basico.h - reservar_bloque()
+        + bloques.h - bwrite()
+        + bloques.h - bread()
+        + ficheros_basico.h - obtener_indice()
+        + ficheros_basico.h - escribir_inodo()
 
     Funciones desde donde es llamado:
 
     Parámetros de entrada:
+        + unsigned int ninodo
+        + unsignet int nblogico
+        + char reservar [0] = sólo consultar. [1] = consultar y reservar. 
 
     Parámetros de salida:
-
+        + Posición del bloque físico de datos creado (en caso de que no exista
+        previamente) o consultado (en caso de que ya exista). 
 */
 int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, char reservar) {
     
@@ -960,7 +972,7 @@ int obtener_indice(int nblogico, int nivel_punteros){
         if (nivel_punteros == 2) return ((nblogico - INDIRECTOS1) % 
                                 (NPUNTEROS * NPUNTEROS)) / NPUNTEROS;
         if(nivel_punteros == 1) return ((nblogico - INDIRECTOS1) % 
-                                (NPUNTEROS * NPUNTEROS)) & NPUNTEROS;
+                                (NPUNTEROS * NPUNTEROS)) % NPUNTEROS;
     }
 
     return -1;
