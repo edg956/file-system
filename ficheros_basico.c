@@ -800,7 +800,7 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, char reser
         indice;         /*Variable que indica la pos. del puntero del inodo*/
     unsigned int ptr, ptr_prev; /*variables para salvar punteros*/
     int buffer[NPUNTEROS]; //buffer para guardar los punteros directos del inodo
-    char svInodo;        //Variable que indica si hay que salvar el inodo
+    int svInodo;        //Variable que indica si hay que salvar el inodo
 
     //Obtener inodo ninodo
     if (leer_inodo(ninodo, &inodo) == -1) {
@@ -824,7 +824,7 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, char reser
 
     //Mientras el nivel de punteros no sea de directos
     while (nivel_ptr > 0) {
-        printf("ptr while: %i\n",ptr);
+      //  printf("ptr while: %i\n",ptr);
         if (ptr == 0) {     //Puntero vacío -> inodo disponible
    
             if (reservar == 0) return -1;   //Ptr vacio -> lectura imposible

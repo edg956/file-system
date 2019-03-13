@@ -158,11 +158,11 @@ int main(int argc, char **argv) {
     
     //Asignar punteros a inodo
     for (int i = 0; i < sizearray; i++) {
-        //MUTEX? WTF
-        pthread_mutex_t mutex;
-        pthread_mutex_lock(&mutex);
+       //MUTEX? WTF
+       // pthread_mutex_t mutex;
+       // pthread_mutex_lock(&mutex);
         traducir_bloque_inodo(ninodo, blogicos[i],1);
-        pthread_mutex_unlock(&mutex);
+        //pthread_mutex_unlock(&mutex);
     }
     
 
