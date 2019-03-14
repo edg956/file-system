@@ -158,15 +158,9 @@ int main(int argc, char **argv) {
     
     //Asignar punteros a inodo
     for (int i = 0; i < sizearray; i++) {
-       //MUTEX? WTF
-       // pthread_mutex_t mutex;
-       // pthread_mutex_lock(&mutex);
         traducir_bloque_inodo(ninodo, blogicos[i],1);
-        //pthread_mutex_unlock(&mutex);
     }
     
-
-
     /************************DATOS DEL INOODO RESERVADO************************/
 
     //Lectura del nuevo inodo
@@ -198,6 +192,4 @@ int main(int argc, char **argv) {
         perror("Error: no se ha podido cerrar el fichero.\n");
         exit(-1);
     }
-    
-
 }

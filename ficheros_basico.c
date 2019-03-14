@@ -768,8 +768,7 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos) {
 /*----------------------------FUNCIONES DE NIVEL 4----------------------------*/
 
 /*
-    Descripción: 
-    Esta función se encarga de obtener el nº  de bloque físico 
+    Descripción: Esta función se encarga de obtener el nº  de bloque físico 
     correspondiente a un bloque lógico determinado del inodo indicado.
 
     Funciones a las que llama:
@@ -1006,7 +1005,7 @@ int obtener_indice(int nblogico, int nivel_punteros){
                                         (NPUNTEROS * NPUNTEROS);
         if (nivel_punteros == 2) return ((nblogico - INDIRECTOS1) % 
                                 (NPUNTEROS * NPUNTEROS)) / NPUNTEROS;
-        if(nivel_punteros == 1) return ((nblogico - INDIRECTOS1) % 
+        if (nivel_punteros == 1) return ((nblogico - INDIRECTOS1) % 
                                 (NPUNTEROS * NPUNTEROS)) % NPUNTEROS;
     }
 

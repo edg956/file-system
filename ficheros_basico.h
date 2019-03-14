@@ -15,7 +15,7 @@
 #define NUMINPRBLQ BLOCKSIZE / INODOSIZE    //Nº de inodos por bloque
 #define posSB 0        //el superbloque se escribe en el primer bloque de nuestro FS
 
-#define NPUNTEROS BLOCKSIZE / sizeof(unsigned int)
+#define NPUNTEROS (BLOCKSIZE / sizeof(unsigned int))
 #define DIRECTOS 12
 #define INDIRECTOS0 (NPUNTEROS + DIRECTOS)
 #define INDIRECTOS1 (NPUNTEROS * NPUNTEROS + INDIRECTOS0)
