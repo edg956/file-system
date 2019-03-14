@@ -8,16 +8,18 @@
 #include "bloques.h"
 #include <sys/types.h>
 
+#include <time.h>
+
 #define BLOCKSIZE 1024 // bytes
 #define INODOSIZE 128  // bytes
-#define NUMINPRBLQ BLOCKSIZE % INODOSIZE    //Nº de inodos por bloque
+#define NUMINPRBLQ BLOCKSIZE / INODOSIZE    //Nº de inodos por bloque
 #define posSB 0        //el superbloque se escribe en el primer bloque de nuestro FS
 
-#define NPUNTEROS BLOCKSIZE / sizeof(unsigned int)
+#define NPUNTEROS (BLOCKSIZE / sizeof(unsigned int))
 #define DIRECTOS 12
-#define INDIRECTOS0 NPUNTEROS + DIRECTOS
-#define INDIRECTOS1 NPUNTEROS * NPUNTEROS + INDIRECTOS0
-#define INDIRECTOS2 NPUNTEROS * NPUNTEROS * NPUNTEROS + INDIRECTOS1 
+#define INDIRECTOS0 (NPUNTEROS + DIRECTOS)
+#define INDIRECTOS1 (NPUNTEROS * NPUNTEROS + INDIRECTOS0)
+#define INDIRECTOS2 (NPUNTEROS * NPUNTEROS * NPUNTEROS + INDIRECTOS1)
 
 struct superbloque{
 	unsigned int posPrimerBloqueMB; //Posición del primer bloque del mapa de bits 

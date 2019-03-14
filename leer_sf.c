@@ -5,6 +5,11 @@
 
 #include "bloques.h"
 #include "ficheros_basico.h"
+#include <pthread.h>
+
+#define NUM_ATTR_SB 6 //Número de atributos sobre los cuales iterar para 
+                      //función leer_bit()
+#define POS_INODO_RAIZ 0 //Posición del inodo raiz dentro del array de inodos
 
 int main(int argc, char **argv) {
 
@@ -19,14 +24,18 @@ int main(int argc, char **argv) {
     }
 
     //Estructuras y variables de apoyo
+
     struct superbloque SB;
+
 
     if (bread(posSB, &SB) == -1) {
         perror("Error: no se ha podido obtener información del superbloque del FS\n");
         exit(-1);
     }
 
-    printf("DATOS DEL SUPERBLOQUE\n");
+    /**************************DATOS DEL SUPERBLOQUE***************************/
+
+    puts("DATOS DEL SUPERBLOQUE\n");
     printf("Posición del primer bloque del mapa de bits: %i\n",SB.posPrimerBloqueMB);
     printf("Posición del último bloque del mapa de bits: %i\n",SB.posUltimoBloqueMB);
     printf("Posición del primer bloque del array de inodos: %i\n",SB.posPrimerBloqueAI);
@@ -39,28 +48,145 @@ int main(int argc, char **argv) {
     printf("Cantidad de inodos libres: %i\n",SB.cantInodosLibres);
     printf("Cantidad total de bloques: %i\n",SB.totBloques);
     printf("Cantidad total de inodos: %i\n",SB.totInodos);
-
-    printf("sizeof struct superbloque: %li\n",sizeof(struct superbloque));
-    printf("sizeof struct inodo: %li\n",sizeof(struct inodo));
-
-    printf("\nRECORRIDO LISTA ENLAZADA DE INODOS LIBRES:\n");
     
-    struct inodo inodos[BLOCKSIZE/INODOSIZE];
+    /*****************************RESERVAR BLOQUE******************************/
 
-    //Lectura del array de inodos, obteniendolo bloque por bloque
-    for (int i = SB.posPrimerBloqueAI; i <= SB.posUltimoBloqueAI; i++) {
-        if (bread(i, &inodos[0]) == -1) {
-            perror("Error: no se ha podido obtener información del array de inodos del FS\n");
+    puts("\nRESERVAMOS UN BLOQUE Y LUEGO LO LIBERAMOS");
+
+    int rbloque = reservar_bloque();
+    printf("Bloque reservado: %d\n", rbloque);
+
+
+    if (bread(posSB, &SB) == -1) {
+        perror("Error: no se ha podido obtener información del superbloque del FS\n");
+        exit(-1);
+    }
+
+    
+    printf("Cantidad de bloques libres: %i\n",SB.cantBloquesLibres);
+
+    /*LIBERAR BLOQUES*/
+    puts("Liberación\n");
+
+    liberar_bloque(rbloque);
+
+    if (bread(posSB, &SB) == -1) {
+        perror("Error: no se ha podido obtener información del superbloque del FS\n");
+        exit(-1);
+    }
+
+    printf("Cantidad de bloques libres: %i\n",SB.cantBloquesLibres);
+
+    /*************************MOSTRAR EL MAPA DE BITS**************************/
+
+    puts("\nInformación sobre mapa de bits: \n\n");
+
+    unsigned int *bloques = &SB.posPrimerBloqueMB;
+    unsigned char bit;
+    char *noms[NUM_ATTR_SB] = {"posPrimerBloqueMB","posUltimoBloqueMB",
+    "posPrimerBloqueAI","posUltimoBloqueAI", "posPrimerBloqueDatos",
+    "posUltimoBloqueDatos"};
+
+    //Información del SB
+    bit = leer_bit(posSB);
+    if (bit == -1) {
+        perror("Error de ejecución.");
+        exit(-1);
+    }
+    printf("Valor del bit correspondiente a posSB: %i\n\n",bit);
+
+    /*  Recorrido a los seis primeros atributos del SB.
+        Los nombres del array noms han de coincidir en orden con los atributos
+        recorridos en el bucle  */
+    for (int i = 0; i < NUM_ATTR_SB; i++) {
+        bit = leer_bit(*bloques);
+        if (bit == -1) {
+            perror("Error de ejecución.");
             exit(-1);
         }
+        printf("Valor del bit correspondiente a %s (BF: %i): %i\n\n",
+        noms[i],*bloques,bit);
+        bloques++;
+    } 
 
-        for (int i = 0; i < BLOCKSIZE/INODOSIZE; i++) {
-            printf("%i ",inodos[i].punterosDirectos[0]);
+    /************************DATOS DEL DIRECTORIO RAIZ*************************/
 
-        }
+    printf("DATOS DEL DIRECTORIO RAIZ: \n\n");
+
+    struct tm *ts;
+    char atime[80];
+    char mtime[80];
+    char c_time[80];
+    struct inodo inodo;
+    unsigned int ninodo = POS_INODO_RAIZ;
+
+    if (leer_inodo(ninodo, &inodo) == -1) {
+        perror("Error leyendo el inodo raiz");
+        exit(-1);
+    }
+
+    ts = localtime(&inodo.atime);
+    strftime(atime, sizeof(atime), "%a %Y-%m-%d %H:%M:%S",ts);
+    ts = localtime(&inodo.mtime);
+    strftime(mtime, sizeof(mtime), "%a %Y-%m-%d %H:%M:%S",ts);
+    ts = localtime(&inodo.ctime);
+    strftime(c_time, sizeof(c_time), "%a %Y-%m-%d %H:%M:%S", ts);
+    
+    printf("tipo: %c\n",inodo.tipo);
+    printf("Permisos: %i\n",inodo.permisos);
+    printf("atime: %s\n",atime);
+    printf("ctime: %s\n", c_time);
+    printf("mtime: %s\n",mtime);
+    printf("nlinks: %i\n",inodo.nlinks);
+    printf("tamEnBytesLog: %i\n",inodo.tamEnBytesLog);
+    printf("numBloquesOcupados: %i\n",inodo.numBloquesOcupados);
+
+    /******************INODO 1: TRADUCCIÓN DE BLOQUES LÓGICOS******************/
+
+    unsigned int blogicos[5] = {8,204,30004,400004,16843019};
+    int sizearray = sizeof(blogicos) / sizeof(blogicos[0]);
+    
+    //Obtener primer inodo libre
+    if ((ninodo = reservar_inodo('f', 6)) == -1) {
+        perror("Error en reservar inodo.");
+        exit(-1);
+    }
+
+    printf("\nINODO %i. TRADUCCIÓN DE BLOQUES LÓGICOS 8, 204, 30.004, 400.004"
+    " y 16.843.019\n\n",ninodo);
+
+    
+    //Asignar punteros a inodo
+    for (int i = 0; i < sizearray; i++) {
+        traducir_bloque_inodo(ninodo, blogicos[i],1);
     }
     
-    puts("");
+    /************************DATOS DEL INOODO RESERVADO************************/
+
+    //Lectura del nuevo inodo
+    if (leer_inodo(ninodo, &inodo) == -1) {
+        perror("Error: no se ha podido leer el inodo deseado.");
+        exit(-1);
+    }
+
+
+    //Formatear tiempos
+    ts = localtime(&inodo.atime);
+    strftime(atime, sizeof(atime), "%a %Y-%m-%d %H:%M:%S",ts);
+    ts = localtime(&inodo.mtime);
+    strftime(mtime, sizeof(mtime), "%a %Y-%m-%d %H:%M:%S",ts);
+    ts = localtime(&inodo.ctime);
+    strftime(c_time, sizeof(c_time), "%a %Y-%m-%d %H:%M:%S", ts);
+
+    printf("\nDATOS DEL INODO RESERVADO %i\n",ninodo);
+    printf("tipo: %c\n",inodo.tipo);
+    printf("Permisos: %i\n",inodo.permisos);
+    printf("atime: %s\n",atime);
+    printf("ctime: %s\n", c_time);
+    printf("mtime: %s\n",mtime);
+    printf("nlinks: %i\n",inodo.nlinks);
+    printf("tamEnBytesLog: %i\n",inodo.tamEnBytesLog);
+    printf("numBloquesOcupados: %i\n",inodo.numBloquesOcupados);
 
     if (bumount() == -1) {
         perror("Error: no se ha podido cerrar el fichero.\n");

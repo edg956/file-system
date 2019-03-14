@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
         perror("Se ha producido un error al montar el dispositivo virtual.\n");
         exit(-1);
     }
-    
+
     //Creación del buffer e inicialización a 0.
     unsigned char buffer[BLOCKSIZE];
     memset(buffer, INITIALIZATION_VALUE, BLOCKSIZE);
@@ -87,6 +87,12 @@ int main(int argc, char **argv) {
     //Inicializar array de inodos del sistema de ficheros
     if (initAI() == -1) { //Check errores
         perror("Se ha producido un error inicializando el array de inodos.\n");
+        exit(-1);
+    }
+
+    if (reservar_inodo('d', 7)==-1) {
+        perror("Se ha producido un error reservando el inodo del" 
+        " directorio raíz.\n");
         exit(-1);
     }
 
