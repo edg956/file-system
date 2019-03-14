@@ -921,26 +921,6 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, char reser
     return ptr; //Nº de bloque físico
 }
 
-/*
-    Descripción: 
-    Sirve para obtener el rango de punteros en el que se sitúa el bloque lógico 
-    que se busca. 
-
-    Funciones desde donde es llamado:
-        + ficheros_basica.h - traducir_bloque_inodo()
-
-    Parámetros de entrada:
-        + struct inodo inodo
-        + unsignet int nblogico
-        + unsigned int *ptr
-
-    Parámetros de salida:
-        + Rango dónde se situa el bloque lógico. 
-        0: Directos.
-        1: Indirectos 0.
-        2: Indirectos 1.
-        3: Indirectos 2.
-*/
 int obtener_nrangoBL(struct inodo inodo, unsigned int nblogico, unsigned int *ptr){
     if (nblogico < DIRECTOS){
         *ptr = inodo.punterosDirectos[nblogico];
@@ -970,20 +950,6 @@ int obtener_nrangoBL(struct inodo inodo, unsigned int nblogico, unsigned int *pt
     }
 }
 
-/*
-    Descripción: 
-    Calcula el indice de los bloques de punteros de cada nivel. 
-
-    Funciones desde donde es llamado:
-        + ficheros_basica.h - traducir_bloque_inodo()
-
-    Parámetros de entrada:
-        + int nivel_punteros
-        + int nblogico
-
-    Parámetros de salida:
-        + Índice del bloque de punteros. 
-*/
 int obtener_indice(int nblogico, int nivel_punteros){
     //Nº de bloque lógico direccionable mediante punteros directos
     if  (nblogico < DIRECTOS) return nblogico;
@@ -1006,7 +972,7 @@ int obtener_indice(int nblogico, int nivel_punteros){
                                         (NPUNTEROS * NPUNTEROS);
         if (nivel_punteros == 2) return ((nblogico - INDIRECTOS1) % 
                                 (NPUNTEROS * NPUNTEROS)) / NPUNTEROS;
-        if (nivel_punteros == 1) return ((nblogico - INDIRECTOS1) % 
+        if(nivel_punteros == 1) return ((nblogico - INDIRECTOS1) % 
                                 (NPUNTEROS * NPUNTEROS)) % NPUNTEROS;
     }
 
@@ -1033,7 +999,15 @@ int obtener_indice(int nblogico, int nivel_punteros){
         + Número de inodo liberado. 
 */
 int liberar_inodo(unsigned int ninodo) {
+    if (liberar_bloques_inodo(ninodo, 0)){
+        return -1;
+    }
+    struct inodo ino;
+    struct superbloque SB;
+    
+    if(bread(posSB,&SB) < 0){
 
+    }
 
 }
 
@@ -1056,6 +1030,32 @@ int liberar_inodo(unsigned int ninodo) {
         + Cantidad de bloques liberados. 
 */
 int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
+    struct inodo inodo;
+    unsigned int nRangoBL, nivel_punteros, ptr, nblog, ultimoBL;
+    int bloques_punteros[3][NPUNTEROS]; //array de bloque de punteros
+    int ptr_nivel[3];   //punteros de bloques de punteros a cada nivel
+    int indices[3]; //indices de cada nivel
+    int liberados;  //número de bloques liberados
 
+    liberados = 0;
+    leer_inodo(ninodo,&inodo);
+    if (inodo.tamEnBytesLog == 0){
+        return 0;   //fichero vacio
+    }
+    //obtenemos el útlimo bloque lógico del inodo
+    if (inodo.tamEnBytesLog % BLOCKSIZE == 0) {
+        ultimoBL = (inodo.tamEnBytesLog / BLOCKSIZE) -1;
+    }else{
+        ultimoBL = inodo.tamEnBytesLog / BLOCKSIZE;
+    }
+    ptr = 0;
+    for (nblog = nblogico; nblog < ultimoBL; nblog++){
+        nRangoBL = obtener_nrangoBL(inodo,nblog,&ptr);
+        if (nRangoBL < 0){
+            return -1;
+        }
+        nivel_punteros = nRangoBL; //el nivel_punteros + alto cuelga del inodo
 
+    }
+    
 }
