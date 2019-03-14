@@ -768,7 +768,8 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos) {
 /*----------------------------FUNCIONES DE NIVEL 4----------------------------*/
 
 /*
-    Descripción: Esta función se encarga de obtener el nº  de bloque físico 
+    Descripción: 
+    Esta función se encarga de obtener el nº  de bloque físico 
     correspondiente a un bloque lógico determinado del inodo indicado.
 
     Funciones a las que llama:
@@ -1010,4 +1011,51 @@ int obtener_indice(int nblogico, int nivel_punteros){
     }
 
     return -1;
+}
+
+/*----------------------------FUNCIONES DE NIVEL 5----------------------------*/
+
+/*
+    Descripción: 
+    Libera todos los bloques que cuelgan del inodo especificado y después, 
+    libera el inodo. Actualiza la lista de inodos libres. 
+    
+
+    Funciones a las que llama:
+        + ficheros_basico.h - liberar_bloques_inodo()
+
+    Funciones desde donde es llamado:
+
+    Parámetros de entrada:
+        + unsigned int ninodo
+
+    Parámetros de salida:
+        + Número de inodo liberado. 
+*/
+int liberar_inodo(unsigned int ninodo) {
+
+
+}
+
+/*
+    Descripción:
+    libera todos los bloques ocupados (con la ayuda de la función 
+    liberar_bloque()) a partir del bloque lógico indicado por el argumento 
+    nblogico (inclusive).
+
+    Funciones a las que llama:
+        + ficheros_basico.h - liberar_bloque()
+        
+    Funciones desde donde es llamado:
+
+    Parámetros de entrada:
+        + unsigned int ninodo
+        + unsignet int nblogico 
+
+    Parámetros de salida:
+        + Cantidad de bloques liberados. 
+*/
+int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
+
+
 }
