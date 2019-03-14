@@ -1031,7 +1031,8 @@ int liberar_inodo(unsigned int ninodo) {
 */
 int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
     struct inodo inodo;
-    unsigned int nRangoBL, nivel_punteros, ptr, nblog, ultimoBL;
+    int nRangoBL;
+    unsigned int  nivel_punteros, indice, ptr, nblog, ultimoBL;
     int bloques_punteros[3][NPUNTEROS]; //array de bloque de punteros
     int ptr_nivel[3];   //punteros de bloques de punteros a cada nivel
     int indices[3]; //indices de cada nivel
@@ -1056,6 +1057,44 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
         }
         nivel_punteros = nRangoBL; //el nivel_punteros + alto cuelga del inodo
 
+        //cuelgan bloques de punteros
+        while(ptr > 0 && nivel_punteros > 0){
+            bread(ptr,bloques_punteros[nivel_punteros-1]);
+            indice = obtener_indice(nblog, nivel_punteros);
+            ptr_nivel[nivel_punteros-1] = ptr;
+            indices[nivel_punteros-1] = indice;
+            ptr = bloques_punteros[nivel_punteros-1][indice];
+            nivel_punteros--;
+        }
+
+        //si existen bloque de datos
+        if (ptr > 0){
+            liberar_bloque(ptr);
+            liberados++:
+            if (nRangoBL == 0){     //es un puntero directo
+                inodo.punterosDirectos[nblog] = 0;
+            }else{
+                while (nivel_punteros < nRangoBL){
+                    indice = indices[nivel_punteros];
+                    bloques_punteros[nivel_punteros][indice] = 0;
+                    ptr = ptr_nivel[nivel_punteros];
+                    if (bloques_punteros[nivel_punteros] == 0){
+                        //No cuelgan bloques ocupados, hay que liberar el bloque de punteros
+                        liberar_bloque(ptr);
+                        liberados++;
+                        nivel_punteros++;
+                        if (nivel_punteros == nRangoBL){
+                            inodo.punterosIndirectos[nRangoBL - 1] = 0;
+                        }
+                    }else{
+                            //escribimos en el dispositivo el bloque de punteros modificado
+                            bwrite(ptr, bloques_punteros[nivel_punteros]);
+                        }
+                    
+                }
+            }
+        }
     }
+    return liberados;
     
 }
