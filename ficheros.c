@@ -97,18 +97,29 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     int leidos = 0; 
     struct inodo inodo; 
     int desp1 = offset%BLOCKSIZE; 
+<<<<<<< HEAD
     int PBL = offset/BLOCKSIZE; 
+=======
+    int desp2 = (offset+nbytes-1)%BLOCKSIZE; 
+    int PBL = offset/BLOCKSIZE; 
+    int UBL = (offset+nbytes-1)/BLOCKSIZE;
+>>>>>>> Se desarrolla la funcion mi_read_f
     unsigned char *auxBuff[BLOCKSIZE];
     int bfisico; 
     
     //Lectura del inodo con el que se trabajará. 
     if (leer_inodo(ninodo, &inodo) == -1) {
+<<<<<<< HEAD
        perror("Error: no se ha podido leer el inodo deseado."
        "Función -> mi_read_f()");
+=======
+       perror("Error: no se ha podido leer el inodo deseado.");
+>>>>>>> Se desarrolla la funcion mi_read_f
        exit(-1);
     }
 
     //Comprobación inicial de los permisos de lectura del inodo. 
+<<<<<<< HEAD
     if ((inodo.permisos & 4)!=4) { 
        perror("Error: no se ha podido leer el inodo deseado." 
        "Permisos incorrectos. Función -> mi_read_f()");
@@ -213,6 +224,73 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     //Finalización.
     inodo.atime = time(NULL);
 
+=======
+    if ((inodo.permisos & 4)==4) {
+
+        //Verificar que la posición del offset sea válida. 
+        if (offset>= inodo.tamEnBytesLog) {
+            return leidos; 
+        }
+
+        /*Si no entiendo mal, en la documentación pone que este pedazo de código tiene
+        que ir justo aqui, pero el código se va a extender mucho y me parece que tiene
+        que haber alguna forma mucho más eficiente de hacerlo. */
+
+        if (offset + nbytes >= inodo.tamEnBytesLog) {
+            nbytes = inodo.tamEnBytesLog - offset;
+            //Leer los bytes desde el offset hasta EOF. 
+
+
+        }
+
+        for(int i = PBL; i <= UBL; i++) {
+            
+            //Identificación del bloque físico correspondiente. 
+            bfisico = traducir_bloque_inodo(ninodo, i, 0);
+
+            if (bfisico==-1) {
+                
+                /*Bloque físico inexistente. Se acumulan los bytes leídos
+                y se sigue iterando*/
+                leidos = leidos+BLOCKSIZE;
+
+            }else{
+                
+              //Se deposita el contenido del bloque en el buffer auxiliar.  
+              if (bread(bfisico, *auxBuff)==-1) {
+                  perror("Error: no se ha podido leer el bloque deseado. "
+                  "Función -> mi_read_f()");
+                  exit(-1);
+              }
+               
+               if (i==PBL) {
+
+                   //Primer bloque (no completo).
+                  memcpy(buf_original, auxBuff+desp1, BLOCKSIZE-desp1);
+                  leidos = leidos+BLOCKSIZE-desp1;
+
+              }else if (i==UBL) {
+
+                    //Úlimo bloque (no completo).
+                    memcpy(buf_original+nbytes-desp2, auxBuff, desp2+1);
+                    leidos = leidos+desp2+1; 
+
+                }else{
+
+                    //Bloques de por el medio (completos). 
+                    memcpy(buf_original+leidos, auxBuff, BLOCKSIZE);
+                    leidos = leidos+BLOCKSIZE;
+
+                }
+            }
+        
+        }
+        //Finalización.
+        inodo.atime = time(NULL);
+
+    }
+
+>>>>>>> Se desarrolla la funcion mi_read_f
     return leidos; 
 
 }

@@ -430,7 +430,7 @@ unsigned char leer_bit(unsigned int nbloque) {
 */
 int reservar_bloque() {
     struct superbloque SB;
-    unsigned char bufferAux[BLOCKSIZE];
+    unsigned char s[BLOCKSIZE];
     unsigned char bufferMB[BLOCKSIZE];
 
     //Miramos si hay error al llamar bread y no encontramos el bloque deseado
