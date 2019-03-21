@@ -1,4 +1,4 @@
-#include "ficheros_basico.h"
+#include "ficheros.h"
 
 /*----------------------------FUNCIONES DE NIVEL 6----------------------------*/
 
