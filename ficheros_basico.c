@@ -1070,7 +1070,7 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
         //si existen bloque de datos
         if (ptr > 0){
             liberar_bloque(ptr);
-            liberados++:
+            liberados++;
             if (nRangoBL == 0){     //es un puntero directo
                 inodo.punterosDirectos[nblog] = 0;
             }else{
