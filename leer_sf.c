@@ -2,7 +2,7 @@
     PROGRAMA DE APOYO PARA DETERMINAR LA CORRECIÓN DE LA INFORMACIÓN
     ALMACENADA EN EL SUPERBLOQUE, EN EL MAPA DE BITS Y EN EL ARRAY DE INODOS
 */
-
+#include <time.h>
 #include "bloques.h"
 #include "ficheros_basico.h"
 
@@ -187,8 +187,53 @@ int main(int argc, char **argv) {
     printf("tamEnBytesLog: %i\n",inodo.tamEnBytesLog);
     printf("numBloquesOcupados: %i\n",inodo.numBloquesOcupados);
 
+
+
+    /******************INODO 1: LIBERACIÓN DE BLOQUES LÓGICOS******************/
+
+    puts("\nLIBERACIÓN DE INODO 1:");
+
+    clock_t str_time,fns_time;
+    double segundos;
+    str_time = clock();
+
+    liberar_inodo(ninodo);
+
+    fns_time = clock();
+
+    segundos = (double) (fns_time-str_time) / CLOCKS_PER_SEC;
+
+    printf("Tiempo de liberación de inodo 1: %f\n",segundos);
+
+     //Lectura del nuevo inodo
+    if (leer_inodo(ninodo, &inodo) == -1) {
+        perror("Error: no se ha podido leer el inodo deseado.");
+        exit(-1);
+    }
+
+
+    //Formatear tiempos
+    ts = localtime(&inodo.atime);
+    strftime(atime, sizeof(atime), "%a %Y-%m-%d %H:%M:%S",ts);
+    ts = localtime(&inodo.mtime);
+    strftime(mtime, sizeof(mtime), "%a %Y-%m-%d %H:%M:%S",ts);
+    ts = localtime(&inodo.ctime);
+    strftime(c_time, sizeof(c_time), "%a %Y-%m-%d %H:%M:%S", ts);
+
+    printf("\nDATOS DEL INODO RESERVADO %i\n",ninodo);
+    printf("tipo: %c\n",inodo.tipo);
+    printf("Permisos: %i\n",inodo.permisos);
+    printf("atime: %s\n",atime);
+    printf("ctime: %s\n", c_time);
+    printf("mtime: %s\n",mtime);
+    printf("nlinks: %i\n",inodo.nlinks);
+    printf("tamEnBytesLog: %i\n",inodo.tamEnBytesLog);
+    printf("numBloquesOcupados: %i\n",inodo.numBloquesOcupados);
+
+
     if (bumount() == -1) {
         perror("Error: no se ha podido cerrar el fichero.\n");
         exit(-1);
     }
+
 }

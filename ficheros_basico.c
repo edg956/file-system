@@ -825,7 +825,6 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, char reser
 
     //Mientras el nivel de punteros no sea de directos
     while (nivel_ptr > 0) {
-      //  printf("ptr while: %i\n",ptr);
         if (ptr == 0) {     //Puntero vacío -> inodo disponible
    
             if (reservar == 0) return -1;   //Ptr vacio -> lectura imposible
@@ -1030,13 +1029,14 @@ int obtener_indice(int nblogico, int nivel_punteros){
         + unsigned int ninodo
 
     Parámetros de salida:
-        + Número de inodo liberado. 
+        + Número de inodo liberado.
+        + (-1) en caso de error.
 */
 int liberar_inodo(unsigned int ninodo) {
     int nb_liberados; //Nº bloques liberados
 
     //Liberar bloques del inodo ninodo
-    if (nb_liberados = liberar_bloques_inodo(ninodo, 0) < 0){
+    if ((nb_liberados = liberar_bloques_inodo(ninodo, 0)) < 0){
         perror("Error: liberar_bloque_inodo ha fallado. Función -> liberar_inodo()");
         return -1;
     }
@@ -1054,6 +1054,7 @@ int liberar_inodo(unsigned int ninodo) {
     //Actualización de estado de inodo
     ino.numBloquesOcupados -= nb_liberados;
     ino.tipo = T_INODO_LIBRE;
+    ino.permisos = 0;
 
     //Lectura del superbloque 
     if (bread(posSB,&SB) < 0){
@@ -1063,7 +1064,7 @@ int liberar_inodo(unsigned int ninodo) {
     }
 
     //Actualización de información sobre array de inodos en SB
-    ino.punterosIndirectos[0] = SB.posPrimerInodoLibre; //Inodo liberado apunta a 1er inodo libre
+    ino.punterosDirectos[0] = SB.posPrimerInodoLibre; //Inodo liberado apunta a 1er inodo libre
     SB.posPrimerInodoLibre = ninodo; //Ninodo es nuevo primerInodoLibre
     SB.cantInodosLibres++;  //Aumentar el Nº de inodos libres
 
@@ -1108,31 +1109,52 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
     int bloques_punteros[3][NPUNTEROS]; //array de bloque de punteros
     int ptr_nivel[3];   //punteros de bloques de punteros a cada nivel
     int indices[3]; //indices de cada nivel
-    int liberados;  //número de bloques liberados
+    int liberados = 0;  //número de bloques liberados
+    int salvar_inodo;
 
-    liberados = 0;
-    leer_inodo(ninodo,&inodo);
-    if (inodo.tamEnBytesLog == 0){
-        return 0;   //fichero vacio
+    //Leer inodo ninodo de disco
+    if (leer_inodo(ninodo,&inodo) < 0) {
+        perror("Error: leer_inodo ha fallado. Función -> liberar_bloques_inodo()");
+        return -1;
     }
-    //obtenemos el útlimo bloque lógico del inodo
+
+    // if (inodo.tamEnBytesLog == 0){
+    //     return 0;   //fichero vacio
+    // }
+
+    //Obtener el útlimo bloque lógico del inodo
     if (inodo.tamEnBytesLog % BLOCKSIZE == 0) {
         ultimoBL = (inodo.tamEnBytesLog / BLOCKSIZE) -1;
-    }else{
+    } else {
         ultimoBL = inodo.tamEnBytesLog / BLOCKSIZE;
     }
+
+    //Preparación de buffer auxiliar para comparar con bloques
+    unsigned char auxbuf[BLOCKSIZE];
+    memset(&auxbuf, 0,BLOCKSIZE);
+
+    //Preparación y ejecución de for-loop que libera bloques
     ptr = 0;
-    for (nblog = nblogico; nblog < ultimoBL; nblog++){
+    for (nblog = nblogico; nblog < ultimoBL; nblog++) {
+        //Obtener rango del bloque
         nRangoBL = obtener_nrangoBL(inodo,nblog,&ptr);
         if (nRangoBL < 0){
+            perror("Error: obtener_nrangoBL ha fallado. Función -> liberar_bloques_inodo()");
             return -1;
         }
         nivel_punteros = nRangoBL; //el nivel_punteros + alto cuelga del inodo
 
         //cuelgan bloques de punteros
-        while(ptr > 0 && nivel_punteros > 0){
-            bread(ptr,bloques_punteros[nivel_punteros-1]);
+        while(ptr > 0 && nivel_punteros > 0) {
+            if (bread(ptr,&bloques_punteros[nivel_punteros-1]) < 0) {
+                perror("Error: bread ha fallado. Función -> liberar_bloques_inodo()");
+                return -1;
+            }
             indice = obtener_indice(nblog, nivel_punteros);
+            if (indice < 0) {
+                perror("Error: obtener_indice ha fallado. Función -> liberar_bloques_inodo()");
+                return -1;
+            }
             ptr_nivel[nivel_punteros-1] = ptr;
             indices[nivel_punteros-1] = indice;
             ptr = bloques_punteros[nivel_punteros-1][indice];
@@ -1141,30 +1163,46 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
 
         //si existen bloque de datos
         if (ptr > 0){
-            liberar_bloque(ptr);
+            if (liberar_bloque(ptr) < 0) {
+                perror("Error: liberar_bloque ha fallado. Función -> liberar_bloques_inodo()");
+                return -1;
+            }
+
             liberados++;
             if (nRangoBL == 0){     //es un puntero directo
                 inodo.punterosDirectos[nblog] = 0;
-            }else{
+                salvar_inodo = 1;
+            } else {
                 while (nivel_punteros < nRangoBL){
                     indice = indices[nivel_punteros];
                     bloques_punteros[nivel_punteros][indice] = 0;
                     ptr = ptr_nivel[nivel_punteros];
-                    if (bloques_punteros[nivel_punteros] == 0){
+                    if (memcmp(&bloques_punteros[nivel_punteros], &auxbuf, BLOCKSIZE)) {
                         //No cuelgan bloques ocupados, hay que liberar el bloque de punteros
-                        liberar_bloque(ptr);
+                        if (liberar_bloque(ptr) < 0) {
+                            perror("Error: liberar_bloque ha fallado. Función -> liberar_bloques_inodo()");
+                            return -1;
+                        }
                         liberados++;
                         nivel_punteros++;
                         if (nivel_punteros == nRangoBL){
                             inodo.punterosIndirectos[nRangoBL - 1] = 0;
                         }
-                    }else{
-                            //escribimos en el dispositivo el bloque de punteros modificado
-                            bwrite(ptr, bloques_punteros[nivel_punteros]);
+                    } else {
+                        //escribimos en el dispositivo el bloque de punteros modificado
+                        if (bwrite(ptr, bloques_punteros[nivel_punteros]) < 0) {
+                            perror("Error: bwrite ha fallado. Función -> liberar_bloques_inodo()");
+                            return -1;
                         }
-                    
+                    }
                 }
             }
+        }
+    }
+    if (salvar_inodo == 1) {
+        if (escribir_inodo(ninodo, inodo) < 0) {
+            perror("Error: escribir_inodo ha fallado. Función -> liberar_bloques_inodo()");
+            return -1;
         }
     }
     return liberados;
