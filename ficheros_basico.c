@@ -1129,9 +1129,33 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
         ultimoBL = inodo.tamEnBytesLog / BLOCKSIZE;
     }
 
+    /*  
+        Ajustar el valor del último bloque: 
+    
+        Si el inodo no tiene puntero hacia bloque de punteros y el último BL
+        del inodo es mayor que el Nº de bloque direccionable por el nivel 
+        inferior al puntero indirecto, se ha de reducir la cantidad hasta el
+        último bloque lógico direccionable a partir del inodo.
+    */
+    if (inodo.indirectos[2] == 0) {
+        if (ultimoBL >= INDIRECTOS1) ultimoBL = INDIRECTOS1 - 1;
+    }
+
+    if (inodo.indirectos[1] == 0) {
+        if (ultimoBL >= INDIRECTOS0) ultimoBL = INDIRECTOS0 - 1;
+    }
+
+    if (inodo.indirectos[0] == 0) {
+        if (ultimoBL >= DIRECTOS) ultimoBL = DIRECTOS - 1;
+    }
+
     //Preparación de buffer auxiliar para comparar con bloques
     unsigned char auxbuf[BLOCKSIZE];
     memset(&auxbuf, 0,BLOCKSIZE);
+
+    //MENSAJE POR CONSOLA DE NIVEL 5
+    printf("liberar_bloques_inodo: primerBL: %i últimoBL: %i\n",
+    nblogico,ultimoBL);
 
     //Preparación y ejecución de for-loop que libera bloques
     ptr = 0;
@@ -1139,7 +1163,8 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
         //Obtener rango del bloque
         nRangoBL = obtener_nrangoBL(inodo,nblog,&ptr);
         if (nRangoBL < 0){
-            perror("Error: obtener_nrangoBL ha fallado. Función -> liberar_bloques_inodo()");
+            perror("Error: obtener_nrangoBL ha fallado. Función -> "
+            "liberar_bloques_inodo()");
             return -1;
         }
         nivel_punteros = nRangoBL; //el nivel_punteros + alto cuelga del inodo
@@ -1177,8 +1202,10 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
                     indice = indices[nivel_punteros];
                     bloques_punteros[nivel_punteros][indice] = 0;
                     ptr = ptr_nivel[nivel_punteros];
-                    if (memcmp(&bloques_punteros[nivel_punteros], &auxbuf, BLOCKSIZE)) {
-                        //No cuelgan bloques ocupados, hay que liberar el bloque de punteros
+                    if (memcmp(&bloques_punteros[nivel_punteros], &auxbuf, 
+                    BLOCKSIZE)) {
+                        //No cuelgan bloques ocupados, hay que liberar el 
+                        //bloque de punteros
                         if (liberar_bloque(ptr) < 0) {
                             perror("Error: liberar_bloque ha fallado. Función -> liberar_bloques_inodo()");
                             return -1;
@@ -1189,14 +1216,46 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
                             inodo.punterosIndirectos[nRangoBL - 1] = 0;
                         }
                     } else {
-                        //escribimos en el dispositivo el bloque de punteros modificado
+                        //escribimos en el dispositivo el bloque de punteros 
+                        //modificado
                         if (bwrite(ptr, bloques_punteros[nivel_punteros]) < 0) {
-                            perror("Error: bwrite ha fallado. Función -> liberar_bloques_inodo()");
+                            perror("Error: bwrite ha fallado. "
+                            "Función -> liberar_bloques_inodo()");
                             return -1;
                         }
                     }
                 }
             }
+        }
+
+        /*
+            Ajustar el Nº del siguiente bloque lógico a liberar:
+
+            Dependiendo del rango y la diferencia con el nivel de punteros donde
+            se haya quedado el algoritmo, al encontrar un puntero == 0 dentro de
+            un bloque de punteros de nivel intermedio (es decir: un b. de ptrs
+            que apunta a 256 bloqs. de ptrs), se pueden omitir una cierta 
+            cantidad de bloques que intentarán pasar también por ese puntero
+            intermedio. 
+        */
+        if (ptr == 0 && nivel_punteros > 0) {
+            //Si quedó en indirectos[1] y hay un nivel de diferencia entre
+            //rango y nivel_punteros
+            if (nRangoBL - 1 == 1 && nivel_punteros == nRangoBL - 1) {
+                nblog += NPUNTEROS;
+            } else 
+            //Si quedó en indirectos[2]
+            if (nRangoBL - 1 == 2) {
+                //Si hay un nivel de diferencia entre rango y nivel_punteros
+                if (nivel_punteros == nRangoBL - 1) {
+                    nblog += NPUNTEROS*NPUNTEROS;
+                } else 
+                //Si hay dos niveles de diferencia entre rango y nivel_punteros
+                if (nivel_punteros == nRangoBL - 2) {
+                    nblog += NPUNTEROS;
+                } 
+            }
+                 
         }
     }
     if (salvar_inodo == 1) {
