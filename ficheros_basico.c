@@ -921,6 +921,26 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, char reser
     return ptr; //Nº de bloque físico
 }
 
+/*
+    Descripción: 
+        Sirve para obtener el rango de punteros en el que se sitúa el bloque lógico 
+        que se busca. 
+
+    Funciones desde donde es llamado:
+        + ficheros_basica.h - traducir_bloque_inodo()
+
+    Parámetros de entrada:
+        + struct inodo inodo
+        + unsignet int nblogico
+        + unsigned int *ptr
+
+    Parámetros de salida:
+        + Rango dónde se situa el bloque lógico. 
+        0: Directos.
+        1: Indirectos 0.
+        2: Indirectos 1.
+        3: Indirectos 2.
+*/
 int obtener_nrangoBL(struct inodo inodo, unsigned int nblogico, unsigned int *ptr){
     if (nblogico < DIRECTOS){
         *ptr = inodo.punterosDirectos[nblogico];
@@ -950,6 +970,20 @@ int obtener_nrangoBL(struct inodo inodo, unsigned int nblogico, unsigned int *pt
     }
 }
 
+/*
+    Descripción: 
+        Calcula el indice de los bloques de punteros de cada nivel. 
+
+    Funciones desde donde es llamado:
+        + ficheros_basica.h - traducir_bloque_inodo()
+
+    Parámetros de entrada:
+        + int nivel_punteros
+        + int nblogico
+
+    Parámetros de salida:
+        + Índice del bloque de punteros. 
+*/
 int obtener_indice(int nblogico, int nivel_punteros){
     //Nº de bloque lógico direccionable mediante punteros directos
     if  (nblogico < DIRECTOS) return nblogico;
