@@ -229,7 +229,7 @@ int initAI() {
     //Inicialización de numInPerBloq inodos por cada bloque
     for(int i = SB.posPrimerBloqueAI; i <= SB.posUltimoBloqueAI; i++) {
         for(int j = 0; j < numInPerBloq; j++) {
-            inodos[j].tipo = 'l';
+            inodos[j].tipo = T_INODO_LIBRE;
            
             if (contInodos < SB.totInodos) {
 
@@ -1017,8 +1017,8 @@ int obtener_indice(int nblogico, int nivel_punteros){
 
 /*
     Descripción: 
-    Libera todos los bloques que cuelgan del inodo especificado y después, 
-    libera el inodo. Actualiza la lista de inodos libres. 
+        Libera todos los bloques que cuelgan del inodo especificado y después, 
+        libera el inodo. Actualiza la lista de inodos libres. 
     
 
     Funciones a las que llama:
@@ -1033,23 +1033,61 @@ int obtener_indice(int nblogico, int nivel_punteros){
         + Número de inodo liberado. 
 */
 int liberar_inodo(unsigned int ninodo) {
-    if (liberar_bloques_inodo(ninodo, 0)){
+    int nb_liberados; //Nº bloques liberados
+
+    //Liberar bloques del inodo ninodo
+    if (nb_liberados = liberar_bloques_inodo(ninodo, 0) < 0){
+        perror("Error: liberar_bloque_inodo ha fallado. Función -> liberar_inodo()");
         return -1;
     }
+
+    //Estructuras de apoyo
     struct inodo ino;
     struct superbloque SB;
     
-    if(bread(posSB,&SB) < 0){
-
+    //Lectura del inodo actualizado
+    if (leer_inodo(ninodo, &ino) < 0) {
+        perror("Error: leer_inodo ha fallado. Función -> liberar_inodo()");
+        return -1;
     }
 
+    //Actualización de estado de inodo
+    ino.numBloquesOcupados -= nb_liberados;
+    ino.tipo = T_INODO_LIBRE;
+
+    //Lectura del superbloque 
+    if (bread(posSB,&SB) < 0){
+        perror("Error: no se ha podido leer del superbloque."
+        " Función -> liberar_inodo()");
+        return -1;
+    }
+
+    //Actualización de información sobre array de inodos en SB
+    ino.punterosIndirectos[0] = SB.posPrimerInodoLibre; //Inodo liberado apunta a 1er inodo libre
+    SB.posPrimerInodoLibre = ninodo; //Ninodo es nuevo primerInodoLibre
+    SB.cantInodosLibres++;  //Aumentar el Nº de inodos libres
+
+    //Escribir inodo en disco
+    if (escribir_inodo(ninodo, ino) < 0) {
+        perror("Error: escribir_inodo ha fallado. Función -> liberar_inodo()");
+        return -1;        
+    }
+
+    //Escribir superbloque en disco
+    if (bwrite(posSB,&SB) < 0){
+        perror("Error: no se ha podido leer del superbloque."
+        " Función -> liberar_inodo()");
+        return -1;
+    }
+
+    return ninodo;
 }
 
 /*
     Descripción:
-    libera todos los bloques ocupados (con la ayuda de la función 
-    liberar_bloque()) a partir del bloque lógico indicado por el argumento 
-    nblogico (inclusive).
+        libera todos los bloques ocupados (con la ayuda de la función 
+        liberar_bloque()) a partir del bloque lógico indicado por el argumento 
+        nblogico (inclusive).
 
     Funciones a las que llama:
         + ficheros_basico.h - liberar_bloque()
@@ -1104,7 +1142,7 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
         //si existen bloque de datos
         if (ptr > 0){
             liberar_bloque(ptr);
-            liberados++:
+            liberados++;
             if (nRangoBL == 0){     //es un puntero directo
                 inodo.punterosDirectos[nblog] = 0;
             }else{

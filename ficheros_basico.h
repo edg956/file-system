@@ -21,6 +21,10 @@
 #define INDIRECTOS1 (NPUNTEROS * NPUNTEROS + INDIRECTOS0)
 #define INDIRECTOS2 (NPUNTEROS * NPUNTEROS * NPUNTEROS + INDIRECTOS1)
 
+#define T_INODO_LIBRE 'l'
+#define T_INODO_DIRECTORIO 'd'
+#define T_INODO_FICHERO 'f'
+
 struct superbloque{
 	unsigned int posPrimerBloqueMB; //Posición del primer bloque del mapa de bits 
 	unsigned int posUltimoBloqueMB; //Posición del último bloque del mapa de bits 

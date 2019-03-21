@@ -5,7 +5,6 @@
 
 #include "bloques.h"
 #include "ficheros_basico.h"
-#include <pthread.h>
 
 #define NUM_ATTR_SB 6 //Número de atributos sobre los cuales iterar para 
                       //función leer_bit()
@@ -147,7 +146,7 @@ int main(int argc, char **argv) {
     int sizearray = sizeof(blogicos) / sizeof(blogicos[0]);
     
     //Obtener primer inodo libre
-    if ((ninodo = reservar_inodo('f', 6)) == -1) {
+    if ((ninodo = reservar_inodo(T_INODO_FICHERO, 6)) == -1) {
         perror("Error en reservar inodo.");
         exit(-1);
     }
