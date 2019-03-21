@@ -1322,5 +1322,4 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
     }
 
     return liberados;
-    
 }
