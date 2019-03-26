@@ -66,6 +66,29 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
     //falta actualizar la metainformación del inodo
 }
 
+/*
+    Descripción: 
+        Lee información de un fichero/directorio (correspondiente al nº de inodo
+        pasado como argumento) y la almacena en un buffer de memoria.
+
+    Funciones a las que llama:
+        + ficheros_basico.h - leer_inodo()
+        + bloques.h - bread()
+        + ficheros_basico.h - traducir_bloque_inodo()
+
+    Funciones desde donde es llamado:
+        +
+
+    Parámetros de entrada:
+        + unsigned int ninodo
+        + void *buf_original
+        + unsigned int offset
+        + unsigned int nbytes
+
+    Parámetros de salida:
+        + Cantidad de bloques leídos. 
+        + (-1): Algún error ocurrido. 
+*/
 int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsigned int nbytes){
 
     //Declaraciones
@@ -85,7 +108,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     }
 
     //Comprobación inicial de los permisos de lectura del inodo. 
-    if ((inodo.permisos & 4)==4) {
+    if ((inodo.permisos & 4)==4) {  //------------------------------> negar el condicional y devolver con perror. 
 
         //Verificar que la posición del offset sea válida. 
         if (offset>= inodo.tamEnBytesLog) {
@@ -154,14 +177,195 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
 
 }
 
+/*
+    Descripción: 
+    Devuelve la metainformación de un fichero/directorio (correspondiente al 
+    nº de inodo pasado como argumento): tipo, permisos, cantidad de enlaces 
+    de entradas en directorio, tamaño en bytes lógicos, timestamps y cantidad 
+    de bloques ocupados en la zona de datos, es decir todos los campos menos 
+    los punteros.
+
+    Funciones a las que llama:
+        + ficheros_basico.h - leer_inodo()
+
+    Funciones desde donde es llamado:
+        +
+
+    Parámetros de entrada:
+        + unsigned int ninodo
+        + struct STAT *p_stat
+
+    Parámetros de salida:
+        + 0: sin errores. 
+        + (-1): algún error ocurrido.
+        + Actualiza la información de la estructura apuntada por el puntero 
+          *p_stat.  
+
+*/
 int mi_stat_f(unsigned int ninodo, struct STAT *p_stat){
 
+    //Declaraciones
+    struct inodo inodo; 
+
+    //Lectura del inodo.
+    if (leer_inodo(ninodo, &inodo)==-1) {
+            perror("Error: no se ha podido leer el inodo deseado. "
+                  "Función -> mi_stat_f()");
+            exit(-1);
+    }
+
+    //Copiar los campos. 
+    p_stat->tipo=inodo.tipo; 
+    p_stat->permisos=inodo.permisos; 
+    p_stat->atime=inodo.atime; 
+    p_stat->mtime=inodo.mtime; 
+    p_stat->ctime=inodo.ctime; 
+    p_stat->nlinks=inodo.nlinks;
+    p_stat->tamEnBytesLog=inodo.tamEnBytesLog; 
+    p_stat->numBloquesOcupados=inodo.numBloquesOcupados; 
+
+    return 0; 
 }
 
+/*
+    Descripción: 
+    Cambia los permisos de un fichero/directorio (correspondiente al nº de inodo
+    pasado como argumento) según indique el argumento.
+
+    Funciones a las que llama:
+        + ficheros_basico.h - leer_inodo()
+        + ficheros_basico.h - escribir_inodo()
+
+    Funciones desde donde es llamado:
+        +
+
+    Parámetros de entrada:
+        + unsigned int ninodo
+        + unsigned char permisos
+
+    Parámetros de salida:
+        + 0: si no hay errores. 
+        + (-1): si hay algún error.
+
+*/
 int mi_chmod_f(unsigned int ninodo, unsigned char permisos){
 
+    //Declaraciones
+    struct inodo inodo; 
+
+    if (leer_inodo(ninodo, &inodo)==-1) {
+            perror("Error: no se ha podido leer el inodo deseado. "
+                  "Función -> mi_chmod_f()");
+            exit(-1);        
+    }
+
+    //Cambiar los permisos. 
+    inodo.permisos=permisos; 
+
+    //Actualizar ctime. 
+    inodo.ctime=time(NULL);
+
+    //Escribir inodo ya modificado. 
+    if (escribir_inodo(ninodo, inodo)==-1) {
+        perror("Error: no se ha podido escribir el inodo deseado. "
+                  "Función -> mi_chmod_f()");
+            exit(-1);
+    }
+    return 0;
 }
 
+/*
+    Descripción: 
+    Trunca un fichero/directorio (correspondiente al nº de inodo pasado como 
+    argumento) a los bytes indicados, liberando los bloques necesarios.
+
+    Funciones a las que llama:
+        + ficheros_basico.h - leer_inodo()
+        + ficheros_basico.h - escribir_inodo()
+        + ficheros_basico.h - liberar_bloques_inodo()
+
+    Funciones desde donde es llamado:
+        +
+
+    Parámetros de entrada:
+        + unsigned int ninodo
+        + unsigned int nbytes
+
+    Parámetros de salida:
+        + Número de bloques liberados. 
+        + (-1): algún error ocurrido.
+
+*/
 int mi_truncar_f(unsigned int ninodo, unsigned int nbytes){
+
+    //Declaraciones.
+    struct inodo inodo; 
+    int bliberados = 0; 
+    int nblogico;
+    int aux; 
+
+    //Leer inodo. 
+    if (leer_inodo(ninodo, &inodo)==-1) {
+            perror("Error: no se ha podido leer el inodo deseado. "
+                  "Función -> mi_truncar_f()");
+            exit(-1);  
+    }
+
+    //Comprobar que tiene permisos de escritura. 
+    if ((inodo.permisos & 2) != 2) {
+        perror("Error: no se ha podido truncar el fichero/directorio por"
+        "falta de permisos de escritura. "
+              "Función -> mi_truncar_f()");
+                  
+        return bliberados;         
+    }
+
+    //Comprobar que no se quiera truncar más allá del tamaño en bytes lógico.
+    if (nbytes > inodo.tamEnBytesLog) {
+        perror("Error: no se puede truncar el fichero/directorio más allá"
+        "del tamaño en bytes lógico."
+              "Función -> mi_truncar_f()");
+        return bliberados; 
+    }
+
+    //Determinar nblogico. 
+    if ((nbytes % BLOCKSIZE)==0) {
+        
+        nblogico = nbytes/BLOCKSIZE; 
+
+    }else{
+
+        nblogico = nbytes/BLOCKSIZE+1;
+
+    }
+
+    //Recorrido desde nblogico hasta final de fichero/directorio. 
+    for(int i = nblogico; i < inodo.tamEnBytesLog; i++) {
+
+        aux = liberar_bloques_inodo(ninodo, nblogico);
+
+        if (aux==-1) {
+            perror("Error: no se han podido liberar los bloques del inodo."
+           "Función -> mi_truncar_f()");
+            exit(-1);
+        }
+
+       bliberados = bliberados + aux;
+
+    }
+    
+    //Actualizar mtime, ctime y tamaño en bytes lógicos del inodo. 
+    inodo.ctime = time(NULL);
+    inodo.mtime = time(NULL);
+    inodo.tamEnBytesLog = nbytes; 
+
+    //Escribir inodo modificado. 
+    if (escribir_inodo(ninodo, inodo)==-1) {
+            perror("Error: no se ha podido escribir el inodo deseado"
+              "Función -> mi_truncar_f()");
+              exit(-1);
+    }
+
+    return bliberados; 
 
 }
