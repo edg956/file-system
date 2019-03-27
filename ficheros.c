@@ -312,6 +312,9 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     //Finalización.
     inodo.atime = time(NULL);
 
+    //Finalización.
+    inodo.atime = time(NULL);
+
     return leidos; 
 }
 
