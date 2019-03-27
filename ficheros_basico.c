@@ -1188,12 +1188,23 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
 
         //si existen bloque de datos
         if (ptr > 0){
-            if (liberar_bloque(ptr) < 0) {
-                perror("Error: liberar_bloque ha fallado. Función -> liberar_bloques_inodo()");
-                return -1;
-            }
 
-            liberados++;
+            /*Una vez llegado al bloque de punteros que conecta al bloque
+            lógico, se libera los siguientes bloques lógicos del bloque de
+            punteros y se limpia los punteros del bloque correspondientes.*/
+            while (indice < 256) {
+                if (liberar_bloque(ptr) < 0) {
+                    perror("Error: liberar_bloque ha fallado. Función -> "
+                    "liberar_bloques_inodo()");
+                    return -1;
+                }
+
+                liberados++;
+                indice++;
+                ptr = bloques_punteros[nivel_punteros][indice];
+                bloques_punteros[nivel_punteros][indice] = 0;
+            }
+            
             if (nRangoBL == 0){     //es un puntero directo
                 inodo.punterosDirectos[nblog] = 0;
                 salvar_inodo = 1;
