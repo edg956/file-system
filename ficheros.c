@@ -71,6 +71,8 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
         Lee información de un fichero/directorio (correspondiente al nº de inodo
         pasado como argumento) y la almacena en un buffer de memoria.
 
+        Se debe recibir *buf_original inicializado con 0's. 
+
     Funciones a las que llama:
         + ficheros_basico.h - leer_inodo()
         + bloques.h - bread()
@@ -95,83 +97,121 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     int leidos = 0; 
     struct inodo inodo; 
     int desp1 = offset%BLOCKSIZE; 
-    int desp2 = (offset+nbytes-1)%BLOCKSIZE; 
     int PBL = offset/BLOCKSIZE; 
-    int UBL = (offset+nbytes-1)/BLOCKSIZE;
     unsigned char *auxBuff[BLOCKSIZE];
     int bfisico; 
     
     //Lectura del inodo con el que se trabajará. 
     if (leer_inodo(ninodo, &inodo) == -1) {
-       perror("Error: no se ha podido leer el inodo deseado.");
+       perror("Error: no se ha podido leer el inodo deseado."
+       "Función -> mi_read_f()");
        exit(-1);
     }
 
     //Comprobación inicial de los permisos de lectura del inodo. 
-    if ((inodo.permisos & 4)==4) {  //------------------------------> negar el condicional y devolver con perror. 
-
-        //Verificar que la posición del offset sea válida. 
-        if (offset>= inodo.tamEnBytesLog) {
-            return leidos; 
-        }
-
-        /*Si no entiendo mal, en la documentación pone que este pedazo de código tiene
-        que ir justo aqui, pero el código se va a extender mucho y me parece que tiene
-        que haber alguna forma mucho más eficiente de hacerlo. */
-
-        if (offset + nbytes >= inodo.tamEnBytesLog) {
-            nbytes = inodo.tamEnBytesLog - offset;
-            //Leer los bytes desde el offset hasta EOF. 
-
-
-        }
-
-        for(int i = PBL; i <= UBL; i++) {
-            
-            //Identificación del bloque físico correspondiente. 
-            bfisico = traducir_bloque_inodo(ninodo, i, 0);
-
-            if (bfisico==-1) {
-                
-                /*Bloque físico inexistente. Se acumulan los bytes leídos
-                y se sigue iterando*/
-                leidos = leidos+BLOCKSIZE;
-
-            }else{
-                
-              //Se deposita el contenido del bloque en el buffer auxiliar.  
-              if (bread(bfisico, *auxBuff)==-1) {
-                  perror("Error: no se ha podido leer el bloque deseado. "
-                  "Función -> mi_read_f()");
-                  exit(-1);
-              }
-               
-               if (i==PBL) {
-
-                   //Primer bloque (no completo).
-                  memcpy(buf_original, auxBuff+desp1, BLOCKSIZE-desp1);
-                  leidos = leidos+BLOCKSIZE-desp1;
-
-              }else if (i==UBL) {
-
-                    //Úlimo bloque (no completo).
-                    memcpy(buf_original+nbytes-desp2, auxBuff, desp2+1);
-                    leidos = leidos+desp2+1; 
-
-                }else{
-
-                    //Bloques de por el medio (completos). 
-                    memcpy(buf_original+leidos, auxBuff, BLOCKSIZE);
-                    leidos = leidos+BLOCKSIZE;
-
-                }
-            }
-        
-        }
-        //Finalización.
-        inodo.atime = time(NULL);
-
+    if ((inodo.permisos & 4)!=4) { 
+       perror("Error: no se ha podido leer el inodo deseado." 
+       "Permisos incorrectos. Función -> mi_read_f()");
+       exit(-1);         //-------------------------------------------------------------------------> ver en el fichero "Consideraciones_del_proyecto.txt"
     }
+
+    //Verificar que la posición del offset sea válida. 
+    if (offset>= inodo.tamEnBytesLog) {
+        return leidos; 
+    }
+
+    if (offset + nbytes >= inodo.tamEnBytesLog) {
+        //Leer los bytes desde el offset hasta EOF. 
+        nbytes = inodo.tamEnBytesLog - offset;       
+    }
+
+    //Se calcula el desplazamiento del último bloque y el último bloque. 
+    int desp2 = (offset+nbytes-1)%BLOCKSIZE; 
+    int UBL = (offset+nbytes-1)/BLOCKSIZE;
+
+    /*PRIMER BLOQUE A LEER (Posibilidad de que sea incompleto)*/
+
+    bfisico = traducir_bloque_inodo(ninodo, PBL, 0);
+
+    if ((bfisico)==-1) {
+
+        leidos = leidos + BLOCKSIZE; 
+
+    }else{
+
+        //Se lee el primer bloque (entero) y se almacena en el buffer. 
+        if (bread(bfisico, &auxBuff)==-1) {
+            perror("Error: no se ha podido leer el bloque deseado." 
+            "Función -> mi_read_f()");
+            exit(-1);  
+        }
+        
+        //Se realiza la copia al buffer original.
+        memcpy(buf_original, auxBuff+desp1, BLOCKSIZE-desp1);//------------------------------------------------> ver en el fichero "Consideraciones_del_proyecto.txt"
+
+        //Se actualiza la variable de leídos. 
+        leidos = leidos + (BLOCKSIZE-desp1);
+    }
+
+
+    /*BLOQUES INTERMEDIOS (Bloques que seguro que serán completos)*/
+
+    for(int i = PBL+1; i < UBL; i++) {
+
+        //Identificar bloque físico correspondiente. 
+        bfisico = traducir_bloque_inodo(ninodo, i, 0);
+
+        if ((bfisico)==-1) {
+
+            leidos = leidos + BLOCKSIZE;
+        }else{
+
+            /*Se copia el bloque físico correspondiente al bloque lógico en
+            un buffer auxiliar.*/
+            if (bread(bfisico, &auxBuff)==-1) {
+                perror("Error: no se ha podido leer el bloque deseado." 
+                "Función -> mi_read_f()");
+                exit(-1);   
+            }
+
+            /*Una vez leído el bloque, se tiene que copiar al buffer 
+            original*/
+
+            /*La suma de leidos es para ir avanzando dentro del buffer de
+            destino y no pisar la información que haya antes*/
+            memcpy(buf_original+leidos,auxBuff, BLOCKSIZE);
+
+            //Se actualiza la variable que indica los bloques leídos.
+            leidos = leidos+BLOCKSIZE;
+        }
+    }
+
+    /*ÚLTIMO BLOQUE A LEER (Posibilidad de que sea incompleto)*/
+
+    //Identificar el bloque físico. 
+    bfisico = traducir_bloque_inodo(ninodo, UBL, 0);
+
+    if ((bfisico)==-1) {
+
+        leidos = leidos + BLOCKSIZE;
+
+    }else {
+        //Se lee el bloque entero y se almacena en el buffer auxiliar. 
+        if (bread(bfisico, &auxBuff)==-1) {
+            perror("Error: no se ha podido leer el bloque deseado." 
+            "Función -> mi_read_f()");
+            exit(-1);  
+        }
+
+        //Realizar la copia al buffer original. 
+        memcpy((buf_original+nbytes)-desp2, auxBuff, desp2+1);
+
+        //Se actualiza la variable de bloques leídos.
+        leidos = leidos + desp2 + 1; 
+    }
+
+    //Finalización.
+    inodo.atime = time(NULL);
 
     return leidos; 
 
