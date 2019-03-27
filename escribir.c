@@ -2,6 +2,7 @@
 para obtener un nº de inodo, que mostraremos por pantalla y además utilizaremos 
 como parámetro para mi_write_f().*/
 
+<<<<<<< HEAD
 #include "ficheros_basico.h"
 #include "ficheros.h"
 #include "bloques.h"
@@ -124,4 +125,10 @@ int main(int argc, char **argv) {
     }
 
     return 0;
+=======
+int main(int argc, char **argv) {
+
+    
+
+>>>>>>> Se crean los archivos necesarios y se añaden descripciones
 }
