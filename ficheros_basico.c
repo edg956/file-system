@@ -1129,26 +1129,6 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
         ultimoBL = inodo.tamEnBytesLog / BLOCKSIZE;
     }
 
-    /*  
-        Ajustar el valor del último bloque: 
-    
-        Si el inodo no tiene puntero hacia bloque de punteros y el último BL
-        del inodo es mayor que el Nº de bloque direccionable por el nivel 
-        inferior al puntero indirecto, se ha de reducir la cantidad hasta el
-        último bloque lógico direccionable a partir del inodo.
-    */
-    // if (inodo.punterosIndirectos[2] == 0) {
-    //     if (ultimoBL >= INDIRECTOS1) ultimoBL = INDIRECTOS1 - 1;
-    // }
-
-    // if (inodo.punterosIndirectos[1] == 0) {
-    //     if (ultimoBL >= INDIRECTOS0) ultimoBL = INDIRECTOS0 - 1;
-    // }
-
-    // if (inodo.punterosIndirectos[0] == 0) {
-    //     if (ultimoBL >= DIRECTOS) ultimoBL = DIRECTOS - 1;
-    // }
-
     ultimoBL = INDIRECTOS2 - 1;
 
     //Preparación de buffer auxiliar para comparar con bloques
@@ -1188,6 +1168,50 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
             nivel_punteros--;
         }
 
+
+        /*
+            Ajustar el Nº del siguiente bloque lógico a liberar:
+
+            Dependiendo del rango y la diferencia con el nivel de punteros donde
+            se haya quedado el algoritmo, al encontrar un puntero == 0 dentro de
+            un bloque de punteros de nivel intermedio (es decir: un b. de ptrs
+            que apunta a 256 bloqs. de ptrs), se pueden omitir una cierta 
+            cantidad de bloques que intentarán pasar también por ese puntero
+            intermedio. 
+        */
+        if (ptr == 0 && nivel_punteros > 0) {
+            //Si quedó en indirectos[0] y dicho puntero es 0
+            if (nRangoBL - 1 == 0) {
+                nblog += NPUNTEROS - 1;
+            } else
+            //Si quedó en indirectos[1] y hay un nivel de diferencia entre
+            //rango y nivel_punteros
+            if (nRangoBL - 1 == 1) {
+                if (nivel_punteros == nRangoBL) {
+                    nblog += NPUNTEROS * NPUNTEROS - 1;
+                } else 
+                if (nivel_punteros == nRangoBL - 1) {
+                    nblog += NPUNTEROS - 1;
+                }
+            } else 
+            //Si quedó en indirectos[2]
+            if (nRangoBL - 1 == 2) {
+                //Si no hay niveles de diferencia entre rango y nivel_punteros
+                if (nivel_punteros == nRangoBL) {
+                    nblog += NPUNTEROS*NPUNTEROS*NPUNTEROS - 1;
+                } else 
+                //Si hay un nivel de diferencia entre rango y nivel_punteros
+                if (nivel_punteros == nRangoBL - 1) {
+                    nblog += NPUNTEROS*NPUNTEROS - 1;
+                } else
+                //Si hay dos niveles de diferencia entre rango y nivel_punteros
+                if (nivel_punteros == nRangoBL - 2) {
+                    nblog += NPUNTEROS - 1;
+                }
+            }
+        }
+
+
         //si existen bloque de datos
         if (ptr > 0){
 
@@ -1214,7 +1238,7 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
             }
 
             liberados++;
-            printf("Bloque liberado: %i\n", ptr);                       //DEBUG
+            printf("liberar_bloque_inodo(): liberado BF: %i de datos del BL %i\n", ptr, nblog);                       //DEBUG
 
 
             if (nRangoBL == 0){     //es un puntero directo
@@ -1227,7 +1251,7 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
                     ptr = ptr_nivel[nivel_punteros];
                     if (memcmp(&bloques_punteros[nivel_punteros], &auxbuf, 
                     BLOCKSIZE) == 0) {
-                        printf("Bloque liberado: %i\n", ptr);                       //DEBUG
+                        printf("liberar_bloque_inodo(): liberado BF: %i de punteros nivel %i del BL %i\n", ptr, nivel_punteros+1, nblog);                       //DEBUG
                         //No cuelgan bloques ocupados, hay que liberar el 
                         //bloque de punteros
                         if (liberar_bloque(ptr) < 0) {
@@ -1238,6 +1262,9 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
                         nivel_punteros++;
                         if (nivel_punteros == nRangoBL){
                             inodo.punterosIndirectos[nRangoBL - 1] = 0;
+                            if (nRangoBL - 1 == 0) nblog = INDIRECTOS0 - 1;
+                            else if (nRangoBL - 1 == 1) nblog = INDIRECTOS1 - 1;
+                            else if (nRangoBL - 1 == 2) nblog = INDIRECTOS2 - 1;
                             salvar_inodo = 1;
                         }
                     } else {
@@ -1254,35 +1281,7 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
             }
         }
 
-        /*
-            Ajustar el Nº del siguiente bloque lógico a liberar:
-
-            Dependiendo del rango y la diferencia con el nivel de punteros donde
-            se haya quedado el algoritmo, al encontrar un puntero == 0 dentro de
-            un bloque de punteros de nivel intermedio (es decir: un b. de ptrs
-            que apunta a 256 bloqs. de ptrs), se pueden omitir una cierta 
-            cantidad de bloques que intentarán pasar también por ese puntero
-            intermedio. 
-        */
-        // if (ptr == 0 && nivel_punteros > 0) {
-        //     //Si quedó en indirectos[1] y hay un nivel de diferencia entre
-        //     //rango y nivel_punteros
-        //     if (nRangoBL - 1 == 1 && nivel_punteros == nRangoBL - 1) {
-        //         nblog += NPUNTEROS;
-        //     } else 
-        //     //Si quedó en indirectos[2]
-        //     if (nRangoBL - 1 == 2) {
-        //         //Si hay un nivel de diferencia entre rango y nivel_punteros
-        //         if (nivel_punteros == nRangoBL - 1) {
-        //             nblog += NPUNTEROS*NPUNTEROS;
-        //         } else 
-        //         //Si hay dos niveles de diferencia entre rango y nivel_punteros
-        //         if (nivel_punteros == nRangoBL - 2) {
-        //             nblog += NPUNTEROS;
-        //         } 
-        //     }
-                 
-        // }
+        
     }
     if (salvar_inodo == 1) {
         if (escribir_inodo(ninodo, inodo) < 0) {
