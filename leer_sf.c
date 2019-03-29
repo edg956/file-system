@@ -12,28 +12,28 @@
 
 int main(int argc, char **argv) {
 
+    //Comprobación de parámetros enviados al programa. 
     if (argc != 2) {
         perror("Error: formato de comando: ./nombre_de_programa <nombre_de_fichero_disco>\n");
         exit(-1);
     }
 
+    //Montaje del disco virtual. 
     if (bmount(argv[1]) == -1) {
         perror("Error: no se ha podido abrir el directorio indicado.\n");
         exit(-1);
     }
 
-    //Estructuras y variables de apoyo
-
+    //Estructuras y variables de apoyo.
     struct superbloque SB;
 
-
+    //Lectura del superbloque.
     if (bread(posSB, &SB) == -1) {
         perror("Error: no se ha podido obtener información del superbloque del FS\n");
         exit(-1);
     }
 
     /**************************DATOS DEL SUPERBLOQUE***************************/
-
     puts("DATOS DEL SUPERBLOQUE\n");
     printf("Posición del primer bloque del mapa de bits: %i\n",SB.posPrimerBloqueMB);
     printf("Posición del último bloque del mapa de bits: %i\n",SB.posUltimoBloqueMB);
@@ -48,6 +48,7 @@ int main(int argc, char **argv) {
     printf("Cantidad total de bloques: %i\n",SB.totBloques);
     printf("Cantidad total de inodos: %i\n",SB.totInodos);
 
+    //Desmontaje del dispositivo virtual. 
     if (bumount() == -1) {
         perror("Error: desmontar dispositivo erroneo.");
         exit(-1);
