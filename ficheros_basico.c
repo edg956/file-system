@@ -1022,6 +1022,10 @@ int obtener_indice(int nblogico, int nivel_punteros){
 
     Funciones a las que llama:
         + ficheros_basico.h - liberar_bloques_inodo()
+        + ficheros_basico.h - leer_inodo()
+        + ficheros_basico.h - escribir_inodo()
+        + bloques.h - bread()
+        + bloques.h - bwrite()
 
     Funciones desde donde es llamado:
 
@@ -1092,6 +1096,12 @@ int liberar_inodo(unsigned int ninodo) {
 
     Funciones a las que llama:
         + ficheros_basico.h - liberar_bloque()
+        + ficheros_basico.h - leer_inodo()
+        + ficheros_basico.h - obtener_nrangoBL()
+        + ficheros_basico.h - obtener_indice()
+        + ficheros_basico.h - escribir_inodo()
+        + bloques.h - bread()
+        + bloques.h - bwrite()
         
     Funciones desde donde es llamado:
 
@@ -1117,10 +1127,6 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
         perror("Error: leer_inodo ha fallado. Función -> liberar_bloques_inodo()");
         return -1;
     }
-
-    // if (inodo.tamEnBytesLog == 0){
-    //     return 0;   //fichero vacio
-    // }
 
     //Obtener el útlimo bloque lógico del inodo
     if (inodo.tamEnBytesLog % BLOCKSIZE == 0) {
@@ -1167,7 +1173,6 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
             ptr = bloques_punteros[nivel_punteros-1][indice];
             nivel_punteros--;
         }
-
 
         /*
             Ajustar el Nº del siguiente bloque lógico a liberar:
@@ -1283,6 +1288,7 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
 
         
     }
+
     if (salvar_inodo == 1) {
         if (escribir_inodo(ninodo, inodo) < 0) {
             perror("Error: escribir_inodo ha fallado. Función -> liberar_bloques_inodo()");
@@ -1290,5 +1296,4 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
         }
     }
     return liberados;
-    
 }
