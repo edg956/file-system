@@ -4,6 +4,7 @@ como parámetro para mi_write_f().*/
 
 #include "ficheros_basico.h"
 #include "ficheros.h"
+#include "bloques.h"
 
 int main(int argc, char **argv) {
 
@@ -56,11 +57,7 @@ int main(int argc, char **argv) {
             "Función -> escribir.c - main()");
             exit(-1);
         }
-    }
-    
-
-
-
+    }    
 
     //Mostrar datos del inodo escrito. 
     mi_stat_f(ninodo, &STAT);
@@ -68,10 +65,11 @@ int main(int argc, char **argv) {
     printf("Tamaño en bytes lógico del inodo: %d\n", STAT.tamEnBytesLog);
     printf("Número de bloques ocupados: %d\n", STAT.numBloquesOcupados);
 
+    } else {
 
-    }else{
-
-
+            //Falta implementar esta parte. 
+            //En la parte del if anterior tengo algunas dudas, no se si
+            //Asi como lo estoy planteando es correcto. 
 
         
     }
@@ -81,4 +79,6 @@ int main(int argc, char **argv) {
         perror("Error: no se ha podido desmontar el dispositivo virtual.\n");
         exit(-1);
     }
+
+    return 0;
 }
