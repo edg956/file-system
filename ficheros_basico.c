@@ -1242,8 +1242,13 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
                     } else {
                         //escribimos en el dispositivo el bloque de punteros 
                         //modificado
+<<<<<<< HEAD
                         if (ptr != ptr_nivel[nivel_punteros] &&
                         bwrite(ptr, bloques_punteros[nivel_punteros]) < 0) {
+=======
+                        if (bwrite(ptr, &bloques_punteros[nivel_punteros]) < 0) 
+                        {
+>>>>>>> Comentarios innecesarios removidos
                             perror("Error: bwrite ha fallado. "
                             "Función -> liberar_bloques_inodo()");
                             return -1;
