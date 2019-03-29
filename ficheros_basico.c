@@ -430,7 +430,7 @@ unsigned char leer_bit(unsigned int nbloque) {
 */
 int reservar_bloque() {
     struct superbloque SB;
-    unsigned char s[BLOCKSIZE];
+    unsigned char bufferAux[BLOCKSIZE];
     unsigned char bufferMB[BLOCKSIZE];
 
     //Miramos si hay error al llamar bread y no encontramos el bloque deseado
@@ -1002,13 +1002,12 @@ int liberar_inodo(unsigned int ninodo) {
     if (liberar_bloques_inodo(ninodo, 0)){
         return -1;
     }
-    struct inodo ino;
     struct superbloque SB;
     
     if(bread(posSB,&SB) < 0){
 
     }
-
+return 0;
 }
 
 /*
