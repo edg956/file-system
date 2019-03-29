@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 
 #include "ficheros_basico.h"
 #include "ficheros.h"
@@ -31,10 +30,5 @@ int main(int argc, char **argv) {
         perror("Error: no se ha podido desmontar el dispositivo virtual.\n");
         exit(-1);
     }
-=======
-int main(int argc, char **argv) {
-
->>>>>>> Se crean los archivos necesarios y se añaden descripciones
-
 
 }
