@@ -334,7 +334,6 @@ int mi_chmod_f(unsigned int ninodo, unsigned char permisos){
     Parámetros de salida:
         + Número de bloques liberados. 
         + (-1): algún error ocurrido.
-
 */
 int mi_truncar_f(unsigned int ninodo, unsigned int nbytes){
 

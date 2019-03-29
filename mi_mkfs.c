@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
         perror("ERROR: La ejecución del programa no se ha realizado correctamente.\n");
         perror("Requisitos para la ejecución del programa: \n");
         perror("Primer parámetro -> nombre_del_dispositivo.\n");
-        perror("Segundo parámetro -> número_de_bloques.\n"); 
+        perror("Segundo parámetro -> número_de_bloques.\n");
         perror("Ejemplo: \n");
         perror("./mi_mkfs nombre_del_dispositivo número_de_bloques\n");
         exit(-1);
