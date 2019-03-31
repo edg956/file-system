@@ -5,6 +5,7 @@ como parámetro para mi_write_f().*/
 #include "ficheros.h"
 #include "bloques.h"
 
+
 int main(int argc, char **argv) {
 
     //Comprobar la sintaxis de la llamada a la función.
