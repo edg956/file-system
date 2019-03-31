@@ -1,12 +1,10 @@
-
-#include "ficheros_basico.h"
 #include "ficheros.h"
 #include "bloques.h"
 
 int main(int argc, char **argv) {
 
     //Comprobar la sintaxis de la llamada a la función.
-    if (argc!=3) {
+    if (argc!=3 && argc != 4) {
         perror("Error: Sintaxis de llamada al programa incorrecta.\n"
         "Sintaxis: ./nombre_del_programa <nombre_dispositivo>" 
         "<ninodo> <permisos\n>");
@@ -19,8 +17,10 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
+    unsigned char permisos = *argv[3];
+
     //Llamada a mi_chmod_f().
-    if (mi_chmod_f((int)argv[2], (unsigned char)argv[3])==-1) {
+    if (mi_chmod_f(atoi(argv[2]), permisos) ==-1) {
         perror("Error: No se han podido asignar los permisos correspondientes.\n");
         exit(-1); 
     }

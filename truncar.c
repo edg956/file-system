@@ -1,5 +1,3 @@
-
-#include "ficheros_basico.h"
 #include "ficheros.h"
 #include "bloques.h"
 
@@ -24,8 +22,15 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
+    //Leer superbloque
+    if (bread(posSB, &superbloque) < 0) {
+        perror("Error: no se ha podido leer el superbloque."
+        "Función -> main()");
+        exit(-1);
+    }
+
     //Leer inodo. 
-    if (leer_inodo((int)argv[2], &inodo)==-1) {
+    if (leer_inodo(atoi(argv[2]), &inodo)==-1) {
         perror("Error: no se ha podido leer el inodo indicado." 
         "Función -> truncar.c - main()\n");
         exit(-1);    
@@ -36,7 +41,7 @@ int main(int argc, char **argv) {
     printf("Número de bloques ocupados: %d\n", inodo.numBloquesOcupados);
 
     //Llamada a la función mi_truncar_f().
-    bliberados = mi_truncar_f((int) argv[1], (int) argv[2]);
+    bliberados = mi_truncar_f(atoi(argv[1]), atoi(argv[2]));
 
     if (bliberados==-1) {
         perror("Error: no se ha podido abrir el directorio indicado.\n");

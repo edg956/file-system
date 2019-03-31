@@ -2,7 +2,6 @@
 para obtener un nº de inodo, que mostraremos por pantalla y además utilizaremos 
 como parámetro para mi_write_f().*/
 
-#include "ficheros_basico.h"
 #include "ficheros.h"
 #include "bloques.h"
 
@@ -25,9 +24,9 @@ int main(int argc, char **argv) {
 
     //Declaraciones
     int ninodo; 
-    int diferentes_inodos = atoi(&argv[3]);
+    int diferentes_inodos = atoi(argv[3]);
     struct STAT STAT; 
-    unsigned char buffer[strlen(argv[2])];     
+    char buffer[strlen(argv[2])];     
     unsigned int arrayOffsets[5] = {0, 5120, 256000, 30720000, 71680000};   
 
     //Preparar buffer que se utilizará para escribir. 
@@ -51,7 +50,7 @@ int main(int argc, char **argv) {
     
         //Escritura en todos los offsets.
         for(int i = 0; i < sizeof(arrayOffsets)/sizeof(arrayOffsets[0]); i++) {
-            strcpy(&buffer, &argv[2]);                          //Coloco esto aquí y comento la linea antes de este if solo para comprobar la funcionalidad de write_f y read_f
+            strcpy(&buffer[0], argv[2]);                          //Coloco esto aquí y comento la linea antes de este if solo para comprobar la funcionalidad de write_f y read_f
             if (mi_write_f(ninodo, &buffer, arrayOffsets[i], sizeof(buffer))==-1) {
                 perror("Error al intentar reservar un inodo." 
                 "Función -> escribir.c - main()");
