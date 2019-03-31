@@ -3,8 +3,12 @@
 /*----------------------------FUNCIONES DE NIVEL 6----------------------------*/
 
 int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offset, unsigned int nbytes) {
-    struct inodo inodo;
-    struct inodo in = leer_inodo(ninodo, &in);
+    struct inodo in;
+    
+    if (leer_inodo(ninodo, &in) < 0) {
+        perror("Error: mi_write_f fallido.");
+        return -1;
+    }
     
     if((in.permisos & 2) != 2){
         return -1;                                          //Error no tiene permisos de escritura
@@ -20,12 +24,12 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
 		if(traducir_bloque_inodo(ninodo, bloqueI, 1) < 0){
             return -1;                                      //Obtenemos el bloque físico Error Traducir Bloque Inodo
         }
-		if(bread(bfisico, bufBloque) < 0){
+		if(bread(bfisico, &bufBloque) < 0){
             return -1;                                      //Error en el Bread
         }
 		memcpy (bufBloque + desp1, buf_original, BLOCKSIZE - desp1);
 
-		if(bwrite(bfisico, bufBloque) < 0){
+		if(bwrite(bfisico, &bufBloque) < 0){
             return -1;                                      // Error en el Bwrite
         } 
 		bytes += BLOCKSIZE - desp1 + 1;	                    // Aumentamos el contador los bytes que hemos escrito
@@ -34,9 +38,9 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
         if(traducir_bloque_inodo(ninodo, bloqueI,1) < 0) {
             return -1;                                      //Error Traducir Bloque Inodo
         }
-        if(bread(bfisico, bufBloque) < 0) return -3;        //Leemos el bloque correspondiente Error BREAD
+        if(bread(bfisico, &bufBloque) < 0) return -3;        //Leemos el bloque correspondiente Error BREAD
         memcpy (bufBloque + desp1, buf_original, BLOCKSIZE - desp1);
-        if(bwrite(bfisico, bufBloque) < 0) {
+        if(bwrite(bfisico, &bufBloque) < 0) {
             return -1;                                      // Error en el Bwrite
         }
         bytes += BLOCKSIZE - desp1;
@@ -54,16 +58,18 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
             return -1;                                      //Error Traducir Bloque Indodo
 
         } 
-        if(bread(bfisico, bufBloque) < 0) {
+        if(bread(bfisico, &bufBloque) < 0) {
             return -1;                                      //Error en el Bread
         }
         memcpy (bufBloque, buf_original + (nbytes - desp2 - 1), desp2 + 1);
-        if (bwrite(bfisico, bufBloque) < 0) {
+        if (bwrite(bfisico, &bufBloque) < 0) {
             return -1;                                       // Error en el Bwrite
         }
         bytes += desp2 + 1;
     }
     //falta actualizar la metainformación del inodo
+
+    return bytes;
 }
 
 /*
