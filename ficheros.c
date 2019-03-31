@@ -65,7 +65,7 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
         if ((bfisico = traducir_bloque_inodo(ninodo, bloqueF, 1)) < 0){
             return -1;                                      //Error Traducir Bloque Indodo
         } 
-        if(bread(bfisico, bufBloque) < 0) {
+        if(bread(bfisico, &bufBloque) < 0) {
             return -1;                                      //Error en el Bread
         }
         
