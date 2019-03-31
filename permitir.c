@@ -17,6 +17,8 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
+    unsigned char permisos = *argv[3];
+
     //Llamada a mi_chmod_f().
     if (mi_chmod_f(atoi(argv[2]), atoi(argv[3])) ==-1) {
         perror("Error: No se han podido asignar los permisos correspondientes.\n");
