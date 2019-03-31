@@ -2,13 +2,6 @@
 #include <errno.h>
 #include "ficheros_basico.h"
 
-/*FUNCIONES NIVEL 6*/
-int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offset, unsigned int nbytes);
-int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsigned int nbytes);
-int mi_stat_f(unsigned int ninodo, struct STAT *p_stat);
-int mi_chmod_f(unsigned int ninodo, unsigned char permisos);
-int mi_truncar_f(unsigned int ninodo, unsigned int nbytes);
-
 /*Estructura STAT. Igual que la estructura inodo pero sin los punteros.*/
 struct STAT {
    char tipo;     // Tipo ('l':libre, 'd':directorio o 'f':fichero)
@@ -20,5 +13,13 @@ struct STAT {
    unsigned int nlinks;             // Cantidad de enlaces de entradas en directorio
    unsigned int tamEnBytesLog;      // Tamaño en bytes lógicos
    unsigned int numBloquesOcupados; // Cantidad de bloques ocupados zona de datos
-   char padding[INODOSIZE - 2 * sizeof(unsigned char) - 3 * sizeof(time_t) - 18 * sizeof(unsigned int) - 6 * sizeof(unsigned char)];
+   char padding[INODOSIZE - 2 * sizeof(unsigned char) - 3 * sizeof(time_t) - 
+   18 * sizeof(unsigned int) - 6 * sizeof(unsigned char)];
 };
+
+/*FUNCIONES NIVEL 6*/
+int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offset, unsigned int nbytes);
+int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsigned int nbytes);
+int mi_stat_f(unsigned int ninodo, struct STAT *p_stat);
+int mi_chmod_f(unsigned int ninodo, unsigned char permisos);
+int mi_truncar_f(unsigned int ninodo, unsigned int nbytes);
