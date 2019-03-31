@@ -23,8 +23,10 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
 	unsigned char bufBloque[BLOCKSIZE];             
 	int desp1 = offset % BLOCKSIZE;                         //Desplazamiento en el bloque
 	
+    bfisico = traducir_bloque_inodo(ninodo, bloqueI, 1);
+
     if(bloqueI == bloqueF) {                                //Si el bloque inicial y el bloque final coinciden
-		if((bfisico = traducir_bloque_inodo(ninodo, bloqueI, 1)) < 0) {
+		if(bfisico < 0) {
             return -1;                                      //Obtenemos el bloque físico Error Traducir Bloque Inodo
         }
 		if(bread(bfisico, &bufBloque) < 0){
@@ -41,9 +43,10 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
     } else {
     
         //Primer bloque
-        if(traducir_bloque_inodo(ninodo, bloqueI,1) < 0) {
+        if (bfisico < 0) {
             return -1;                                      //Error Traducir Bloque Inodo
         }
+        
         if(bread(bfisico, &bufBloque) < 0) return -3;        //Leemos el bloque correspondiente Error BREAD
 
         memcpy (bufBloque + desp1, buf_original, BLOCKSIZE - desp1);
@@ -89,6 +92,8 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
         "Función -> mi_write_f()");
         return -1;
     }
+
+    return bytes;
 }
 
 /*
