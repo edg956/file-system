@@ -3,9 +3,16 @@
 /*----------------------------FUNCIONES DE NIVEL 6----------------------------*/
 
 int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offset, unsigned int nbytes) {
-    struct inodo inodo;
-    struct inodo in = leer_inodo(ninodo, &in);
+    struct inodo in;
     
+    //Lectura del inodo
+    if (leer_inodo(ninodo, &in) < 0) {
+        perror("Error: no se ha podido leer el inodo."
+        "Función -> mi_write_f()");
+        return -1;
+    }
+    
+    //Comprobación de permisos
     if((in.permisos & 2) != 2){
         return -1;                                          //Error no tiene permisos de escritura
     }   
@@ -17,53 +24,73 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
 	int desp1 = offset % BLOCKSIZE;                         //Desplazamiento en el bloque
 	
     if(bloqueI == bloqueF) {                                //Si el bloque inicial y el bloque final coinciden
-		if(traducir_bloque_inodo(ninodo, bloqueI, 1) < 0){
+		if((bfisico = traducir_bloque_inodo(ninodo, bloqueI, 1)) < 0) {
             return -1;                                      //Obtenemos el bloque físico Error Traducir Bloque Inodo
         }
-		if(bread(bfisico, bufBloque) < 0){
+		if(bread(bfisico, &bufBloque) < 0){
             return -1;                                      //Error en el Bread
         }
-		memcpy (bufBloque + desp1, buf_original, BLOCKSIZE - desp1);
 
-		if(bwrite(bfisico, bufBloque) < 0){
+		memcpy (&bufBloque + desp1, &buf_original, nbytes);
+
+		if(bwrite(bfisico, &bufBloque) < 0){
             return -1;                                      // Error en el Bwrite
         } 
-		bytes += BLOCKSIZE - desp1 + 1;	                    // Aumentamos el contador los bytes que hemos escrito
-    }else{
+		bytes += nbytes;	                    // Aumentamos el contador los bytes que hemos escrito
+    
+    } else {
+    
         //Primer bloque
         if(traducir_bloque_inodo(ninodo, bloqueI,1) < 0) {
             return -1;                                      //Error Traducir Bloque Inodo
         }
-        if(bread(bfisico, bufBloque) < 0) return -3;        //Leemos el bloque correspondiente Error BREAD
-        memcpy (bufBloque + desp1, buf_original, BLOCKSIZE - desp1);
-        if(bwrite(bfisico, bufBloque) < 0) {
+        if(bread(bfisico, &bufBloque) < 0) return -3;        //Leemos el bloque correspondiente Error BREAD
+        
+        memcpy (&bufBloque + desp1, &buf_original, BLOCKSIZE - desp1);
+        
+        if(bwrite(bfisico, &bufBloque) < 0) {
             return -1;                                      // Error en el Bwrite
         }
         bytes += BLOCKSIZE - desp1;
     
         //Bloques Intermedios
         for(int i = bloqueI + 1; i < bloqueF; i++) {
-            if(traducir_bloque_inodo(ninodo, i, 1) < 0) {
+            if((bfisico = traducir_bloque_inodo(ninodo, i, 1)) < 0) {
                 return -1;                                  //Error Traducir Bloque Inodo
             }
-            bytes += bwrite (bfisico, buf_original + (BLOCKSIZE - desp1) + (i - bloqueI - 1) * BLOCKSIZE);
+            bytes += bwrite (bfisico, &buf_original + (BLOCKSIZE - desp1) + (i - bloqueI - 1) * BLOCKSIZE);
         }
         //Último Bloque
         int desp2 = (offset + nbytes - 1) % BLOCKSIZE;
-        if (traducir_bloque_inodo(ninodo, bloqueF, 1) < 0){
+        if ((bfisico = traducir_bloque_inodo(ninodo, bloqueF, 1)) < 0){
             return -1;                                      //Error Traducir Bloque Indodo
-
         } 
         if(bread(bfisico, bufBloque) < 0) {
             return -1;                                      //Error en el Bread
         }
-        memcpy (bufBloque, buf_original + (nbytes - desp2 - 1), desp2 + 1);
+        
+        memcpy (&bufBloque, &buf_original + (nbytes - desp2 - 1), desp2 + 1);
+        
         if (bwrite(bfisico, bufBloque) < 0) {
             return -1;                                       // Error en el Bwrite
         }
+        
         bytes += desp2 + 1;
     }
-    //falta actualizar la metainformación del inodo
+    //Actualizar metadatos inodo
+    if (in.tamEnBytesLog < offset + bytes) {
+        //Si se ha pasado el tamaño del fichero antes de la nueva escritura
+        in.tamEnBytesLog = offset + bytes;
+        in.ctime = time(NULL);
+    }
+    in.mtime = time(NULL);
+
+    //Escribir inodo actualizado
+    if (escribir_inodo(ninodo, in) < 0) {
+        perror("Error: no se ha podido escribir inodo."
+        "Función -> mi_write_f()");
+        return -1;
+    }
 }
 
 /*
