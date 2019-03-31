@@ -1044,9 +1044,12 @@ int liberar_inodo(unsigned int ninodo) {
         perror("Error: liberar_bloque_inodo ha fallado. Función -> liberar_inodo()");
         return -1;
     }
+<<<<<<< HEAD
 
     //Estructuras de apoyo
     struct inodo ino;
+=======
+>>>>>>> 128693127f214110c33b2cf7ca76f3eb6cdd4691
     struct superbloque SB;
     
     //Lectura del inodo actualizado
@@ -1084,8 +1087,12 @@ int liberar_inodo(unsigned int ninodo) {
         " Función -> liberar_inodo()");
         return -1;
     }
+<<<<<<< HEAD
 
     return ninodo;
+=======
+return 0;
+>>>>>>> 128693127f214110c33b2cf7ca76f3eb6cdd4691
 }
 
 /*

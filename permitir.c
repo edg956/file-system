@@ -1,10 +1,12 @@
+
+#include "ficheros_basico.h"
 #include "ficheros.h"
 #include "bloques.h"
 
 int main(int argc, char **argv) {
 
     //Comprobar la sintaxis de la llamada a la función.
-    if (argc!=3 && argc != 4) {
+    if (argc!=3) {
         perror("Error: Sintaxis de llamada al programa incorrecta.\n"
         "Sintaxis: ./nombre_del_programa <nombre_dispositivo>" 
         "<ninodo> <permisos\n>");
