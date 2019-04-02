@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
     struct inodo inodo; 
 
     //Comprobar la sintaxis de la llamada a la función.
-    if (argc!=3) {
+    if (argc!=4) {
         perror("Error: Sintaxis de llamada al programa incorrecta.\n"
         "Sintaxis: ./nombre_del_programa <nombre_dispositivo>" 
         "<ninodo> <nbytes\n>");

@@ -53,5 +53,8 @@ int main(int argc, char **argv) {
         perror("Error: desmontar dispositivo erroneo.");
         exit(-1);
     }
+<<<<<<< HEAD
     
+=======
+>>>>>>> Código compilable. He estado intentando hacer funcionar el script 1. De momento no ha sido posible.
 }

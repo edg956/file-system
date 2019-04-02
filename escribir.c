@@ -5,14 +5,15 @@ como parámetro para mi_write_f().*/
 #include "ficheros.h"
 #include "bloques.h"
 
-
 int main(int argc, char **argv) {
 
     //Comprobar la sintaxis de la llamada a la función.
-    if (argc!=3) {
+    if (argc!=4) {
         perror("Error: Sintaxis de llamada al programa incorrecta.\n"
         "Sintaxis: ./nombre_del_programa <nombre_dispositivo>" 
-        "<""$(cat fichero)""> <diferentes_inodos\n>");
+        "<\"$(cat fichero)\"> <diferentes_inodos>\nOffsets: 0, 5120,"
+        "256000, 30720000, 71680000\nSi diferentes inodos = 0 se reserva"
+        " un solo inodo para todos los offsets\n");
         exit(-1);
     }
 
@@ -27,7 +28,12 @@ int main(int argc, char **argv) {
     int diferentes_inodos = atoi(argv[3]);
     struct STAT STAT; 
     char buffer[strlen(argv[2])];     
-    unsigned int arrayOffsets[5] = {0, 5120, 256000, 30720000, 71680000};   
+    unsigned int arrayOffsets[5] = {0, 5120, 256000, 30720000, 71680000}; 
+    int bytesEscritos = 0;  
+    struct tm *ts;
+    char buf[80];
+    
+    printf("Longitud texto: %ld\n\n", strlen(argv[2]));
 
     //Preparar buffer que se utilizará para escribir. 
     //strcpy(&buffer, &argv[2]);
@@ -44,9 +50,6 @@ int main(int argc, char **argv) {
             "Función -> escribir.c - main()");
             exit(-1);
         }
-
-        //Mostrar el número de inodo por pantalla. 
-        printf("El número de inodo reservado es: %d\n", ninodo);
     
         //Escritura en todos los offsets.
         for(int i = 0; i < sizeof(arrayOffsets)/sizeof(arrayOffsets[0]); i++) {
@@ -59,23 +62,40 @@ int main(int argc, char **argv) {
 
             /*COMPROBACIONES DE CORRECTESA*/
             memset(&buffer, 0, sizeof(buffer));
-
+            printf("\nNº inodo reservado: %d\n", ninodo);
             mi_read_f(ninodo, &buffer, arrayOffsets[i], sizeof(buffer));
             printf("Offset: %u\n", arrayOffsets[i]);
-            write(1, &buffer, sizeof(buffer));
-            puts("\n");
-        }    
+            bytesEscritos = write(1, &buffer, sizeof(buffer));
+            printf("Bytes escritos: %d\n\n", bytesEscritos);
 
-        //Mostrar datos del inodo escrito. 
-        if (mi_stat_f(ninodo, &STAT) < 0) {
+            //Mostrar datos del inodo escrito. 
+            if (mi_stat_f(ninodo, &STAT) < 0) {
             perror("Error: mi_stat_f fallido." 
                 "Función -> escribir.c - main()");
             exit(-1);
-        }
+            }
 
-        //Imprimir resultados
-        printf("Tamaño en bytes lógico del inodo: %d\n", STAT.tamEnBytesLog);
-        printf("Número de bloques ocupados: %d\n", STAT.numBloquesOcupados);
+            //Imprimir resultados
+            printf("DATOS INODO %d:\n", ninodo);
+            printf("Tipo = %c\n", STAT.tipo);
+            printf("Permisos = %d\n", STAT.permisos);
+
+            ts = localtime(&STAT.atime);
+            strftime(buf, sizeof(buf), "%a %Y-%m-%d %H:%M:%S %Z", ts);
+            printf("atime: %s\n", buf);
+
+            ts = localtime(&STAT.ctime);
+            strftime(buf, sizeof(buf), "%a %Y-%m-%d %H:%M:%S %Z", ts);
+            printf("ctime: %s\n", buf);
+
+            ts = localtime(&STAT.mtime);
+            strftime(buf, sizeof(buf), "%a %Y-%m-%d %H:%M:%S %Z", ts);
+            printf("mtime: %s\n", buf);
+
+            printf("nlinks = %d\n", STAT.nlinks);
+            printf("TamEnBytesLog = %d\n", STAT.tamEnBytesLog);
+            printf("NumBloquesOcupados = %d\n", STAT.numBloquesOcupados);
+        }    
 
     } else {
 
@@ -83,9 +103,6 @@ int main(int argc, char **argv) {
         for (int i = 0; i < sizeof(arrayOffsets)/sizeof(arrayOffsets[0]); i++) {
             //Reservar inodo
             ninodo = reservar_inodo('f', 6);
-
-            //Mostrar el número de inodo por pantalla. 
-            printf("El número de inodo reservado es: %d\n", ninodo);
 
             //Escribir en offset correspondiente a inodo
             if (mi_write_f(ninodo, &buffer, arrayOffsets[i], sizeof(buffer))<0){
@@ -96,24 +113,40 @@ int main(int argc, char **argv) {
 
             /*COMPROBACIONES DE CORRECTESA*/
             memset(&buffer, 0, sizeof(buffer));
-
+            printf("Nº inodo reservado: %d\n", ninodo);
             mi_read_f(ninodo, &buffer, arrayOffsets[i], sizeof(buffer));
             printf("Offset: %u\n", arrayOffsets[i]);
-            write(1, &buffer, sizeof(buffer));
-            puts("\n");
+            bytesEscritos = write(1, &buffer, sizeof(buffer));
+            printf("Bytes escritos: %d\n\n", bytesEscritos);
 
-            //Mostrar datos del inodo escrito
-            if (mi_stat_f(ninodo, &STAT)<0) {
-                perror("Error: mi_stat_f fallido." 
+            //Mostrar datos del inodo escrito. 
+            if (mi_stat_f(ninodo, &STAT) < 0) {
+            perror("Error: mi_stat_f fallido." 
                 "Función -> escribir.c - main()");
-                exit(-1);
+            exit(-1);
             }
 
             //Imprimir resultados
-            printf("Tamaño en bytes lógico del inodo: %d\n", STAT.tamEnBytesLog);
-            printf("Número de bloques ocupados: %d\n", STAT.numBloquesOcupados);
-        }
+            printf("DATOS INODO %d:\n", ninodo);
+            printf("Tipo = %c\n", STAT.tipo);
+            printf("Permisos = %d\n", STAT.permisos);
 
+            ts = localtime(&STAT.atime);
+            strftime(buf, sizeof(buf), "%a %Y-%m-%d %H:%M:%S %Z", ts);
+            printf("atime: %s\n", buf);
+
+            ts = localtime(&STAT.ctime);
+            strftime(buf, sizeof(buf), "%a %Y-%m-%d %H:%M:%S %Z", ts);
+            printf("ctime: %s\n", buf);
+
+            ts = localtime(&STAT.mtime);
+            strftime(buf, sizeof(buf), "%a %Y-%m-%d %H:%M:%S %Z", ts);
+            printf("mtime: %s\n", buf);
+
+            printf("nlinks = %d\n", STAT.nlinks);
+            printf("TamEnBytesLog = %d\n", STAT.tamEnBytesLog);
+            printf("NumBloquesOcupados = %d\n", STAT.numBloquesOcupados);
+        }
     }
 
     //Desmontar dispositivo virtual. 

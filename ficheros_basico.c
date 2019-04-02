@@ -857,10 +857,10 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, char reser
 
             if (nivel_ptr == nRangoBL) {    //el bloque cuelga del inodo
                 inodo.punterosIndirectos[nRangoBL -1] = ptr;
-                printf("traducir_bloque_inodo(): inodo.punterosIndirectos[%i] = %i -> BL: %i\n",nRangoBL-1, ptr,nblogico);        //Mensaje de comprobación
+                //printf("traducir_bloque_inodo(): inodo.punterosIndirectos[%i] = %i -> BL: %i\n",nRangoBL-1, ptr,nblogico);        //Mensaje de comprobación
             } else {
                 buffer[indice] = ptr;
-                printf("traducir_bloque_inodo(): punteros_nivel%i[%i]: = %i -> BL: %i\n",nivel_ptr+1,indice,ptr, nblogico);        //Mensaje de comprobación
+                //printf("traducir_bloque_inodo(): punteros_nivel%i[%i]: = %i -> BL: %i\n",nivel_ptr+1,indice,ptr, nblogico);        //Mensaje de comprobación
 
                 if (bwrite(ptr_prev, &buffer) == -1) {
                     perror("Error: no se ha podido escribir el buffer en el "
@@ -908,12 +908,12 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, char reser
         //Si el rango cabe dentro de punteros directos: 
         if (nRangoBL == 0) {
             inodo.punterosDirectos[nblogico] = ptr;
-            printf("traducir_bloque_inodo(): inodo.punterosDirectos[%i] = %i -> BL: %i\n",nblogico, ptr, nblogico);        //Mensaje de comprobación
+            //printf("traducir_bloque_inodo(): inodo.punterosDirectos[%i] = %i -> BL: %i\n",nblogico, ptr, nblogico);        //Mensaje de comprobación
 
         } else {
             //Sino, dejar a la siguiente iteración
             buffer[indice] = ptr;
-            printf("traducir_bloque_inodo(): punteros_nivel%i[%i]: = %i -> BL: %i\n",nivel_ptr+1,indice,ptr,nblogico);        //Mensaje de comprobación
+            //printf("traducir_bloque_inodo(): punteros_nivel%i[%i]: = %i -> BL: %i\n",nivel_ptr+1,indice,ptr,nblogico);        //Mensaje de comprobación
             if (bwrite(ptr_prev, &buffer) == -1) {
                 perror("Error: no se ha podido escribir el buffer en el "
                     "disco. Función -> traducir_bloque_inodo()");
@@ -930,7 +930,6 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, char reser
             return -1;
         }
     }
-
     return ptr; //Nº de bloque físico
 }
 
@@ -1071,6 +1070,8 @@ int liberar_inodo(unsigned int ninodo) {
     }
     
     
+    struct inodo ino; 
+
     //Lectura del inodo actualizado
     if (leer_inodo(ninodo, &inodo) < 0) {
         perror("Error: leer_inodo ha fallado. Función -> liberar_inodo()");

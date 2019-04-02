@@ -86,7 +86,7 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
     }
     in.mtime = time(NULL);
 
-    //Escribir inodo actualizado
+    //Escribir inodo actualizado                                                    //CONFLICTO
     if (escribir_inodo(ninodo, in) < 0) {
         perror("Error: no se ha podido escribir inodo."
         "Función -> mi_write_f()");
@@ -165,7 +165,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
 
     if ((bfisico)==-1) {
 
-        leidos = leidos + BLOCKSIZE; 
+        //leidos = leidos + BLOCKSIZE;  -------------------------------------------------------------> Revisar esta parte. 
 
     }else{
 
@@ -193,7 +193,8 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
 
         if ((bfisico)==-1) {
 
-            leidos = leidos + BLOCKSIZE;
+            //leidos = leidos + BLOCKSIZE;  -----------------------------------------------------------> revisar esta parte también.
+        
         }else{
 
             /*Se copia el bloque físico correspondiente al bloque lógico en
@@ -223,7 +224,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
 
     if ((bfisico)==-1) {
 
-        leidos = leidos + BLOCKSIZE;
+        leidos = leidos + BLOCKSIZE; //---------------------------------------------------------------> Revisar. 
 
     }else {
         //Se lee el bloque entero y se almacena en el buffer auxiliar. 
@@ -244,7 +245,6 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     inodo.atime = time(NULL);
 
     return leidos; 
-
 }
 
 /*
