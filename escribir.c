@@ -5,7 +5,6 @@ como parámetro para mi_write_f().*/
 #include "ficheros.h"
 #include "bloques.h"
 
-
 int main(int argc, char **argv) {
 
     //Comprobar la sintaxis de la llamada a la función.
@@ -138,7 +137,7 @@ int main(int argc, char **argv) {
             if (mi_stat_f(ninodo, &STAT) < 0) {
                 perror("Error: mi_stat_f fallido." 
                 "Función -> escribir.c - main()");
-                exit(-1);
+            exit(-1);
             }
 
             //Imprimir resultados
