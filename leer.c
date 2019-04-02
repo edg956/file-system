@@ -11,7 +11,7 @@ similar a la función cat de linux, explorando TODO el fichero*/
 int main(int argc, char **argv) {
 
     //Comprobación de los argumentos pasados al programa. 
-    if (argc!=2) {
+    if (argc!=3) {
         perror("Error: Sintaxis de llamada al programa incorrecta.\n"
         "Sintaxis: ./nombre_del_programa <nombre_dispositivo>" 
         "<numero_inodo>");
@@ -61,8 +61,8 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    sprintf(&str[0], "Fin de fichero\n. Nº bytes leidos: %i\nTam.Bytes "
-    "inodo: %i\n",bytes_leidos, STAT.tamEnBytesLog);
+    sprintf(&str[0], "total_leidos %i\nTamEnBytesLog "
+    "%i\n",bytes_leidos, STAT.tamEnBytesLog);
     write(2, &str, strlen(str));
 
     //Desmontar dispositivo virtual. 

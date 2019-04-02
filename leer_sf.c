@@ -53,5 +53,4 @@ int main(int argc, char **argv) {
         perror("Error: no se ha podido cerrar el fichero.\n");
         exit(-1);
     }
-
 }
