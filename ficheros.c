@@ -278,7 +278,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
 
             /*La suma de leidos es para ir avanzando dentro del buffer de
             destino y no pisar la información que haya antes*/
-            memcpy(buf_original+leidos,auxBuff, BLOCKSIZE);
+            memcpy(&buf_original+leidos,&auxBuff[0], BLOCKSIZE);
 
             //Se actualiza la variable que indica los bloques leídos.
             leidos = leidos+BLOCKSIZE;
