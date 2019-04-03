@@ -396,7 +396,7 @@ int mi_truncar_f(unsigned int ninodo, unsigned int nbytes){
     //Declaraciones.
     struct inodo inodo; 
     int bliberados = 0; 
-    int nblogico;
+    int nblogico, nblogicoL;
     int aux; 
 
     //Leer inodo. 
@@ -434,8 +434,15 @@ int mi_truncar_f(unsigned int ninodo, unsigned int nbytes){
 
     }
 
+    //Determinar último bloque lógico
+    if (inodo.tamEnBytesLog % BLOCKSIZE == 0) {
+        nblogicoL = inodo.tamEnBytesLog/BLOCKSIZE;
+    } else {
+        nblogicoL = inodo.tamEnBytesLog/BLOCKSIZE + 1;
+    }
+
     //Recorrido desde nblogico hasta final de fichero/directorio. 
-    for(int i = nblogico; i < inodo.tamEnBytesLog; i++) {
+    for(int i = nblogico; i < nblogicoL; i++) {
 
         aux = liberar_bloques_inodo(ninodo, nblogico);
 
@@ -445,14 +452,15 @@ int mi_truncar_f(unsigned int ninodo, unsigned int nbytes){
             exit(-1);
         }
 
-       bliberados = bliberados + aux;
+       bliberados += aux;
 
     }
     
     //Actualizar mtime, ctime y tamaño en bytes lógicos del inodo. 
     inodo.ctime = time(NULL);
     inodo.mtime = time(NULL);
-    inodo.tamEnBytesLog = nbytes; 
+    inodo.tamEnBytesLog = nbytes;
+    inodo.numBloquesOcupados -= bliberados;
 
     //Escribir inodo modificado. 
     if (escribir_inodo(ninodo, inodo)==-1) {
