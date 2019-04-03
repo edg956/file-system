@@ -54,9 +54,8 @@ int main(int argc, char **argv) {
     
         //Escritura en todos los offsets.
         for(int i = 0; i < sizeof(arrayOffsets)/sizeof(arrayOffsets[0]); i++) {
-            strcpy(&buffer[0], argv[2]);                          //Coloco esto aquí y comento la linea antes de este if solo para comprobar la funcionalidad de write_f y read_f
-            
-            bytesEscritos = mi_write_f(ninodo, &buffer[0], arrayOffsets[i], 
+            strcpy(buffer, argv[2]);                          //Coloco esto aquí y comento la linea antes de este if solo para comprobar la funcionalidad de write_f y read_f
+            bytesEscritos = mi_write_f(ninodo, buffer, arrayOffsets[i], 
             sizeof(buffer));
 
             if (bytesEscritos ==-1) {
@@ -65,16 +64,10 @@ int main(int argc, char **argv) {
                 exit(-1);
             }
 
-            /*COMPROBACIONES DE CORRECTESA*/
-            memset(&buffer[0], 0, sizeof(buffer));
+            //Mensajes de nivel 7
             printf("\nNº inodo reservado: %d\n", ninodo);
-            
-            bytesEscritos = mi_read_f(ninodo, &buffer[0], arrayOffsets[i], sizeof(buffer));
-            
             printf("Offset: %u\n", arrayOffsets[i]);
-            printf("Bytes escritos: %d\n", bytesEscritos);
-            write(1, &buffer[0], sizeof(buffer));  
-            puts("");            
+            printf("Bytes escritos: %d\n", bytesEscritos);           
             
             //Mostrar datos del inodo escrito. 
             if (mi_stat_f(ninodo, &STAT) < 0) {
@@ -112,7 +105,7 @@ int main(int argc, char **argv) {
             //Reservar inodo
             ninodo = reservar_inodo('f', 6);
 
-            bytesEscritos = mi_write_f(ninodo, &buffer[0], arrayOffsets[i], 
+            bytesEscritos = mi_write_f(ninodo, buffer, arrayOffsets[i], 
             sizeof(buffer));
 
             //Escribir en offset correspondiente a inodo
@@ -122,17 +115,10 @@ int main(int argc, char **argv) {
                 exit(-1);
             }
 
-            /*COMPROBACIONES DE CORRECTESA*/
-            memset(&buffer[0], 0, sizeof(buffer));
+            //Mensajes de nivel 7
             printf("\nNº inodo reservado: %d\n", ninodo);
-            
-            mi_read_f(ninodo, &buffer[0], arrayOffsets[i], sizeof(buffer));
-        
             printf("Offset: %u\n", arrayOffsets[i]);
-            printf("Bytes escritos: %d\n", bytesEscritos);
-
-            write(1, &buffer[0], sizeof(buffer));  
-            puts("");     
+            printf("Bytes escritos: %d\n", bytesEscritos);  
 
             //Mostrar datos del inodo escrito. 
             if (mi_stat_f(ninodo, &STAT) < 0) {
