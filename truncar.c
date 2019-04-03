@@ -24,20 +24,6 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    //Leer superbloque
-    if (bread(posSB, &superbloque) < 0) {
-        perror("Error: no se ha podido leer el superbloque."
-        "Función -> main()");
-        exit(-1);
-    }
-
-    //Leer inodo. 
-    if (mi_stat_f(atoi(argv[2]), &STAT)==-1) {
-        perror("Error: no se ha podido leer el inodo indicado." 
-        "Función -> truncar.c - main()\n");
-        exit(-1);    
-    }
-
     //Llamada a la función mi_truncar_f().
     bliberados = mi_truncar_f(atoi(argv[2]), atoi(argv[3]));
 
@@ -48,13 +34,6 @@ int main(int argc, char **argv) {
 
     //Mostrar número de bloques liberados.
     printf("Número de bloques liberados: %d\n\n", bliberados);
-
-    //Leer superbloque
-    if (bread(posSB, &superbloque) < 0) {
-        perror("Error: no se ha podido leer el superbloque."
-        "Función -> main()");
-        exit(-1);
-    }
 
     //Leer inodo. 
     if (mi_stat_f(atoi(argv[2]), &STAT)==-1) {

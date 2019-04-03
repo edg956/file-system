@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
     }
 
     /**************************DATOS DEL SUPERBLOQUE***************************/
-    puts("DATOS DEL SUPERBLOQUE\n");
+    puts("\nDATOS DEL SUPERBLOQUE");
     printf("Posición del primer bloque del mapa de bits: %i\n",SB.posPrimerBloqueMB);
     printf("Posición del último bloque del mapa de bits: %i\n",SB.posUltimoBloqueMB);
     printf("Posición del primer bloque del array de inodos: %i\n",SB.posPrimerBloqueAI);

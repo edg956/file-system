@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
         exit(-1);           
     }
 
-    sprintf(&str[0], "total_leidos %i\nTamEnBytesLog "
+    sprintf(&str[0], "\n\ntotal_leidos %i\nTamEnBytesLog "
     "%i\n",bytes_leidos, STAT.tamEnBytesLog);
     write(2, &str, strlen(str));
 
