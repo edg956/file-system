@@ -14,6 +14,7 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
     
     //Comprobación de permisos
     if((in.permisos & 2) != 2){
+        puts("oh shit");
         return -1;                                          //Error no tiene permisos de escritura
     }   
 
@@ -38,10 +39,7 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
 		if(bwrite(bfisico, &bufBloque) < 0){
             return -1;                                      // Error en el Bwrite
         } 
-        // puts("PRUEBA WRITE");
-        // write(1, &buf_original, nbytes);  
-        // puts("");
-        // write(1, &bufBloque+desp1, nbytes);  
+
 		bytes += nbytes;	                    // Aumentamos el contador los bytes que hemos escrito
     } else {
     
@@ -178,11 +176,17 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
 		if(bfisico < 0) {
             leidos += nbytes;                                                 //Obtenemos el bloque físico Error Traducir Bloque Inodo
         }else{
-		if(bread(bfisico, &auxBuff[0]) < 0){
+		if(bread(bfisico, &auxBuff) < 0){
             return -1;                                      //Error en el Bread
         }
         
-		memcpy (&buf_original, &auxBuff[0] + desp1, nbytes); //CONFLICTO
+        printf("Im here!!");
+        write(1, &auxBuff+desp1, nbytes);
+		memcpy (&buf_original, &auxBuff + desp1, nbytes);
+        puts("");
+        write(1, &buf_original, nbytes);
+        puts("");
+
 		leidos += nbytes;	                    // Aumentamos el contador los bytes que hemos escrito
         }
     }else{
