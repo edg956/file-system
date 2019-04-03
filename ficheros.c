@@ -29,13 +29,13 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
 		if(bfisico < 0) {
             return -1;                                      //Obtenemos el bloque físico Error Traducir Bloque Inodo
         }
-		if(bread(bfisico, &bufBloque[0]) < 0){
+		if(bread(bfisico, &bufBloque) < 0){
             return -1;                                      //Error en el Bread
         }
 
 		memcpy (&bufBloque + desp1, &buf_original, nbytes);
 
-		if(bwrite(bfisico, &bufBloque[0]) < 0){
+		if(bwrite(bfisico, &bufBloque) < 0){
             return -1;                                      // Error en el Bwrite
         } 
         // puts("PRUEBA WRITE");
