@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
     //Preparar buffer que se utilizará para escribir. 
     //strcpy(&buffer, &argv[2]);
 
-    if(diferentes_inodos==0) {
+    if(!diferentes_inodos) {
         //Sólo hay que reservar un inodo en este caso. 
 
         //Reserva del inodo.
@@ -68,12 +68,11 @@ int main(int argc, char **argv) {
             /*COMPROBACIONES DE CORRECTESA*/
             memset(&buffer[0], 0, sizeof(buffer));
             printf("\nNº inodo reservado: %d\n", ninodo);
-            printf("Bytes escritos: %d\n", bytesEscritos);
+            
             bytesEscritos = mi_read_f(ninodo, &buffer[0], arrayOffsets[i], sizeof(buffer));
-            //printf("bytes leidos: %i\n", bytesEscritos);
             
             printf("Offset: %u\n", arrayOffsets[i]);
-            //printf("Contenido leido: %s\n", &buffer[0]);
+            printf("Bytes escritos: %d\n", bytesEscritos);
             write(1, &buffer[0], sizeof(buffer));  
             puts("");            
             
@@ -114,7 +113,8 @@ int main(int argc, char **argv) {
             ninodo = reservar_inodo('f', 6);
 
             bytesEscritos = mi_write_f(ninodo, &buffer[0], arrayOffsets[i], 
-            sizeof(buffer);
+            sizeof(buffer));
+
             //Escribir en offset correspondiente a inodo
             if (bytesEscritos<0){
                 perror("Error al intentar reservar un inodo." 
@@ -125,20 +125,20 @@ int main(int argc, char **argv) {
             /*COMPROBACIONES DE CORRECTESA*/
             memset(&buffer[0], 0, sizeof(buffer));
             printf("\nNº inodo reservado: %d\n", ninodo);
-            printf("Bytes escritos: %d\n", bytesEscritos);
-            mi_read_f(ninodo, &buffer[0], arrayOffsets[i], sizeof(buffer));
-            //printf("bytes leidos: %i\n", bytesEscritos);
             
+            mi_read_f(ninodo, &buffer[0], arrayOffsets[i], sizeof(buffer));
+        
             printf("Offset: %u\n", arrayOffsets[i]);
-            //printf("Contenido leido: %s\n", &buffer[0]);
+            printf("Bytes escritos: %d\n", bytesEscritos);
+
             write(1, &buffer[0], sizeof(buffer));  
             puts("");     
 
             //Mostrar datos del inodo escrito. 
             if (mi_stat_f(ninodo, &STAT) < 0) {
-            perror("Error: mi_stat_f fallido." 
+                perror("Error: mi_stat_f fallido." 
                 "Función -> escribir.c - main()");
-            exit(-1);
+                exit(-1);
             }
 
             //Imprimir resultados

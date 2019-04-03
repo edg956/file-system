@@ -1,6 +1,7 @@
 #include "ficheros_basico.h"
 #include <limits.h>
 #include <time.h>
+#include <stdio.h>                                                                  //DEBUG
 
 /*----------------------------FUNCIONES DE NIVEL 2----------------------------*/
 
@@ -214,8 +215,7 @@ int initAI() {
     //Estructuras y variables de apoyo
     struct superbloque SB;
     int contInodos;
-    int numInPerBloq = BLOCKSIZE/INODOSIZE; //Número de inodos por bloque
-    struct inodo inodos[numInPerBloq]; 
+    struct inodo inodos[NUMINPRBLQ]; 
 
     if (bread(0, &SB) == -1) {
         perror("Error: no se ha podido leer del superbloque."
@@ -228,7 +228,7 @@ int initAI() {
 
     //Inicialización de numInPerBloq inodos por cada bloque
     for(int i = SB.posPrimerBloqueAI; i <= SB.posUltimoBloqueAI; i++) {
-        for(int j = 0; j < numInPerBloq; j++) {
+        for(int j = 0; j < NUMINPRBLQ; j++) {
             inodos[j].tipo = T_INODO_LIBRE;
            
             if (contInodos < SB.totInodos) {
@@ -596,21 +596,22 @@ int escribir_inodo(unsigned int ninodo, struct inodo inodo) {
     }
 
     //Variables de apoyo
-    unsigned int posInodo = ninodo / NUMINPRBLQ; //Nº de blqs que tiene el inodo
+    unsigned int posInodo = ninodo / NUMINPRBLQ; //Nº de blq que tiene al inodo
     struct inodo bufferIn[NUMINPRBLQ];   //Buffer de inodos
 
     //Leer información del array de inodos
-    if (bread(posInodo + SB.posPrimerBloqueAI, &bufferIn) == -1) {
+    if (bread(posInodo + SB.posPrimerBloqueAI, &bufferIn[0]) == -1) {
         perror("Error en lectura desde el array de inodos."
         " Función -> escribir_inodo()");
         return -1;
     }
 
+
     //Nº de inodo sobre el que escribir
     bufferIn[ninodo % NUMINPRBLQ] = inodo;
 
     //Escritura sobre el array de inodos
-    if (bwrite(posInodo + SB.posPrimerBloqueAI, &bufferIn) == -1) {
+    if (bwrite(posInodo + SB.posPrimerBloqueAI, &bufferIn[0]) == -1) {
         perror("Error en escritura al array de inodos."
         " Función -> escribir_inodo()");
         return -1;
@@ -655,13 +656,13 @@ int leer_inodo(unsigned int ninodo, struct inodo *inodo) {
     struct inodo inodos[NUMINPRBLQ];
 
     //Encontramos la posición del inodo solicitado
-    if (bread(posInodo,&inodos) == -1) {
+    if (bread(posInodo,&inodos[0]) == -1) {
         perror("Error en lectura del bloque que contiene ninodo. "
         "Función -> leer_inodo()");
         return -1;
     }
 
-    //No se si está bien la asignación?¿---------------------------------------------------> Revisar este comentario. 
+    //Asignar a inodo de salida
     *inodo = inodos[ninodo%NUMINPRBLQ];
 
 	return 0;
@@ -811,7 +812,7 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, char reser
     }
 
     //Inicialización de buffer con 0s
-    memset(&buffer, 0, NPUNTEROS * sizeof(int));
+    memset(&buffer[0], 0, NPUNTEROS * sizeof(int));
 
     //Inicializar variables
     ptr = 0;
