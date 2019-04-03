@@ -362,7 +362,7 @@ int mi_chmod_f(unsigned int ninodo, unsigned char permisos){
     if (escribir_inodo(ninodo, inodo)==-1) {
         perror("Error: no se ha podido escribir el inodo deseado. "
                   "Función -> mi_chmod_f()");
-            exit(-1);
+        exit(-1);
     }
     return 0;
 }

@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
             }
 
             //Imprimir resultados
-            printf("DATOS INODO %d:\n", ninodo);
+            printf("\nDATOS INODO %d:\n", ninodo);
             printf("Tipo = %c\n", STAT.tipo);
             printf("Permisos = %d\n", STAT.permisos);
 
@@ -162,6 +162,5 @@ int main(int argc, char **argv) {
         perror("Error: no se ha podido desmontar el dispositivo virtual.\n");
         exit(-1);
     }
-
     return 0;
 }
