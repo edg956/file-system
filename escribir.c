@@ -35,6 +35,9 @@ int main(int argc, char **argv) {
     char buf[80];
     
     printf("Longitud texto: %ld\n\n", strlen(argv[2]));
+            
+    //Obtenemos los datos a escribir. 
+    strcpy(buffer, argv[2]);
 
     //Preparar buffer que se utilizará para escribir. 
     //strcpy(&buffer, &argv[2]);
@@ -54,7 +57,6 @@ int main(int argc, char **argv) {
     
         //Escritura en todos los offsets.
         for(int i = 0; i < sizeof(arrayOffsets)/sizeof(arrayOffsets[0]); i++) {
-            strcpy(buffer, argv[2]);                          //Coloco esto aquí y comento la linea antes de este if solo para comprobar la funcionalidad de write_f y read_f
             bytesEscritos = mi_write_f(ninodo, buffer, arrayOffsets[i], 
             sizeof(buffer));
 
@@ -104,6 +106,11 @@ int main(int argc, char **argv) {
         for (int i = 0; i < sizeof(arrayOffsets)/sizeof(arrayOffsets[0]); i++) {
             //Reservar inodo
             ninodo = reservar_inodo('f', 6);
+            if (ninodo == -1) {
+                 perror("Error al intentar reservar un inodo." 
+                "Función -> escribir.c - main()");
+                exit(-1);
+            }
 
             bytesEscritos = mi_write_f(ninodo, buffer, arrayOffsets[i], 
             sizeof(buffer));
