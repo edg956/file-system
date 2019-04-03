@@ -137,7 +137,7 @@ int main(int argc, char **argv) {
             if (mi_stat_f(ninodo, &STAT) < 0) {
                 perror("Error: mi_stat_f fallido." 
                 "Función -> escribir.c - main()");
-            exit(-1);
+                exit(-1);
             }
 
             //Imprimir resultados
