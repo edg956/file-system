@@ -6,7 +6,9 @@ int main(int argc, char **argv) {
     //Declaraciones. 
     int bliberados; 
     struct superbloque superbloque; 
-    struct inodo inodo; 
+    struct STAT STAT;
+    struct tm *ts;
+    char buf[80];
 
     //Comprobar la sintaxis de la llamada a la función.
     if (argc!=4) {
@@ -30,18 +32,14 @@ int main(int argc, char **argv) {
     }
 
     //Leer inodo. 
-    if (leer_inodo(atoi(argv[2]), &inodo)==-1) {
+    if (mi_stat_f(atoi(argv[2]), &STAT)==-1) {
         perror("Error: no se ha podido leer el inodo indicado." 
         "Función -> truncar.c - main()\n");
         exit(-1);    
     }
 
-    //Imprimir cantBloquesLibres y numBloquesOcupados del superbloque e inodo.  
-    printf("Cantidad de bloques libres: %d\n", superbloque.cantBloquesLibres);
-    printf("Número de bloques ocupados: %d\n", inodo.numBloquesOcupados);
-
     //Llamada a la función mi_truncar_f().
-    bliberados = mi_truncar_f(atoi(argv[1]), atoi(argv[2]));
+    bliberados = mi_truncar_f(atoi(argv[2]), atoi(argv[3]));
 
     if (bliberados==-1) {
         perror("Error: no se ha podido abrir el directorio indicado.\n");
@@ -49,12 +47,43 @@ int main(int argc, char **argv) {
     }
 
     //Mostrar número de bloques liberados.
-    printf("Número de bloques liberados: %d\n", bliberados);
+    printf("Número de bloques liberados: %d\n\n", bliberados);
 
-    //Imprimir cantBloquesLibres y numBloquesOcupados del superbloque e inodo.  
-    printf("Cantidad de bloques libres: %d\n", superbloque.cantBloquesLibres);
-    printf("Número de bloques ocupados: %d\n", inodo.numBloquesOcupados);
-    
+    //Leer superbloque
+    if (bread(posSB, &superbloque) < 0) {
+        perror("Error: no se ha podido leer el superbloque."
+        "Función -> main()");
+        exit(-1);
+    }
+
+    //Leer inodo. 
+    if (mi_stat_f(atoi(argv[2]), &STAT)==-1) {
+        perror("Error: no se ha podido leer el inodo indicado." 
+        "Función -> truncar.c - main()\n");
+        exit(-1);    
+    }
+
+    //Imprimir resultados del inodo
+    printf("DATOS INODO %d:\n", atoi(argv[2]));
+    printf("Tipo = %c\n", STAT.tipo);
+    printf("Permisos = %d\n", STAT.permisos);
+
+    ts = localtime(&STAT.atime);
+    strftime(buf, sizeof(buf), "%a %Y-%m-%d %H:%M:%S %Z", ts);
+    printf("atime: %s\n", buf);
+
+    ts = localtime(&STAT.ctime);
+    strftime(buf, sizeof(buf), "%a %Y-%m-%d %H:%M:%S %Z", ts);
+    printf("ctime: %s\n", buf);
+
+    ts = localtime(&STAT.mtime);
+    strftime(buf, sizeof(buf), "%a %Y-%m-%d %H:%M:%S %Z", ts);
+    printf("mtime: %s\n", buf);
+
+    printf("nlinks = %d\n", STAT.nlinks);
+    printf("TamEnBytesLog = %d\n", STAT.tamEnBytesLog);
+    printf("NumBloquesOcupados = %d\n", STAT.numBloquesOcupados);
+
     //Desmontar dispositivo virtual. 
     if (bumount()==-1) {
         perror("Error: no se ha podido desmontar el dispositivo virtual.\n");

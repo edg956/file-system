@@ -1140,10 +1140,6 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
     unsigned char auxbuf[BLOCKSIZE];
     memset(&auxbuf, 0,BLOCKSIZE);
 
-    //MENSAJE POR CONSOLA DE NIVEL 5
-    printf("liberar_bloques_inodo: primerBL: %i últimoBL: %u\n",
-    nblogico,ultimoBL);
-
     //Preparación y ejecución de for-loop que libera bloques
     ptr = 0;
     for (nblog = nblogico; nblog <= ultimoBL; nblog++) {

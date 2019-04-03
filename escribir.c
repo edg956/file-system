@@ -115,8 +115,6 @@ int main(int argc, char **argv) {
             bytesEscritos = mi_write_f(ninodo, buffer, arrayOffsets[i], 
             sizeof(buffer));
 
-            printf("BUFEEEeeER: %s", buffer);
-
             //Escribir en offset correspondiente a inodo
             if (bytesEscritos<0){
                 perror("Error al intentar reservar un inodo." 
