@@ -418,7 +418,7 @@ int mi_truncar_f(unsigned int ninodo, unsigned int nbytes){
     //Comprobar que no se quiera truncar más allá del tamaño en bytes lógico.
     if (nbytes > inodo.tamEnBytesLog) {
         perror("Error: no se puede truncar el fichero/directorio más allá"
-        "del tamaño en bytes lógico."
+        " del tamaño en bytes lógico: "
               "Función -> mi_truncar_f()");
         return bliberados; 
     }
