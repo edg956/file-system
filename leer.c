@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
     write(2, &str, strlen(str));
 
     //Primera lectura de fichero
-    aux = mi_read_f(ninodo, &buffer, offset, BUF_SIZE);
+    aux = mi_read_f(ninodo, buffer, offset, BUF_SIZE);
 
     //Lectura del inodo
     if (mi_stat_f(ninodo, &STAT) < 0) {
@@ -50,17 +50,10 @@ int main(int argc, char **argv) {
 
     //Recorrido al contenido del inodo
     while (aux > 0) {
-
-        if ((offset+BUF_SIZE) >= STAT.tamEnBytesLog) {
-
-            write(1, buffer, STAT.tamEnBytesLog-offset);
-
-        }else{
-        //Imprimir por pantalla el contenido leído
-        write(1, buffer, BUF_SIZE);
+        //Escribir por consola
+        write(1, buffer, aux);
         //Reset buffer para próxima lectura
         memset(buffer, 0, BUF_SIZE);
-        }
         //Aumentar Nº de bytes leidos
         bytes_leidos += aux;
         //Siguiente lectura de fichero
