@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
 
     //Comprobar la sintaxis de la llamada a la función.
     if (argc!=4) {
-        perror("Error: Sintaxis de llamada al programa incorrecta.\n"
+        fprintf(stderr,"Error: Sintaxis de llamada al programa incorrecta.\n"
         "Sintaxis: ./nombre_del_programa <nombre_dispositivo>" 
         "<\"$(cat fichero)\"> <diferentes_inodos>\nOffsets: 0, 5120,"
         "256000, 30720000, 71680000\nSi diferentes inodos = 0 se reserva"
@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
     struct tm *ts;
     char buf[80];
     
-    printf("Longitud texto: %ld\n\n", strlen(argv[2]));
+    printf("Longitud texto: %ld\n", strlen(argv[2]));
             
     //Obtenemos los datos a escribir. 
     strcpy(buffer, argv[2]);
@@ -137,7 +137,7 @@ int main(int argc, char **argv) {
             }
 
             //Imprimir resultados
-            printf("DATOS INODO %d:\n", ninodo);
+            printf("\nDATOS INODO %d:\n", ninodo);
             printf("Tipo = %c\n", STAT.tipo);
             printf("Permisos = %d\n", STAT.permisos);
 
