@@ -28,7 +28,6 @@ int main(int argc, char **argv) {
     int diferentes_inodos = atoi(argv[3]);
     struct STAT STAT; 
     char buffer[strlen(argv[2])];     
-    
     int bytesEscritos = 0;  
     unsigned int arrayOffsets[5] = {0, 5120, 256000, 30720000, 71680000}; 
     struct tm *ts;
@@ -57,6 +56,9 @@ int main(int argc, char **argv) {
     
         //Escritura en todos los offsets.
         for(int i = 0; i < sizeof(arrayOffsets)/sizeof(arrayOffsets[0]); i++) {
+            //Mensajes nivel 7
+            printf("\nNº inodo reservado: %d\n", ninodo);
+            printf("Offset: %u\n", arrayOffsets[i]);
             bytesEscritos = mi_write_f(ninodo, buffer, arrayOffsets[i], 
             sizeof(buffer));
 
@@ -67,8 +69,6 @@ int main(int argc, char **argv) {
             }
 
             //Mensajes de nivel 7
-            printf("\nNº inodo reservado: %d\n", ninodo);
-            printf("Offset: %u\n", arrayOffsets[i]);
             printf("Bytes escritos: %d\n", bytesEscritos);           
             
             //Mostrar datos del inodo escrito. 
@@ -111,6 +111,10 @@ int main(int argc, char **argv) {
                 "Función -> escribir.c - main()");
                 exit(-1);
             }
+    
+            //Mensajes de nivel 7
+            printf("\nNº inodo reservado: %d\n", ninodo);
+            printf("Offset: %u\n", arrayOffsets[i]);
 
             bytesEscritos = mi_write_f(ninodo, buffer, arrayOffsets[i], 
             sizeof(buffer));
@@ -123,8 +127,6 @@ int main(int argc, char **argv) {
             }
 
             //Mensajes de nivel 7
-            printf("\nNº inodo reservado: %d\n", ninodo);
-            printf("Offset: %u\n", arrayOffsets[i]);
             printf("Bytes escritos: %d\n", bytesEscritos);  
 
             //Mostrar datos del inodo escrito. 

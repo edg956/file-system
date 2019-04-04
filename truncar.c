@@ -5,7 +5,6 @@ int main(int argc, char **argv) {
 
     //Declaraciones. 
     int bliberados; 
-    struct superbloque superbloque; 
     struct STAT STAT;
     struct tm *ts;
     char buf[80];
