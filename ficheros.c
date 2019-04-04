@@ -71,7 +71,7 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
             return -1;                                      //Error Traducir Bloque Indodo
         } 
 
-        if(bread(bfisico, &bufBloque) < 0) {
+        if(bread(bfisico, bufBloque) < 0) {
             return -1;                                      //Error en el Bread
         }
         memcpy (bufBloque, buf_original + (nbytes - desp2 - 1), desp2 + 1);
@@ -191,7 +191,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
 
     if ((bfisico)==-1) {
 
-        leidos = leidos + BLOCKSIZE; // -------------------------------------------------------------> Revisar esta parte. 
+        leidos = leidos + (BLOCKSIZE-desp1); // -------------------------------------------------------------> Revisar esta parte. 
 
     }else{
 
@@ -250,7 +250,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
 
     if ((bfisico)==-1) {
 
-        leidos = leidos + BLOCKSIZE; //---------------------------------------------------------------> Revisar. 
+        leidos = leidos + desp2 + 1; //---------------------------------------------------------------> Revisar. 
 
     }else {
         //Se lee el bloque entero y se almacena en el buffer auxiliar. 
@@ -261,7 +261,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
         }
 
         //Realizar la copia al buffer original. 
-        memcpy((buf_original+nbytes)-desp2, auxBuff, desp2+1);
+        memcpy((buf_original+nbytes)-desp2-1, auxBuff, desp2+1);
 
         //Se actualiza la variable de bloques leídos.
         leidos = leidos + desp2 + 1; 

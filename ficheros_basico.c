@@ -246,7 +246,7 @@ int initAI() {
         }
 
         //Escritura de datos en el bloque correspondiente
-        if (bwrite(i, &inodos[0]) == -1) {
+        if (bwrite(i, inodos) == -1) {
             perror("Error: Escritura de datos de inodos en FS incorrecta."
         " Función -> initAI()");
             return -1;
@@ -388,7 +388,7 @@ unsigned char leer_bit(unsigned int nbloque) {
     char bufferMB[BLOCKSIZE];
 
     //Obtener el bloque que contiene el byte buscado
-    if (bread(nbloqueMBabs, &bufferMB) == -1) {
+    if (bread(nbloqueMBabs, bufferMB) == -1) {
         perror("Error: no se ha podido leer para el buffer de MB."
         " Función -> leer_bit()");
         return -1;
@@ -826,7 +826,7 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, char reser
     }
 
     //Inicialización de buffer con 0s
-    memset(&buffer[0], 0, NPUNTEROS * sizeof(int));
+    memset(buffer, 0, NPUNTEROS * sizeof(int));
 
     //Inicializar variables
     ptr = 0;
@@ -863,7 +863,7 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, char reser
                 buffer[indice] = ptr;
                 printf("traducir_bloque_inodo(): punteros_nivel%i[%i]: = %i -> BL: %i\n",nivel_ptr+1,indice,ptr, nblogico);        //Mensaje de comprobación
 
-                if (bwrite(ptr_prev, &buffer) == -1) {
+                if (bwrite(ptr_prev, buffer) == -1) {
                     perror("Error: no se ha podido escribir el buffer en el "
                     "disco. Función -> traducir_bloque_inodo()");
                     return -1;
@@ -872,7 +872,7 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, char reser
         }
 
         //Obtener información sobre el nuevo bloque
-        if (bread(ptr, &buffer) == -1) {
+        if (bread(ptr, buffer) == -1) {
             perror("Error: no se ha podido leer del disco al buffer."
             " Función -> traducir_bloque_inodo()");
             return -1;
@@ -915,7 +915,7 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, char reser
             //Sino, dejar a la siguiente iteración
             buffer[indice] = ptr;
             printf("traducir_bloque_inodo(): punteros_nivel%i[%i]: = %i -> BL: %i\n",nivel_ptr+1,indice,ptr,nblogico);        //Mensaje de comprobación
-            if (bwrite(ptr_prev, &buffer) == -1) {
+            if (bwrite(ptr_prev, buffer) == -1) {
                 perror("Error: no se ha podido escribir el buffer en el "
                     "disco. Función -> traducir_bloque_inodo()");
                 return -1;
@@ -1220,7 +1220,7 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
                     indice = indices[nivel_punteros];
                     bloques_punteros[nivel_punteros][indice] = 0;
                     ptr = ptr_nivel[nivel_punteros];
-                    if (memcmp(&bloques_punteros[nivel_punteros], &auxbuf, 
+                    if (memcmp(bloques_punteros[nivel_punteros], auxbuf, 
                     BLOCKSIZE) == 0) {
                         printf("liberar_bloque_inodo(): liberado BF: %i de "
                         "punteros nivel %i del BL %i\n", ptr, nivel_punteros+1, 
