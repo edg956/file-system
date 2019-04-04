@@ -5,7 +5,7 @@ int main(int argc, char **argv) {
 
     //Comprobar la sintaxis de la llamada a la función.
     if (argc!=4) {
-        perror("Error: Sintaxis de llamada al programa incorrecta.\n"
+        fprintf(stderr, "Error: Sintaxis de llamada al programa incorrecta.\n"
         "Sintaxis: ./nombre_del_programa <nombre_dispositivo>" 
         "<ninodo> <permisos\n>");
         exit(-1);
@@ -17,10 +17,8 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    unsigned char permisos = *argv[3];
-
     //Llamada a mi_chmod_f().
-    if (mi_chmod_f(atoi(argv[2]), permisos) ==-1) {
+    if (mi_chmod_f(atoi(argv[2]), atoi(argv[3])) ==-1) {
         perror("Error: No se han podido asignar los permisos correspondientes.\n");
         exit(-1); 
     }

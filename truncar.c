@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
 
     //Comprobar la sintaxis de la llamada a la función.
     if (argc!=4) {
-        perror("Error: Sintaxis de llamada al programa incorrecta.\n"
+        fprintf(stderr, "Error: Sintaxis de llamada al programa incorrecta.\n"
         "Sintaxis: ./nombre_del_programa <nombre_dispositivo>" 
         "<ninodo> <nbytes\n>");
         exit(-1);
