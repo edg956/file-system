@@ -33,7 +33,7 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
             return -1;                                      //Error en el Bread
         }
 
-		memcpy (bufBloque + desp1, buf_original, nbytes); //CONFLICTO
+		memcpy (bufBloque + desp1, buf_original, nbytes); 
 
 		if(bwrite(bfisico, bufBloque) < 0){
             return -1;                                      // Error en el Bwrite
@@ -97,7 +97,7 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
     }
     in.mtime = time(NULL);
 
-    //Escribir inodo actualizado                                                    //CONFLICTO
+    //Escribir inodo actualizado 
     if (escribir_inodo(ninodo, in) < 0) {
         perror("Error: no se ha podido escribir inodo."
         "Función -> mi_write_f()");
@@ -153,7 +153,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     if ((inodo.permisos & 4)!=4) { 
        perror("Error: no se ha podido leer el inodo deseado." 
        "Permisos incorrectos. Función -> mi_read_f()");
-       exit(-1);         //-------------------------------------------------------------------------> ver en el fichero "Consideraciones_del_proyecto.txt"
+       exit(-1);
     }
 
     //Verificar que la posición del offset sea válida. 
@@ -174,24 +174,24 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
 
     bfisico = traducir_bloque_inodo(ninodo, PBL, 0);
 
-    if(PBL == UBL) {                                //Si el bloque inicial y el bloque final coinciden
+    if(PBL == UBL) {    //Si el bloque inicial y el bloque final coinciden
 		if(bfisico < 0) {
-            leidos += nbytes;                                                 //Obtenemos el bloque físico Error Traducir Bloque Inodo
+            leidos += nbytes;//Obtenemos el bloque físico Error Traducir Bloque Inodo
         }else{
 		    if(bread(bfisico, auxBuff) < 0){
-                return -1;                                      //Error en el Bread
+                return -1;             //Error en el Bread
             }
         
 		    memcpy (buf_original, auxBuff + desp1, nbytes);
 
-		    leidos += nbytes;	                    // Aumentamos el contador los bytes que hemos escrito
+		    leidos += nbytes; // Aumentamos el contador los bytes que hemos escrito
         }
     }else{
 
 
     if ((bfisico)==-1) {
 
-        leidos = leidos + (BLOCKSIZE-desp1); // -------------------------------------------------------------> Revisar esta parte. 
+        leidos = leidos + (BLOCKSIZE-desp1);
 
     }else{
 
@@ -203,7 +203,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
         }
         
         //Se realiza la copia al buffer original.
-        memcpy(buf_original, auxBuff+desp1, BLOCKSIZE-desp1);//------------------------------------------------> ver en el fichero "Consideraciones_del_proyecto.txt"
+        memcpy(buf_original, auxBuff+desp1, BLOCKSIZE-desp1);
 
         //Se actualiza la variable de leídos. 
         leidos = leidos + (BLOCKSIZE-desp1);
@@ -219,7 +219,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
 
         if ((bfisico)==-1) {
 
-            leidos = leidos + BLOCKSIZE;  //-----------------------------------------------------------> revisar esta parte también.
+            leidos = leidos + BLOCKSIZE;
         
         }else{
 
@@ -250,7 +250,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
 
     if ((bfisico)==-1) {
 
-        leidos = leidos + desp2 + 1; //---------------------------------------------------------------> Revisar. 
+        leidos = leidos + desp2 + 1;
 
     }else {
         //Se lee el bloque entero y se almacena en el buffer auxiliar. 

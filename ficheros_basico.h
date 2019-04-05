@@ -13,7 +13,7 @@
 #define BLOCKSIZE 1024 // bytes
 #define INODOSIZE 128  // bytes
 #define NUMINPRBLQ (BLOCKSIZE / INODOSIZE)    //Nº de inodos por bloque
-#define posSB 0        //el superbloque se escribe en el primer bloque de nuestro FS
+#define posSB 0 //el superbloque se escribe en el primer bloque de nuestro FS
 
 #define NPUNTEROS (BLOCKSIZE / sizeof(unsigned int))
 #define DIRECTOS 12
@@ -42,9 +42,9 @@ struct superbloque{
 };
 
 /*
-    Definición de estructura inodo (Consultar solución voluntaria para el padding en el Nivel 2). ----------------> revisar comentario. 
+    Definición de estructura inodo.
 */
-struct inodo {     // comprobar que ocupa 128 bytes haciendo un sizeof(inodo)!!! ------------------------------> revisar comentario. 
+struct inodo { 
    char tipo;     // Tipo ('l':libre, 'd':directorio o 'f':fichero)
    char permisos; // Permisos (lectura y/o escritura y/o ejecución)
    char reservado_alineacion1[6];

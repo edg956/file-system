@@ -39,7 +39,6 @@ int main(int argc, char **argv) {
     strcpy(buffer, argv[2]);
 
     //Preparar buffer que se utilizará para escribir. 
-    //strcpy(&buffer, &argv[2]);
 
     if(!diferentes_inodos) {
         //Sólo hay que reservar un inodo en este caso. 

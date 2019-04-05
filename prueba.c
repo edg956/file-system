@@ -22,7 +22,6 @@ int main(int argc, char **argv) {
     puts("\nLeyendo...\n");
     int leidos = mi_read_f(ninodo, &buffer, 0, strlen(argv[2]));
     
-    // printf("Mensaje leido: %s\n",buffer);
     write(1, buffer, leidos);
     printf("\nbytes leidos: %i\n", leidos);
 

@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
     }
 
     /**************************DATOS DEL SUPERBLOQUE***************************/
-    puts("\nDATOS DEL SUPERBLOQUE");
+    puts("DATOS DEL SUPERBLOQUE\n");
     printf("Posición del primer bloque del mapa de bits: %i\n",SB.posPrimerBloqueMB);
     printf("Posición del último bloque del mapa de bits: %i\n",SB.posUltimoBloqueMB);
     printf("Posición del primer bloque del array de inodos: %i\n",SB.posPrimerBloqueAI);
@@ -53,8 +53,4 @@ int main(int argc, char **argv) {
         perror("Error: desmontar dispositivo erroneo.");
         exit(-1);
     }
-<<<<<<< HEAD
-    
-=======
->>>>>>> Código compilable. He estado intentando hacer funcionar el script 1. De momento no ha sido posible.
 }
