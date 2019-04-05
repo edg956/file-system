@@ -10,6 +10,7 @@ static int descriptor = 0;
     
     Funciones desde dónde es llamado: 
         + mi_mkfs.c - main()
+        + leer_sf.c - main()
 
     Parámetros de entrada:
         + camino: String que indica el path del fichero a abrir
@@ -38,6 +39,7 @@ int bmount(const char *camino) {
 
     Funciones desde dónde es llamado: 
         + mi_mkfs.c - main()
+        + leer_sf.c - main()
     
     Parámetros de salida:
         + 0: En funcionamiento correcto.
@@ -56,6 +58,18 @@ int bumount() {
         
     Funciones desde dónde es llamado: 
         + mi_mkfs.c - main()
+        + ficheros_basico.h - initSB()
+        + ficheros_basico.h - initMB()
+        + ficheros_basico.h - initAI()
+        + ficheros_basico.h - escribir_bit()
+        + ficheros_basico.h - reservar_bloque()
+        + ficheros_basico.h - liberar_bloque()
+        + ficheros_basico.h - escribir_inodo()
+        + ficheros_basico.h - reservar_inodo()
+        + ficheros_basico.h - traducir_bloques_inodo()
+        + ficheros_basico.h - liberar_inodo()
+        + ficheros_basico.h - liberar_bloques_inodo()
+        + ficheros.h - mi_write_f()        
 
     Parámetros de entrada:
         + nbloque: El número de bloque donde volcar el contenido del buffer.
@@ -90,6 +104,20 @@ int bwrite(unsigned int nbloque, const void *buf) {
     
     Funciones desde dónde es llamado: 
         + mi_mkfs.c - main()
+        + ficheros_basico.h - initMB()
+        + ficheros_basico.h - initAI()
+        + ficheros_basico.h - escribir_bit()
+        + ficheros_basico.h - leer_bit()
+        + ficheros_basico.h - reservar_bloque()
+        + ficheros_basico.h - liberar_bloque()
+        + ficheros_basico.h - escribir_inodo()
+        + ficheros_basico.h - leer_inodo()
+        + ficheros_basico.h - reservar_inodo()
+        + ficheros_basico.h - traducir_bloques_inodo()
+        + ficheros_basico.h - liberar_inodo()
+        + ficheros_basico.h - liberar_bloques_inodo()
+        + ficheros.h - mi_write_f()        
+        + ficheros.h - mi_read_f()        
 
     Parámetros de entrada:
         + nbloque: El número de bloque desde el cual leer información.

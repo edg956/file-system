@@ -1,7 +1,31 @@
 #include "ficheros.h"
 
 /*----------------------------FUNCIONES DE NIVEL 6----------------------------*/
+/*
+    Descripción: 
+        Escribe el contenido de un buffer de memoria, buf_original, en un 
+        fichero/directorio (correspondiente al inodo pasado como argumento): 
+        le indicamos la posición de escritura inicial, offset, con respecto al 
+        inodo (en bytes lógicos) y el número de bytes, nbytes, que hay que 
+        escribir.
 
+    Funciones a las que llama:
+        + ficheros_basico.h - leer_inodo()
+        + ficheros_basico.h - traducir_bloque_inodo()
+        + ficheros_basico.h - escribir_inodo()
+        + bloques.h - bwrite()
+        + bloques.h - bread()
+
+    Parámetros de entrada:
+        + unsigned int ninodo
+        + void *buf_original
+        + unsigned int offset
+        + unsigned int nbytes
+
+    Parámetros de salida:
+        + Cantidad de bytes escritos. 
+        + (-1): Algún error ocurrido. 
+*/
 int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offset, unsigned int nbytes) {
     struct inodo in;
     
@@ -14,37 +38,46 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
     
     //Comprobación de permisos
     if((in.permisos & 2) != 2){
-        return -1;                                          //Error no tiene permisos de escritura
+        return -1;                                         
     }   
 
-    int bloqueI = offset / BLOCKSIZE;                       //Calculamos el primer bloque lógico donde hay que escribir
-    int bloqueF = (offset + nbytes - 1) / BLOCKSIZE;        //Calculamos el último bloque lógico donde hay que escribir
+    //Calculamos el primer bloque lógico donde hay que escribir
+    int bloqueI = offset / BLOCKSIZE; 
+    //Calculamos el último bloque lógico donde hay que escribir                      
+    int bloqueF = (offset + nbytes - 1) / BLOCKSIZE;
     int bfisico, bytes = 0;
 	unsigned char bufBloque[BLOCKSIZE];             
-	int desp1 = offset % BLOCKSIZE;                         //Desplazamiento en el bloque
+    //Desplazamiento en el bloque
+	int desp1 = offset % BLOCKSIZE;                         
 	
     bfisico = traducir_bloque_inodo(ninodo, bloqueI, 1);
 
-    if(bloqueI == bloqueF) {                                //Si el bloque inicial y el bloque final coinciden
+    //Si el bloque inicial y el bloque final coinciden
+    if(bloqueI == bloqueF) {     
+
 		if(bfisico < 0) {
-            return -1;                                      //Obtenemos el bloque físico Error Traducir Bloque Inodo
+            //Obtenemos el bloque físico Error Traducir Bloque Inodo
+            return -1;                                      
         }
+
 		if(bread(bfisico, bufBloque) < 0){
-            return -1;                                      //Error en el Bread
+            return -1;                                     
         }
 
 		memcpy (bufBloque + desp1, buf_original, nbytes); 
 
 		if(bwrite(bfisico, bufBloque) < 0){
-            return -1;                                      // Error en el Bwrite
+            return -1;
         } 
 
-		bytes += nbytes;	                    // Aumentamos el contador los bytes que hemos escrito
+        // Aumentamos el contador los bytes que hemos escrito
+		bytes += nbytes;	                   
+
     } else {
     
         //Primer bloque
         if (bfisico < 0) {
-            return -1;                                      //Error Traducir Bloque Inodo
+            return -1;
         }
         
         if(bread(bfisico, &bufBloque) < 0) return -3;        //Leemos el bloque correspondiente Error BREAD
@@ -60,19 +93,21 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
         //Bloques Intermedios
         for(int i = bloqueI + 1; i < bloqueF; i++) {
             if((bfisico = traducir_bloque_inodo(ninodo, i, 1)) < 0) {
-                return -1;                                  //Error Traducir Bloque Inodo
+                return -1;                                  
             }
-            bytes += bwrite (bfisico, buf_original + (BLOCKSIZE - desp1) + (i - bloqueI - 1) * BLOCKSIZE);
+
+            bytes += bwrite (bfisico, buf_original + (BLOCKSIZE - desp1) 
+            + (i - bloqueI - 1) * BLOCKSIZE);
         }
 
         //Último Bloque
         int desp2 = (offset + nbytes - 1) % BLOCKSIZE;
         if ((bfisico = traducir_bloque_inodo(ninodo, bloqueF, 1)) < 0){
-            return -1;                                      //Error Traducir Bloque Indodo
+            return -1;
         } 
 
         if(bread(bfisico, bufBloque) < 0) {
-            return -1;                                      //Error en el Bread
+            return -1; 
         }
         memcpy (bufBloque, buf_original + (nbytes - desp2 - 1), desp2 + 1);
         if (bwrite(bfisico, bufBloque) < 0) {
@@ -116,11 +151,8 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
 
     Funciones a las que llama:
         + ficheros_basico.h - leer_inodo()
-        + bloques.h - bread()
         + ficheros_basico.h - traducir_bloque_inodo()
-
-    Funciones desde donde es llamado:
-        +
+        + bloques.h - bread()
 
     Parámetros de entrada:
         + unsigned int ninodo
@@ -175,19 +207,23 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     bfisico = traducir_bloque_inodo(ninodo, PBL, 0);
 
     if(PBL == UBL) {    //Si el bloque inicial y el bloque final coinciden
+
 		if(bfisico < 0) {
-            leidos += nbytes;//Obtenemos el bloque físico Error Traducir Bloque Inodo
+
+            leidos += nbytes;//Obtenemos el bloque físico 
+
         }else{
+
 		    if(bread(bfisico, auxBuff) < 0){
-                return -1;             //Error en el Bread
+                return -1;
             }
         
 		    memcpy (buf_original, auxBuff + desp1, nbytes);
 
-		    leidos += nbytes; // Aumentamos el contador los bytes que hemos escrito
+            //Aumentamos el contador los bytes que hemos escrito
+		    leidos += nbytes; 
         }
     }else{
-
 
     if ((bfisico)==-1) {
 
@@ -284,9 +320,6 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     Funciones a las que llama:
         + ficheros_basico.h - leer_inodo()
 
-    Funciones desde donde es llamado:
-        +
-
     Parámetros de entrada:
         + unsigned int ninodo
         + struct STAT *p_stat
@@ -332,9 +365,6 @@ int mi_stat_f(unsigned int ninodo, struct STAT *p_stat){
         + ficheros_basico.h - leer_inodo()
         + ficheros_basico.h - escribir_inodo()
 
-    Funciones desde donde es llamado:
-        +
-
     Parámetros de entrada:
         + unsigned int ninodo
         + unsigned char permisos
@@ -342,7 +372,6 @@ int mi_stat_f(unsigned int ninodo, struct STAT *p_stat){
     Parámetros de salida:
         + 0: si no hay errores. 
         + (-1): si hay algún error.
-
 */
 int mi_chmod_f(unsigned int ninodo, unsigned char permisos){
 
@@ -379,9 +408,6 @@ int mi_chmod_f(unsigned int ninodo, unsigned char permisos){
         + ficheros_basico.h - leer_inodo()
         + ficheros_basico.h - escribir_inodo()
         + ficheros_basico.h - liberar_bloques_inodo()
-
-    Funciones desde donde es llamado:
-        +
 
     Parámetros de entrada:
         + unsigned int ninodo
@@ -470,5 +496,4 @@ int mi_truncar_f(unsigned int ninodo, unsigned int nbytes){
     }
 
     return bliberados; 
-
 }

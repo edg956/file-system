@@ -1,6 +1,5 @@
 #include "ficheros_basico.h"
 #include <limits.h>
-#include <time.h>
 #include <stdio.h>
 
 /*----------------------------FUNCIONES DE NIVEL 2----------------------------*/
@@ -13,6 +12,7 @@
 
     Funciones desde donde es llamado:
         + mi_mkfs.c - main()
+        + ficheros_basico.h - initSB()
 
     Parámetros de entrada:
         + nbloques: El número de bloques que tiene el sistema de ficheros
@@ -42,6 +42,7 @@ int tamMB(unsigned int nbloques){
 
     Funciones desde donde es llamado:
         + mi_mkfs.c - main()
+        + ficheros_basico.h - initSB()
 
     Parámetros de entrada:
         + ninodos: El número de inodos que tiene el sistema de ficheros.
@@ -72,7 +73,9 @@ int tamAI(unsigned int ninodos){
     
     Funciones a las que llama:
         + bloques.h - bwrite()
-    
+        + ficheros_basico.h - tamMB()
+        + ficheros_basico.h - tamAI()
+
     Funciones desde donde es llamado:
         + mi_mkfs.c - main()
 
@@ -268,11 +271,13 @@ int initAI() {
         + bloques.h - bwrite()
 
     Funciones desde donde es llamado:
-        +
+        + ficheros_basico.h - initMB()
+        + ficheros_basico.h - reservar_bloque()
+        + ficheros_basico.h - liberar_bloque()
 
     Parámetros de entrada: 
-        + unsigned int nbloque: 
-        + unsigned int bit: 
+        + unsigned int nbloque 
+        + unsigned int bit
     
     Parámetros de salida: 
         + 1: Ejecución correcta
@@ -351,10 +356,7 @@ int escribir_bit(unsigned int nbloque, unsigned int bit) {
         dentro del mapa de bits del sistema de ficheros.
 
     Funciones a las que llama: 
-        + bloques.h - bread()
-
-    Funciones desde donde es llamado:
-        +
+        + bloques.h - bread() 
         
     Parámetros de entrada: 
         + nbloque: El número de bloque del cual se desea consultar su estado
@@ -422,7 +424,7 @@ unsigned char leer_bit(unsigned int nbloque) {
         + bloques.h - bwrite()
 
     Funciones desde donde es llamado:
-        +
+        + ficheros_basico.h - traducir_bloques_inodo()
 
     Parámetros de salida: 
         + int: El número de bloque reservado
@@ -530,9 +532,11 @@ int reservar_bloque() {
 
     Funciones a las que llama: 
         + ficheros_basico.h - escribir_bit()
+        + bloques.h - bread()
+        + bloques.h - bwrite()
 
     Funciones desde donde es llamado:
-        + 
+        + ficheros_basico.h - liberar_bloques_inodo()
 
     Parámetros de entrada: 
         + nbloque: El número de bloque del cual se desea liberar.
@@ -586,7 +590,13 @@ int liberar_bloque(unsigned int nbloque) {
         + bloques.h - bwrite()
 
     Funciones desde donde es llamado:
-        +
+        + ficheros_basico.h - reservar_inodo()
+        + ficheros_basico.h - traducir_bloques_inodo()
+        + ficheros_basico.h - liberar_inodo()
+        + ficheros_basico.h - liberar_bloques_inodo()
+        + ficheros.h - mi_write_f()
+        + ficheros.h - mi_chmod_f()
+        + ficheros.h - mi_truncar_f()
 
     Parámetros de entrada: 
         + ninodo: El número de inodo donde escribir el contenido de inodo.
@@ -642,7 +652,14 @@ int escribir_inodo(unsigned int ninodo, struct inodo inodo) {
         + bloques.h - bread() 
         
     Funciones desde donde es llamado:
-        +
+        + ficheros_basicos.h - traducir_bloques_inodo()
+        + ficheros_basicos.h - liberar_inodo()
+        + ficheros_basicos.h - liberar_bloques_inodo()
+        + ficheros.h - mi_write_f() 
+        + ficheros.h - mi_read_f()
+        + ficheros.h - mi_chmod_f()
+        + ficheros.h - mi_truncar_f()
+        + ficheros.h - mi_stat_f()
 
     Parámetros de entrada: 
         + ninodo: El número de inodo a obtener.
@@ -692,9 +709,6 @@ int leer_inodo(unsigned int ninodo, struct inodo *inodo) {
         + bloques.h - bread()
         + bloques.h - bwrite()
         + ficheros_basico.h - escribir_inodo()
-
-    Funciones desde donde es llamado:
-        +
 
     Parámetros de entrada: 
         + tipo: el tipo de inodo ('d': directorio | 'f': fichero | 'l': libre)
@@ -792,12 +806,14 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos) {
         + ficheros_basico.h - leer_inodo()
         + ficheros_basico.h - obtener_nrangoBL()
         + ficheros_basico.h - reservar_bloque()
-        + bloques.h - bwrite()
-        + bloques.h - bread()
         + ficheros_basico.h - obtener_indice()
         + ficheros_basico.h - escribir_inodo()
+        + bloques.h - bwrite()
+        + bloques.h - bread()
 
     Funciones desde donde es llamado:
+        + ficheros.h - mi_write_f()
+        + ficheros.h - mi_read_f()
 
     Parámetros de entrada:
         + unsigned int ninodo
@@ -941,7 +957,8 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, char reser
         que se busca. 
 
     Funciones desde donde es llamado:
-        + ficheros_basica.h - traducir_bloque_inodo()
+        + ficheros_basica.h - traducir_bloques_inodo()
+        + ficheros_basica.h - liberar_bloques_inodo()
 
     Parámetros de entrada:
         + struct inodo inodo
@@ -989,7 +1006,8 @@ int obtener_nrangoBL(struct inodo inodo, unsigned int nblogico, unsigned int *pt
         Calcula el indice de los bloques de punteros de cada nivel. 
 
     Funciones desde donde es llamado:
-        + ficheros_basica.h - traducir_bloque_inodo()
+        + ficheros_basica.h - traducir_bloques_inodo()
+        + ficheros_basica.h - liberar_bloques_inodo()
 
     Parámetros de entrada:
         + int nivel_punteros
@@ -1033,7 +1051,6 @@ int obtener_indice(int nblogico, int nivel_punteros){
     Descripción: 
         Libera todos los bloques que cuelgan del inodo especificado y después, 
         libera el inodo. Actualiza la lista de inodos libres. 
-    
 
     Funciones a las que llama:
         + ficheros_basico.h - liberar_bloques_inodo()
@@ -1041,8 +1058,6 @@ int obtener_indice(int nblogico, int nivel_punteros){
         + ficheros_basico.h - escribir_inodo()
         + bloques.h - bread()
         + bloques.h - bwrite()
-
-    Funciones desde donde es llamado:
 
     Parámetros de entrada:
         + unsigned int ninodo
@@ -1129,6 +1144,8 @@ int liberar_inodo(unsigned int ninodo) {
         + bloques.h - bwrite()
         
     Funciones desde donde es llamado:
+        + ficheros_basico.h - liberar_inodo()
+        + ficheros.h - mi_truncar_f()
 
     Parámetros de entrada:
         + unsigned int ninodo
