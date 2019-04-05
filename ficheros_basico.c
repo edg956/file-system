@@ -249,7 +249,7 @@ int initAI() {
         }
 
         //Escritura de datos en el bloque correspondiente
-        if (bwrite(i, inodos) == -1) {
+        if (bwrite(i, &inodos[0]) == -1) {
             perror("Error: Escritura de datos de inodos en FS incorrecta."
         " Función -> initAI()");
             return -1;
@@ -314,7 +314,7 @@ int escribir_bit(unsigned int nbloque, unsigned int bit) {
     nbloqueabs = nbloqueMB + SB.posPrimerBloqueMB;
 
     //Comprobación de errores. 
-    if (bread(nbloqueabs, bufferMB)== -1) {
+    if (bread(nbloqueabs, &bufferMB)== -1) {
         perror("Error: imposible leer información del MB. "
         "Función -> escribir_bit()");
         return -1;
@@ -337,7 +337,7 @@ int escribir_bit(unsigned int nbloque, unsigned int bit) {
     }
 
     //Escribir buffer del MB en el dispositivo virtual
-    if (bwrite(nbloqueabs, bufferMB) == -1) {
+    if (bwrite(nbloqueabs, &bufferMB) == -1) {
         perror("Error: No se ha podido escribir en el array de inodos."
         " Función -> escribir_bit()");
         return -1;
@@ -390,7 +390,7 @@ unsigned char leer_bit(unsigned int nbloque) {
     char bufferMB[BLOCKSIZE];
 
     //Obtener el bloque que contiene el byte buscado
-    if (bread(nbloqueMBabs, bufferMB) == -1) {
+    if (bread(nbloqueMBabs, &bufferMB) == -1) {
         perror("Error: no se ha podido leer para el buffer de MB."
         " Función -> leer_bit()");
         return -1;
@@ -455,7 +455,7 @@ int reservar_bloque() {
     int ultPosBloqueMB = SB.posUltimoBloqueMB + 1;
 
     //Miramos si hay error al leer el mapa de bits
-    if (bread(posBloqueMB,bufferMB) < 0) {
+    if (bread(posBloqueMB,&bufferMB) < 0) {
         perror("Error: no se ha podido leer del mapa de bits. "
         "Función -> reservar_bloque()");
         return -1;
@@ -466,7 +466,7 @@ int reservar_bloque() {
     while (memcmp(bufferAux,bufferMB,BLOCKSIZE) == 0 && posBloqueMB < ultPosBloqueMB){
         posBloqueMB++;
         //Comprobamos que no haya error al leer el mapa de bits
-        if(bread(posBloqueMB,bufferMB) < 0){
+        if(bread(posBloqueMB,&bufferMB) < 0){
             perror("Error: no se ha podido leer del mapa de bits para comparar."
             " Función -> reservar_bloque()");
             return -1;
@@ -623,7 +623,7 @@ int escribir_inodo(unsigned int ninodo, struct inodo inodo) {
     struct inodo bufferIn[NUMINPRBLQ];   //Buffer de inodos
 
     //Leer información del array de inodos
-    if (bread(posInodo + SB.posPrimerBloqueAI, bufferIn) == -1) {
+    if (bread(posInodo + SB.posPrimerBloqueAI, &bufferIn[0]) == -1) {
         perror("Error en lectura desde el array de inodos."
         " Función -> escribir_inodo()");
         return -1;
@@ -634,7 +634,7 @@ int escribir_inodo(unsigned int ninodo, struct inodo inodo) {
     bufferIn[ninodo % NUMINPRBLQ] = inodo;
 
     //Escritura sobre el array de inodos
-    if (bwrite(posInodo + SB.posPrimerBloqueAI, bufferIn) == -1) {
+    if (bwrite(posInodo + SB.posPrimerBloqueAI, &bufferIn[0]) == -1) {
         perror("Error en escritura al array de inodos."
         " Función -> escribir_inodo()");
         return -1;
@@ -843,7 +843,7 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, char reser
     }
 
     //Inicialización de buffer con 0s
-    memset(buffer, 0, NPUNTEROS * sizeof(int));
+    memset(&buffer[0], 0, NPUNTEROS * sizeof(int));
 
     //Inicializar variables
     ptr = 0;
@@ -880,7 +880,7 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, char reser
                 buffer[indice] = ptr;
                 //printf("traducir_bloque_inodo(): punteros_nivel%i[%i]: = %i -> BL: %i\n",nivel_ptr+1,indice,ptr, nblogico);        //Mensaje de comprobación
 
-                if (bwrite(ptr_prev, buffer) == -1) {
+                if (bwrite(ptr_prev, &buffer) == -1) {
                     perror("Error: no se ha podido escribir el buffer en el "
                     "disco. Función -> traducir_bloque_inodo()");
                     return -1;
@@ -889,7 +889,7 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, char reser
         }
 
         //Obtener información sobre el nuevo bloque
-        if (bread(ptr, buffer) == -1) {
+        if (bread(ptr, &buffer) == -1) {
             perror("Error: no se ha podido leer del disco al buffer."
             " Función -> traducir_bloque_inodo()");
             return -1;
@@ -1179,7 +1179,7 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
 
     //Preparación de buffer auxiliar para comparar con bloques
     unsigned char auxbuf[BLOCKSIZE];
-    memset(auxbuf, 0,BLOCKSIZE);
+    memset(&auxbuf, 0,BLOCKSIZE);
 
     //Preparación y ejecución de for-loop que libera bloques
     ptr = 0;
@@ -1235,7 +1235,7 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
                     indice = indices[nivel_punteros];
                     bloques_punteros[nivel_punteros][indice] = 0;
                     ptr = ptr_nivel[nivel_punteros];
-                    if (memcmp(bloques_punteros[nivel_punteros], auxbuf, 
+                    if (memcmp(&bloques_punteros[nivel_punteros], &auxbuf, 
                     BLOCKSIZE) == 0) {
                         printf("liberar_bloque_inodo(): liberado BF: %i de "
                         "punteros nivel %i del BL %i\n", ptr, nivel_punteros+1, 

@@ -113,7 +113,7 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
             return -1; 
         }
         memcpy (bufBloque, buf_original + (nbytes - desp2 - 1), desp2 + 1);
-        if (bwrite(bfisico, &bufBloque) < 0) {
+        if (bwrite(bfisico, bufBloque) < 0) {                                     
             return -1;                                       // Error en el Bwrite
         }
 
