@@ -7,7 +7,7 @@ int main(int argc, char **argv) {
     if (argc!=4) {
         fprintf(stderr, "Error: Sintaxis de llamada al programa incorrecta.\n"
         "Sintaxis: ./nombre_del_programa <nombre_dispositivo>" 
-        "<ninodo> <permisos\n>");
+        "<ninodo> <permisos>\n");
         exit(-1);
     }
 
