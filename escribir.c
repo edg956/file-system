@@ -17,6 +17,12 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
+    //Comprobar que el Nº de bytes a escribir sea mayor que 0
+    if (strlen(argv[2])<=0) {
+        fprintf(stderr, "Error: se ha de escribir al menos un byte.\n");
+        exit(-1);
+    }
+
     //Montar dispositivo virtual. 
     if (bmount(argv[1]) == -1) {
         perror("Error: no se ha podido abrir el directorio indicado.\n");
@@ -48,7 +54,7 @@ int main(int argc, char **argv) {
 
         //Comprobar errores de reserva de inodo. 
         if (ninodo == -1) {
-            perror("Error al intentar reservar un inodo." 
+            perror("Error al intentar reservar un inodo. " 
             "Función -> escribir.c - main()");
             exit(-1);
         }
@@ -62,7 +68,7 @@ int main(int argc, char **argv) {
             sizeof(buffer));
 
             if (bytesEscritos ==-1) {
-                perror("Error al intentar reservar un inodo." 
+                perror("Error al intentar reservar un inodo. " 
                 "Función -> escribir.c - main()");
                 exit(-1);
             }
@@ -72,7 +78,7 @@ int main(int argc, char **argv) {
             
             //Mostrar datos del inodo escrito. 
             if (mi_stat_f(ninodo, &STAT) < 0) {
-                perror("Error: mi_stat_f fallido." 
+                perror("Error: mi_stat_f fallido. " 
                 "Función -> escribir.c - main()");
                 exit(-1);
             }
@@ -106,7 +112,7 @@ int main(int argc, char **argv) {
             //Reservar inodo
             ninodo = reservar_inodo('f', 6);
             if (ninodo == -1) {
-                 perror("Error al intentar reservar un inodo." 
+                 perror("Error al intentar reservar un inodo. " 
                 "Función -> escribir.c - main()");
                 exit(-1);
             }
@@ -120,7 +126,7 @@ int main(int argc, char **argv) {
 
             //Escribir en offset correspondiente a inodo
             if (bytesEscritos<0){
-                perror("Error al intentar reservar un inodo." 
+                perror("Error al intentar reservar un inodo. " 
                 "Función -> escribir.c - main()");
                 exit(-1);
             }

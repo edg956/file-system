@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
     if (argc!=4) {
         fprintf(stderr, "Error: Sintaxis de llamada al programa incorrecta.\n"
         "Sintaxis: ./nombre_del_programa <nombre_dispositivo>" 
-        "<ninodo> <nbytes\n>");
+        "<ninodo> <nbytes>\n");
         exit(-1);
     }
 

@@ -29,9 +29,12 @@
 int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offset, unsigned int nbytes) {
     struct inodo in;
     
+    //Comprobar que el Nº de bytes a escribir sea mayor que 0
+    if (nbytes <= 0) return 0;
+
     //Lectura del inodo
     if (leer_inodo(ninodo, &in) < 0) {
-        perror("Error: no se ha podido leer el inodo."
+        perror("Error: no se ha podido leer el inodo. "
         "Función -> mi_write_f()");
         return -1;
     }
@@ -165,6 +168,9 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
 */
 int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsigned int nbytes){
 
+    //Comprobar que el Nº de bytes a leer sea mayor que 0
+    if (nbytes <= 0) return 0;
+
     //Declaraciones
     int leidos = 0; 
     struct inodo inodo; 
@@ -182,7 +188,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
 
     //Comprobación inicial de los permisos de lectura del inodo. 
     if ((inodo.permisos & 4)!=4) { 
-       perror("Error: no se ha podido leer el inodo deseado." 
+       perror("Error: no se ha podido leer el inodo deseado. " 
        "Permisos incorrectos. Función -> mi_read_f()");
        exit(-1);
     }
