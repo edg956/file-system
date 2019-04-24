@@ -50,64 +50,7 @@ int main(int argc, char **argv) {
     
     /*****************************RESERVAR BLOQUE******************************/
 
-    puts("\nRESERVAMOS UN BLOQUE Y LUEGO LO LIBERAMOS");
-
-    int rbloque = reservar_bloque();
-    printf("Bloque reservado: %d\n", rbloque);
-
-
-    if (bread(posSB, &SB) == -1) {
-        perror("Error: no se ha podido obtener información del superbloque del FS\n");
-        exit(-1);
-    }
-
     
-    printf("Cantidad de bloques libres: %i\n",SB.cantBloquesLibres);
-
-    /*LIBERAR BLOQUES*/
-    puts("Liberación\n");
-
-    liberar_bloque(rbloque);
-
-    if (bread(posSB, &SB) == -1) {
-        perror("Error: no se ha podido obtener información del superbloque del FS\n");
-        exit(-1);
-    }
-
-    printf("Cantidad de bloques libres: %i\n",SB.cantBloquesLibres);
-
-    /*************************MOSTRAR EL MAPA DE BITS**************************/
-
-    puts("\nInformación sobre mapa de bits: \n\n");
-
-    unsigned int *bloques = &SB.posPrimerBloqueMB;
-    unsigned char bit;
-    char *noms[NUM_ATTR_SB] = {"posPrimerBloqueMB","posUltimoBloqueMB",
-    "posPrimerBloqueAI","posUltimoBloqueAI", "posPrimerBloqueDatos",
-    "posUltimoBloqueDatos"};
-
-    //Información del SB
-    bit = leer_bit(posSB);
-    if (bit == -1) {
-        perror("Error de ejecución.");
-        exit(-1);
-    }
-    printf("Valor del bit correspondiente a posSB: %i\n\n",bit);
-
-    /*  Recorrido a los seis primeros atributos del SB.
-        Los nombres del array noms han de coincidir en orden con los atributos
-        recorridos en el bucle  */
-    for (int i = 0; i < NUM_ATTR_SB; i++) {
-        bit = leer_bit(*bloques);
-        if (bit == -1) {
-            perror("Error de ejecución.");
-            exit(-1);
-        }
-        printf("Valor del bit correspondiente a %s (BF: %i): %i\n\n",
-        noms[i],*bloques,bit);
-        bloques++;
-    } 
-
     /************************DATOS DEL DIRECTORIO RAIZ*************************/
 
     printf("DATOS DEL DIRECTORIO RAIZ: \n\n");
@@ -191,19 +134,22 @@ int main(int argc, char **argv) {
 
     /******************INODO 1: LIBERACIÓN DE BLOQUES LÓGICOS******************/
 
-    puts("\nLIBERACIÓN DE INODO 1:");
+    printf("\nLIBERACIÓN DE INODO %i\n:", ninodo);
+
+    
 
     clock_t str_time,fns_time;
     double segundos;
     str_time = clock();
-
+    
     liberar_inodo(ninodo);
+    
 
     fns_time = clock();
 
     segundos = (double) (fns_time-str_time) / CLOCKS_PER_SEC;
 
-    printf("Tiempo de liberación de inodo 1: %f\n",segundos);
+    printf("Tiempo de liberación de inodo %i: %f\n", ninodo,segundos);
 
      //Lectura del nuevo inodo
     if (leer_inodo(ninodo, &inodo) == -1) {
