@@ -98,7 +98,7 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     }
 
     //Buscamos la entrada cuyo nombre se encuentra en la inicial. 
-    leer_inodo(*p_inodo_dir, &p_inodo_dir);
+    leer_inodo(*p_inodo_dir, &p_inodo);
     
     if ((permisos & 4)!=4) {
         fprintf(stderr, "Error en los permisos de lectura del inodo."
@@ -112,6 +112,9 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     int numentradas = 0; 
     int nentrada = 0;
 
+    //Poner buffer a 0's
+    memset(entrada.nombre, 0, sizeof(entrada.nombre));
+
     //Calcular el número de entradas del inodo (numentradas).
     /*Nunca se cuenta la última barra "/" (-1)*/
     for(int i = 0; i<strlen(camino_parcial)-1; i++) {
@@ -120,8 +123,11 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
         }
     }
 
+    
+
      if (numentradas > 0) {
-         mi_read_f(p_inodo_dir, entrada.nombre, offset, nbytes); //--?
+         
+         mi_read_f(p_inodo, entrada.nombre, offset, nbytes);
 
         while ((nentrada < numentradas)&&(inicial != entrada.nombre)) {
             nentrada++; 
@@ -132,17 +138,75 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
 
      if (nentrada==numentradas) {
 
-         seleccionar reservar; 
-
          switch (reservar) {
+
              //Modo consulta. Como no existe retornamos error. 
              case 0: 
-                return no existe entrada; 
+
+                 fprintf(stderr, "Error: No existe entrada consulta. "
+                "Función -> buscar_entrada()");
+                return -1; 
                 break; 
 
                 //Modo escritura. 
                 case 1: 
 
+                if (tipo = 'f') {
+                    fprintf(stderr, "Error no se puede crear entrada en un fichero."
+                    "Función -> buscar_entrada()");
+                }
+
+                //Si es directorio comprobar que tiene permiso de escritura. 
+                if ((permisos & 2)!=2) {
+
+                    fprintf(stderr, "Error en los permisos de escritura del inodo. "
+                    "Función -> buscar_entrada()");
+                    
+                }else{
+                    //Copiar inicial en el nombre de la entrada. 
+                    strcpy(entrada.nombre, inicial);
+                    
+                    if (tipo == 'd') {
+                        if(strcmp(final, "/")) {
+                            int ninodo = reservar_inodo(tipo, permisos);
+                            entrada.ninodo = ninodo; 
+                        }else{
+                            //Cuelgan más directorios o ficheros. 
+                             fprintf(stderr, "Error no existe directorio intermedio. "
+                             "Función -> buscar_entrada()");
+                        }
+                    }else{
+                        //Es un fichero
+                        int ninodo = reservar_inodo('f', permisos); 
+                        entrada.ninodo = ninodo; 
+                    }
+                   if (mi_write_f(entrada.ninodo, entrada.nombre, offset, nbytes)==-1) {
+                        
+                        if (entrada.ninodo!=-1) {
+                            liberar_inodo(entrada.ninodo);
+                        }
+                        fprintf(stderr, "EXIT_FAILURE. "
+                        "Función -> buscar_entrada()");
+                        exit(-1);
+                   }
+            }
          }
+     }
+     if (hemos llegado al final del camino) {
+         if ((nentrada < numentradas) && (reservar=1)) {
+             //Modo escritura y la entrada ya existe.
+            fprintf(stderr, "Error: entrada ya existente. "
+            "Función -> buscar_entrada()");
+            return -1; 
+         }
+
+         //Se corta la recursividad. 
+         *p_inodo = entrada.ninodo; 
+         *p_entrada = ; 
+         return 0; 
+     }else{
+
+        *p_inodo_dir = entrada.ninodo; 
+        return buscar_entrada(final, p_inodo_dir, p_inodo, p_entrada, reservar, permisos);
      }
 }
