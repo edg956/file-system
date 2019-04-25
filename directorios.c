@@ -2,6 +2,8 @@
 #include "directorios.h"
 #define BUF_SIZE BLOCKSIZE
 
+/*----------------------------FUNCIONES DE NIVEL 8----------------------------*/
+
 /*
     Descripción:
         Dada una cadena de caracteres camino (que comience por '/'), 
