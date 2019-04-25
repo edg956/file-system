@@ -1,4 +1,7 @@
 #include <string.h>
+#include "directorios.h"
+#define BUF_SIZE BLOCKSIZE
+
 /*
     Descripción:
         Dada una cadena de caracteres camino (que comience por '/'), 
@@ -77,4 +80,69 @@ int extraer_camino(const char *camino, char *inicial, char *final, char *tipo) {
 */
 int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsigned int *p_inodo, unsigned int *p_entrada, char reservar, unsigned char permisos) {
 
+    //Declaraciones
+    char *inicial; 
+    char *final; 
+    char *tipo; 
+
+    //Caso en el que sólo se pasa la raíz. 
+    if (strcmp(camino_parcial, "/")) {
+        *p_inodo = 0; 
+        *p_entrada = 0;
+        return 0; 
+    }
+
+    if (extraer_camino(camino_parcial, inicial, final, &tipo)==-1) {
+        fprintf(stderr, "Error al extraer camino. Función -> buscar_entrada()");
+        exit(-1);
+    }
+
+    //Buscamos la entrada cuyo nombre se encuentra en la inicial. 
+    leer_inodo(*p_inodo_dir, &p_inodo_dir);
+    
+    if ((permisos & 4)!=4) {
+        fprintf(stderr, "Error en los permisos de lectura del inodo."
+        "Función -> buscar_entrada()");
+    } 
+
+    //Declaraciones.
+    /*Inicializar el buffer de lectura para llamar a mi_read_f()
+    Se utilizará un struct entrada*/
+    struct entrada entrada; 
+    int numentradas = 0; 
+    int nentrada = 0;
+
+    //Calcular el número de entradas del inodo (numentradas).
+    /*Nunca se cuenta la última barra "/" (-1)*/
+    for(int i = 0; i<strlen(camino_parcial)-1; i++) {
+        if (strcmp(camino_parcial[i], "/")) {
+            numentradas++;
+        }
+    }
+
+     if (numentradas > 0) {
+         mi_read_f(p_inodo_dir, entrada.nombre, offset, nbytes); //--?
+
+        while ((nentrada < numentradas)&&(inicial != entrada.nombre)) {
+            nentrada++; 
+            mi_read_f();
+        }
+
+     }
+
+     if (nentrada==numentradas) {
+
+         seleccionar reservar; 
+
+         switch (reservar) {
+             //Modo consulta. Como no existe retornamos error. 
+             case 0: 
+                return no existe entrada; 
+                break; 
+
+                //Modo escritura. 
+                case 1: 
+
+         }
+     }
 }
