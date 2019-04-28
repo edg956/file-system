@@ -4,6 +4,7 @@
 #include "bloques.h"
 #include "directorios.h"
 
+<<<<<<< HEAD
 #define BUF_SIZE    4096
 #define AUX_BUF_SIZE  128
 
@@ -14,18 +15,27 @@ int main(int argc, char **argv) {
     int cont = 0;
     int cont2 = 0;
 
+=======
+int main(int argc, char **argv) {
+
+>>>>>>> Implementadas funciones casi totalmente. Creados ficheros de programas de nivel 9 y agregados al makefile.
     //Comprobación de parámetros enviados al programa. 
     if (argc != 3) {
         perror("Error: formato de comando: ./nombre_de_programa <nombre_de_fichero_disco> </ruta_directorio>\n");
         exit(-1);
     }
 
+<<<<<<< HEAD
     //Montaje del disco virtual.
+=======
+    //Montaje del disco virtual. 
+>>>>>>> Implementadas funciones casi totalmente. Creados ficheros de programas de nivel 9 y agregados al makefile.
     if (bmount(argv[1]) == -1) {
         perror("Error: no se ha podido abrir el directorio indicado.\n");
         exit(-1);
     }
 
+<<<<<<< HEAD
     //Leer el directorio y llenar buffer
     cont = mi_dir(argv[1], buffer);
     if (cont == -1) {
@@ -56,6 +66,10 @@ int main(int argc, char **argv) {
     }
 
     //Desmontaje del dispositivo virtual.
+=======
+
+    //Desmontaje del dispositivo virtual. 
+>>>>>>> Implementadas funciones casi totalmente. Creados ficheros de programas de nivel 9 y agregados al makefile.
     if (bumount() == -1) {
         perror("Error: no se ha podido cerrar el fichero.\n");
         exit(-1);
