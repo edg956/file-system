@@ -69,7 +69,9 @@ int extraer_camino(const char *camino, char *inicial, char *final, char *tipo) {
         entre las entradas del inodo correspondiente a su directorio padre.
 
     Funciones a las que llama:
-        + Extraer camino
+        +
+        + directorios.h - extraer_camino()
+        + directorios.h - buscar_entrada()
         
     Funciones desde donde es llamado:
 
