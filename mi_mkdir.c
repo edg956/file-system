@@ -5,7 +5,6 @@
 #include "directorios.h"
 #include <string.h>
 
-
 int main(int argc, char **argv) {
 
     int result = 0;

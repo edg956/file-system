@@ -2,17 +2,11 @@ CC=gcc
 CFLAGS=-c -g -Wall -std=gnu99
 #LDFLAGS=-pthread
 
-<<<<<<< HEAD
 SOURCES=bloques.c ficheros_basico.c mi_mkfs.c leer_sf.c ficheros.c mi_mkdir.c mi_ls.c mi_chmod.c mi_stat.c directorios.c #todos los .c
 LIBRARIES=bloques.o ficheros_basico.o ficheros.o directorios.o #todos los .o de la biblioteca del SF
 INCLUDES=bloques.h ficheros_basico.h ficheros.h directorios.h #todos los .h
 PROGRAMS=mi_mkfs leer_sf mi_mkdir mi_chmod mi_ls mi_stat
-=======
-SOURCES=bloques.c ficheros_basico.c mi_mkfs.c leer_sf.c ficheros.c escribir.c leer.c truncar.c permitir.c mi_mkdir.c mi_ls.c mi_chmod.c mi_stat.c directorios.c #todos los .c
-LIBRARIES=bloques.o ficheros_basico.o ficheros.o directorios.o #todos los .o de la biblioteca del SF
-INCLUDES=bloques.h ficheros_basico.h ficheros.h directorios.h #todos los .h
-PROGRAMS=mi_mkfs leer_sf escribir leer truncar permitir mi_mkdir mi_chmod mi_ls mi_stat
->>>>>>> Implementadas funciones casi totalmente. Creados ficheros de programas de nivel 9 y agregados al makefile.
+
 OBJS=$(SOURCES:.c=.o)
 
 all: $(OBJS) $(PROGRAMS)
