@@ -3,10 +3,13 @@
 */
 #include "bloques.h"
 #include "directorios.h"
+#include <stdio.h>
 
 int main(int argc, char **argv) {
     //Declaraciones
     struct STAT stat;
+    struct tm *ts;
+    char buf[80];
 
     //Comprobación de parámetros enviados al programa. 
     if (argc != 3) {
@@ -26,6 +29,26 @@ int main(int argc, char **argv) {
         perror("Error: no se ha podido leer información del fichero");
         exit(-1);
     }
+
+    printf("Tipo = %c\n", stat.tipo);
+    printf("Permisos = %d\n", stat.permisos);
+
+    ts = localtime(&stat.atime);
+    strftime(buf, sizeof(buf), "%a %Y-%m-%d %H:%M:%S %Z", ts);
+    printf("atime: %s\n", buf);
+
+    ts = localtime(&stat.ctime);
+    strftime(buf, sizeof(buf), "%a %Y-%m-%d %H:%M:%S %Z", ts);
+    printf("ctime: %s\n", buf);
+
+    ts = localtime(&stat.mtime);
+    strftime(buf, sizeof(buf), "%a %Y-%m-%d %H:%M:%S %Z", ts);
+    printf("mtime: %s\n", buf);
+
+    printf("nlinks = %d\n", stat.nlinks);
+    printf("TamEnBytesLog = %d\n", stat.tamEnBytesLog);
+    printf("NumBloquesOcupados = %d\n", stat.numBloquesOcupados);
+    puts("");
 
     //Desmontaje del dispositivo virtual. 
     if (bumount() == -1) {
