@@ -3,7 +3,7 @@
 */
 #include "bloques.h"
 #include "directorios.h"
-#include <string.h>;
+#include <string.h>
 
 int main(int argc, char **argv) {
 
@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
     }
 
     //Comprobar correción de permisos introducidos
-    if (strlen(argv[2]) != 1 || (atoi(argv[2][0]) & 248) != 0) {
+    if (strlen(argv[2]) != 1 || (atoi(argv[2]) & 248) != 0) {
         perror("Error: rango permitido para permisos: [0,7]");
         exit(-1);
     }
@@ -30,6 +30,7 @@ int main(int argc, char **argv) {
     //Llamada a mi_creat para crear directorio/fichero
     result = mi_creat(argv[3], argv[2][0]);
 
+    //Check errores
     if (result == -1) {
         perror("Error: no se ha podido crear directorio o fichero.");
         exit(-1);

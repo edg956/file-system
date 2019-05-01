@@ -80,7 +80,7 @@ int extraer_camino(const char *camino, char *inicial, char *final, char *tipo) {
 
 */
 int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsigned int *p_inodo, unsigned int *p_entrada, char reservar, unsigned char permisos) {
-
+    return 0;
 }
 
 /*
@@ -105,7 +105,7 @@ int mi_creat(const char *camino, unsigned char permisos) {
     //Declaraciones
     struct superbloque SB;
     int result;
-    int posInodoRaiz, p_inodo, p_entrada;
+    unsigned int posInodoRaiz, p_inodo, p_entrada;
 
     //Lectura de superbloque para obtener posición de inodo raiz
     if(bread(posSB, &SB) == -1) {
@@ -119,12 +119,15 @@ int mi_creat(const char *camino, unsigned char permisos) {
 
     //Controlar los posibles errores desde result
     //Todavía por definir la diferenciación entre errores
-
+    return 0;
 }
 
 /*
     Descripción:    
-        Función que copia el contenido de un directorio en un buffer 
+        Función que copia el contenido de un directorio en un buffer.
+        Esta función separa la información de las entradas con "_" y 
+        separa las entradas con "|".
+
 
     Funciones a las que llama:
         + bloques.h - bread()
@@ -146,8 +149,9 @@ int mi_dir(const char *camino, char *buffer) {
     //Declaraciones
     struct superbloque SB;
     int result;
-    int posInodoRaiz, p_inodo, p_entrada;
+    unsigned int posInodoRaiz, p_inodo, p_entrada;
     struct STAT stat, s_aux;
+    char *c;
 
     //Buffer para lecturas de entradas
     struct entrada entradas[BLOCKSIZE/sizeof(struct entrada)];
@@ -200,13 +204,14 @@ int mi_dir(const char *camino, char *buffer) {
         return -1;
     }
 
+    result = 0; //Contador de entradas
     //Recorrido a buffer de entradas
     while (entradas[index].ninodo != 0 && index < limit) {
         //Leer información sobre el inodo
         if (mi_stat_f(entradas[index].ninodo, &s_aux) == -1) {
             //Concatenar únicamente nombre de entrada
             strcat(buffer, entradas[index].nombre);
-            strcat(buffer, "    |");
+            strcat(buffer, "|");
             //Enviar mensaje de error por stderr
             fprintf(stderr, "Error: no se ha podido leer inodo de la entrada.\n");
 
@@ -235,9 +240,6 @@ int mi_dir(const char *camino, char *buffer) {
 
             strcat(buffer, "    "); //Tabulación entre columnas
 
-            //Concatenar nombre de entrada
-            strcat(buffer, entradas[index].nombre && "   ");
-
             //Formatear información de mtime de inodo
             struct tm *tm; //ver info: struct tm
             char tmp[100];
@@ -246,12 +248,23 @@ int mi_dir(const char *camino, char *buffer) {
                     tm->tm_mon+1,tm->tm_mday,tm->tm_hour,tm->tm_min,tm->tm_sec);
             //Concatenar información de mtime
             strcat(buffer,tmp);
+            strcat(buffer, "    ");
+            
+            //Concatenar tamaño del directorio/fichero
+            c = malloc(sizeof(char));
+            *c = s_aux.tamEnBytesLog + '0';
+            strcat(buffer, c);
+            strcat(buffer, "    ");
+
+            //Concatenar nombre de entrada
+            strcat(buffer, entradas[index].nombre);
 
             //Concatenar tabulador y separador de entrada
-            strcat(buffer, "    |");
+            strcat(buffer, "|");
         }
 
         index++;
+        result++;
 
         //Chequear si hay que leer de nuevo desde disco
         if (index == limit) {
@@ -267,7 +280,7 @@ int mi_dir(const char *camino, char *buffer) {
         }
     }
 
-    return 0;
+    return result;
 }
 
 /*
@@ -294,7 +307,7 @@ int mi_chmod(const char *camino, unsigned char permisos) {
     //Declaraciones
     struct superbloque SB;
     int result;
-    int posInodoRaiz, p_inodo, p_entrada;
+    unsigned int posInodoRaiz, p_inodo, p_entrada;
 
     //Lectura de superbloque para obtener posición de inodo raiz
     if(bread(posSB, &SB) == -1) {
@@ -345,7 +358,7 @@ int mi_stat(const char *camino, struct STAT *p_stat) {
     //Declaraciones
     struct superbloque SB;
     int result;
-    int posInodoRaiz, p_inodo, p_entrada;
+    unsigned int posInodoRaiz, p_inodo, p_entrada;
 
     //Lectura de superbloque para obtener posición de inodo raiz
     if(bread(posSB, &SB) == -1) {
