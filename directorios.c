@@ -554,9 +554,38 @@ int mi_stat(const char *camino, struct STAT *p_stat) {
 }
 
 int mi_read (const char *camino, void *buf, unsigned int offset, unsigned int nbytes){
+    int bytesleidos;
+    int p_inodo_dir = 0;
+    int p_inodo = 0;
+    int p_entrada = 0;
+    int buscar_entrada = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0);
+    if (buscar_entrada == -1){
+        printf ("Error!");
+        return -1;          //Error de lectura
+    }else{
+        bytesleidos = mi_read_f (p_inodo, buf, offset, nbytes);
+        if (bytesleidos < 0){
+            return -1;
+        }
+        return bytesleidos;
+    }   
 
 }
 
 int mi_write (const char *camino, const void *buf, unsigned int offset, unsigned int nbytes){
-    
+    int bytesleidos;    
+    int p_inodo_dir = 0;
+    int p_inodo = 0;
+    int p_entrada = 0;
+    int buscar_entrada = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 6);
+    if (buscar_entrada == -1){
+        printf ("Error!");
+        return -1;
+    }
+    bytesleidos = mi_write_f (p_inodo, buf, offset, nbytes);
+    if (bytesleidos < 0){
+        return -1;
+    }
+
+    return bytesleidos;
 }
