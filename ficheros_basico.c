@@ -595,49 +595,27 @@ int escribir_inodo(unsigned int ninodo, struct inodo inodo) {
         return -1;
     }
 
-    struct tm *ts;
-    char atime[80];
-    char mtime[80];
-    char c_time[80];
-
-    puts("\n\nLECTURA DE INODO ANTES DE ESCRIBIR DESPUES DE LIBERACION\n");
-    ts = localtime(&inodo.atime);
-    strftime(atime, sizeof(atime), "%a %Y-%m-%d %H:%M:%S",ts);
-    ts = localtime(&inodo.mtime);
-    strftime(mtime, sizeof(mtime), "%a %Y-%m-%d %H:%M:%S",ts);
-    ts = localtime(&inodo.ctime);
-    strftime(c_time, sizeof(c_time), "%a %Y-%m-%d %H:%M:%S", ts);
-    
-    printf("tipo: %c\n",inodo.tipo);
-    printf("Permisos: %i\n",inodo.permisos);
-    printf("atime: %s\n",atime);
-    printf("ctime: %s\n", c_time);
-    printf("mtime: %s\n",mtime);
-    printf("nlinks: %i\n",inodo.nlinks);
-    printf("tamEnBytesLog: %i\n",inodo.tamEnBytesLog);
-    printf("numBloquesOcupados: %i\n",inodo.numBloquesOcupados);
-    
-
     //Variables de apoyo
-    unsigned int posInodo = ninodo / NUMINPRBLQ; //Nº de blqs que tiene el inodo
-    struct inodo bufferIn[NUMINPRBLQ];   //Buffer de inodos
+    unsigned int posInodo = ninodo / 8; //Nº de blqs que tiene el inodo
+    struct inodo bufferIn[8];   //Buffer de inodos
 
     //Leer información del array de inodos
-    if (bread(posInodo + SB.posPrimerBloqueAI, &bufferIn) == -1) {
+    if (bread(posInodo + SB.posPrimerBloqueAI, bufferIn) == -1) {
         perror("Error en lectura desde el array de inodos."
         " Función -> escribir_inodo()");
         return -1;
     }
 
     //Nº de inodo sobre el que escribir
-    bufferIn[ninodo % NUMINPRBLQ] = inodo;
+    bufferIn[ninodo % 8] = inodo;
 
     //Escritura sobre el array de inodos
-    if (bwrite(posInodo + SB.posPrimerBloqueAI, &bufferIn) == -1) {
+    if (bwrite(posInodo + SB.posPrimerBloqueAI, bufferIn) == -1) {
         perror("Error en escritura al array de inodos."
         " Función -> escribir_inodo()");
         return -1;
     }
+
     return 0;
 }
 
@@ -671,21 +649,21 @@ int leer_inodo(unsigned int ninodo, struct inodo *inodo) {
     }
 
     //Obtenemos el número de bloque del array de inodos que tiene el inodo solicitado
-    int posInodo = (ninodo/NUMINPRBLQ) + SB.posPrimerBloqueAI;
+    int posInodo = (ninodo/8) + SB.posPrimerBloqueAI;
 
     //Empleamos un array de inodos, del tamaño de la cantidad de inodos que caben en un bloque,
     //como buffer de lectura del bloque que hemos de leer
-    struct inodo inodos[NUMINPRBLQ];
+    struct inodo inodos[8];
 
     //Encontramos la posición del inodo solicitado
-    if (bread(posInodo,&inodos) == -1) {
+    if (bread(posInodo, inodos) == -1) {
         perror("Error en lectura del bloque que contiene ninodo. "
         "Función -> leer_inodo()");
         return -1;
     }
 
     //No se si está bien la asignación?¿
-    *inodo = inodos[ninodo%NUMINPRBLQ];
+    *inodo = inodos[ninodo%8];
 
 	return 0;
 }
@@ -1062,10 +1040,15 @@ int obtener_indice(int nblogico, int nivel_punteros){
 int liberar_inodo(unsigned int ninodo) {
     int nb_liberados; //Nº bloques liberados
 
-    
     //Estructuras de apoyo
     struct inodo inodo;
     struct superbloque SB;
+
+    //Lectura del inodo actualizado
+    if (leer_inodo(ninodo, &inodo) < 0) {
+        perror("Error: leer_inodo ha fallado. Función -> liberar_inodo()");
+        return -1;
+    }
 
     //Liberar bloques del inodo ninodo
     if ((nb_liberados = liberar_bloques_inodo(ninodo, 0)) < 0){
@@ -1073,14 +1056,12 @@ int liberar_inodo(unsigned int ninodo) {
         return -1;
     }
     
+    
     //Lectura del inodo actualizado
     if (leer_inodo(ninodo, &inodo) < 0) {
         perror("Error: leer_inodo ha fallado. Función -> liberar_inodo()");
         return -1;
     }
-   
-    printf("numBloquesOcupados: %i\n",inodo.numBloquesOcupados);
-    printf("nb_liberados: %i\n",nb_liberados);
 
     //Actualización de estado de inodo
     inodo.numBloquesOcupados -= nb_liberados;
@@ -1302,12 +1283,13 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
             }
         }
     }
-    
+
     if (salvar_inodo == 1) {
         if (escribir_inodo(ninodo, inodo) < 0) {
             perror("Error: escribir_inodo ha fallado. Función -> liberar_bloques_inodo()");
             return -1;
         }
     }
+
     return liberados;
 }
