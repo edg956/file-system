@@ -585,6 +585,13 @@ int mi_stat(const char *camino, struct STAT *p_stat) {
     return 0;
 }
 
+int mi_read (const char *camino, void *buf, unsigned int offset, unsigned int nbytes){
+
+}
+
+int mi_write (const char *camino, const void *buf, unsigned int offset, unsigned int nbytes){
+    
+}
 //------------------------FUNCIÓN OPCIONAL NIVEL 9------------------------------
 /*
     Descripción:    
