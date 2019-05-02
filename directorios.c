@@ -586,6 +586,13 @@ int mi_stat(const char *camino, struct STAT *p_stat) {
 }
 
 int mi_read (const char *camino, void *buf, unsigned int offset, unsigned int nbytes){
+
+}
+
+int mi_write (const char *camino, const void *buf, unsigned int offset, unsigned int nbytes){
+    
+}
+int mi_read (const char *camino, void *buf, unsigned int offset, unsigned int nbytes){
     int bytesleidos;
     int p_inodo_dir = 0;
     int p_inodo = 0;
