@@ -31,6 +31,9 @@
         + char *tipo 
 
     Parámetros de salida:
+        + 1: La ruta corresponde a un directorio
+        + 0: La ruta corresponde a un fichero
+        + (-1): Ruta inválida
 */
 int extraer_camino(const char *camino, char *inicial, char *final, char *tipo) {
     if (camino[0] != '/'){
@@ -46,11 +49,11 @@ int extraer_camino(const char *camino, char *inicial, char *final, char *tipo) {
         i++;
     }
 
-    inicial[i-1] = "\0"; //Marcar fin de String.
+    inicial[i-1] = '\0'; //Marcar fin de String.
     
     if (i == strlen(camino)){
-        *final = "\0";
-        *tipo = "f";
+        *final = '\0';
+        *tipo = 'f';
         return 0;               //Devolvemos 0 por que lo que hay en el camino corresponde a un fichero
     }
 
@@ -60,8 +63,8 @@ int extraer_camino(const char *camino, char *inicial, char *final, char *tipo) {
         i++;
         j++;
     }
-    *tipo = "d";
-    final[j] = "\0";
+    *tipo = 'd';
+    final[j] = '\0';
     return 1;                   //Devolvemos 1 por quelo que hay en el camino corresponde a un directorio
 }
 
@@ -97,7 +100,7 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     struct inodo inodo_dir;
 
     //Caso en el que sólo se pasa la raíz. 
-    if (strcmp(camino_parcial, "/")) {
+    if (camino_parcial[0] == '/') {
         *p_inodo = 0; 
         *p_entrada = 0;
         return 0; 
@@ -108,9 +111,12 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     memset(final, 0, NAME_MAX_LENGTH);
 
     if (extraer_camino(camino_parcial, inicial, final, &tipo)==-1) {
-        fprintf(stderr, "Error al extraer camino. Función -> buscar_entrada()");
-        exit(-1);   //exit -1?
+        fprintf(stderr, "Error: camino incorrecto.\n");
+        return -1;
     }
+
+    /*MENSAJE DE NIVEL 9                                                            */
+    printf("[buscar_entrada()-> inicial: %s, final: %s, reservar: reservar: %i\n", inicial, final, reservar);
 
     //Buscamos la entrada cuyo nombre se encuentra en la inicial. 
     if (leer_inodo(*p_inodo_dir, &inodo_dir) == -1) {
@@ -142,7 +148,7 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     //Calcular el número de entradas del inodo (numentradas).
     /*Nunca se cuenta la última barra "/" (-1)*/
     for(int i = 0; i<strlen(camino_parcial)-1; i++) {
-        if (strcmp(camino_parcial[i], "/")) {
+        if (camino_parcial[i] == '/') {
             numentradas++;
         }
     }
@@ -151,7 +157,7 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     if (numentradas > 0) {
 
         //Leer un blocksize de entradas
-        mi_read_f(p_inodo_dir, entradas, offset, BLOCKSIZE);
+        mi_read_f(*p_inodo_dir, entradas, offset, BLOCKSIZE);
         
         while ((nentrada < numentradas) &&
                (strcmp(inicial, entradas[index].nombre) != 0)) {
@@ -162,7 +168,7 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
             if (index == BLOCKSIZE/sizeof(struct entrada)) {
                 index = 0;
                 //Leer siguiente bloque de entradas
-                mi_read_f(p_inodo_dir, entradas, offset, BLOCKSIZE);
+                mi_read_f(*p_inodo_dir, entradas, offset, BLOCKSIZE);
             }
         }
     }
@@ -182,7 +188,7 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
             //Modo escritura. 
             case 1: 
 
-                if (inodo_dir.tipo = 'f') {
+                if (inodo_dir.tipo == 'f') {
                     fprintf(stderr, "Error no se puede crear entrada en un fichero."
                     "Función -> buscar_entrada()");
                     return -1;
@@ -216,7 +222,7 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
                         entradas[index].ninodo = ninodo; 
                     }
 
-                    if (mi_write_f(p_inodo_dir, &entradas[index], offset, sizeof(struct entrada))==-1) {
+                    if (mi_write_f(*p_inodo_dir, &entradas[index], offset, sizeof(struct entrada))==-1) {
                         
                         if (entradas[index].ninodo!=-1) {
                             liberar_inodo(entradas[index].ninodo);
@@ -228,6 +234,9 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
             }
         }
     }
+
+    /*MENSAJE DE NIVEL 9                                                            */
+    printf("entrada.nombre: %s, entrada.ninodo: %i\n", entradas[index].nombre, entradas[index].ninodo);
 
     if (!strcmp(final, "\0")) {
         if ((nentrada < numentradas) && (reservar=1)) {
