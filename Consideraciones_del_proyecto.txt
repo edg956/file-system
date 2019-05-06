@@ -3,3 +3,8 @@
 2. Si se intenta leer un inodo sin los permisos adecuados, ¿Hay que devolver -1 de la función que lo intenta leer con el correspondiente mensaje de perror, o hay que romper el programa con un exit(-1)?
 
 3. Deberíamos actualizar todos los comentarios de las funciones desde nivel 1 hasta nivel 7 una vez este todo funcionando. 
+<<<<<<< HEAD
+=======
+
+4. Definición de estructura inodo (Consultar solución voluntaria para el padding en el Nivel 2).
+>>>>>>> 1502d584c46211ae9d36a58981bf9ab5035841bb

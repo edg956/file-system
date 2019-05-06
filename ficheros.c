@@ -83,11 +83,11 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
             return -1;
         }
         
-        if(bread(bfisico, &bufBloque) < 0) return -3;        //Leemos el bloque correspondiente Error BREAD
+        if(bread(bfisico, bufBloque) < 0) return -3;        //Leemos el bloque correspondiente Error BREAD
 
         memcpy (bufBloque + desp1, buf_original, BLOCKSIZE - desp1);
         
-        if(bwrite(bfisico, &bufBloque) < 0) {
+        if(bwrite(bfisico, bufBloque) < 0) {
             return -1;                                      // Error en el Bwrite
         }
 
@@ -309,9 +309,6 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
         leidos = leidos + desp2 + 1; 
     }
     }
-    //Finalización.
-    inodo.atime = time(NULL);
-
     //Finalización.
     inodo.atime = time(NULL);
 
