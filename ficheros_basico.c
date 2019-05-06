@@ -1085,9 +1085,6 @@ int liberar_inodo(unsigned int ninodo) {
         perror("Error: liberar_bloque_inodo ha fallado. Función -> liberar_inodo()");
         return -1;
     }
-    
-    
-    struct inodo ino; 
 
     //Lectura del inodo actualizado
     if (leer_inodo(ninodo, &inodo) < 0) {
