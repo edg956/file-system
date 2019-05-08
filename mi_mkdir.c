@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
     }
 
     //Llamada a mi_creat para crear directorio/fichero
-    result = mi_creat(argv[3], argv[2][0]);
+    result = mi_creat(argv[3], atoi(argv[2]));
 
     //Check errores
     if (result == -1) {

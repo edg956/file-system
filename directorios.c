@@ -100,7 +100,7 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     struct inodo inodo_dir;
 
     //Caso en el que sólo se pasa la raíz. 
-    if (camino_parcial[0] == '/') {
+    if (strcmp(camino_parcial, "/") == 0) {
         *p_inodo = 0; 
         *p_entrada = 0;
         return 0; 
@@ -112,11 +112,11 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
 
     if (extraer_camino(camino_parcial, inicial, final, &tipo)==-1) {
         fprintf(stderr, "Error: camino incorrecto.\n");
-        return -1;
+        exit(-1); 
     }
 
     /*MENSAJE DE NIVEL 9                                                            */
-    printf("[buscar_entrada()-> inicial: %s, final: %s, reservar: reservar: %i\n", inicial, final, reservar);
+    printf("[buscar_entrada()-> inicial: %s, final: %s, reservar: %i]\n", inicial, final, reservar);
 
     //Buscamos la entrada cuyo nombre se encuentra en la inicial. 
     if (leer_inodo(*p_inodo_dir, &inodo_dir) == -1) {
@@ -126,9 +126,8 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     }
     
     if ((inodo_dir.permisos & 4)!=4) {
-        fprintf(stderr, "Error en los permisos de lectura del inodo."
-        "Función -> buscar_entrada()");
-        //No return?
+        fprintf(stderr,"[buscar_entrada()-> inodo %d no tiene permisos de lectura]\n", *p_inodo_dir);
+        exit(-1);
     } 
 
     //Declaraciones.
@@ -140,18 +139,15 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     int nentrada = 0;
     int offset = 0;             //Offset dentro del inodo donde se lee/escribe
     int index = 0;              //Indice dentro del buffer de entradas
+    int ninodo = 0; 
 
     //Poner buffers a 0's
     //memset(entrada.nombre, 0, sizeof(entrada.nombre));
     memset(entradas, 0, BLOCKSIZE);
 
     //Calcular el número de entradas del inodo (numentradas).
-    /*Nunca se cuenta la última barra "/" (-1)*/
-    for(int i = 0; i<strlen(camino_parcial)-1; i++) {
-        if (camino_parcial[i] == '/') {
-            numentradas++;
-        }
-    }
+    numentradas = inodo_dir.tamEnBytesLog/sizeof(struct entrada);
+
 
     //Utilizar buffer de tamaño blocksize para las entradas y reducir accesos
     if (numentradas > 0) {
@@ -174,14 +170,12 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     }
 
     if (nentrada==numentradas) { //Se ha recorrido el total de entradas
-        index = 0;
+
         switch (reservar) {
 
             //Modo consulta. Como no existe retornamos error. 
             case 0: 
 
-                fprintf(stderr, "Error: No existe entrada consulta. "
-                    "Función -> buscar_entrada()");
                 return -1; 
                 break; 
 
@@ -208,19 +202,24 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
                     
                     if (tipo == 'd') {
                         if(!strcmp(final, "/")) { //resultado esperado == 0
-                            int ninodo = reservar_inodo(tipo, permisos);
+                            ninodo = reservar_inodo(tipo, permisos);
                             entradas[index].ninodo = ninodo; 
                         }else{
                             //Cuelgan más directorios o ficheros. 
                              fprintf(stderr, "Error no existe directorio intermedio. "
                              "Función -> buscar_entrada()");
+                             return -1; 
                         }
 
                     }else{
                         //Es un fichero
-                        int ninodo = reservar_inodo('f', permisos); 
+                        ninodo = reservar_inodo('f', permisos); 
                         entradas[index].ninodo = ninodo; 
                     }
+                    /*MENSAJES DE NIVEL 9                                           */
+                    
+                    printf("[buscar_entrada()-> entrada.nombre: %s, entrada.ninodo: %i]\n", entradas[index].nombre, entradas[index].ninodo);
+                    printf("[buscar_entrada()-> reservado inodo %d tipo %c con permisos %d]\n", ninodo, tipo, permisos);
 
                     if (mi_write_f(*p_inodo_dir, &entradas[index], offset, sizeof(struct entrada))==-1) {
                         
@@ -235,14 +234,9 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
         }
     }
 
-    /*MENSAJE DE NIVEL 9                                                            */
-    printf("entrada.nombre: %s, entrada.ninodo: %i\n", entradas[index].nombre, entradas[index].ninodo);
-
-    if (!strcmp(final, "\0")) {
-        if ((nentrada < numentradas) && (reservar=1)) {
+    if (!strcmp(final, "\0") || !strcmp(final, "/")) {
+        if ((nentrada < numentradas) && (reservar==1)) {
             //Modo escritura y la entrada ya existe.
-            fprintf(stderr, "Error: entrada ya existente. "
-            "Función -> buscar_entrada()");
             return -1; 
         }
 
@@ -254,6 +248,7 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
 
         *p_inodo_dir = entradas[index].ninodo; 
         return buscar_entrada(final, p_inodo_dir, p_inodo, p_entrada, reservar, permisos);
+    
     }
 }
 
@@ -284,15 +279,19 @@ int mi_creat(const char *camino, unsigned char permisos) {
     //Lectura de superbloque para obtener posición de inodo raiz
     if(bread(posSB, &SB) == -1) {
         fprintf(stderr, "Error en lectura de superbloque. "
-        "Función -> mi_creat()");
+        "Función -> mi_creat()\n");
     }
 
     posInodoRaiz = SB.posInodoRaiz;
 
     result = buscar_entrada(camino, &posInodoRaiz, &p_inodo, &p_entrada, 1, permisos);
 
-    //Controlar los posibles errores desde result
-    //Todavía por definir la diferenciación entre errores
+    if (result==-1) {
+         fprintf(stderr, "Error al buscar entrada. "
+        "Función -> mi_creat()\n");
+    }
+
+    //Todavía por definir la diferenciación entre errores--------------------------------------------------------_> revisar
     return 0;
 }
 
@@ -325,7 +324,7 @@ int mi_dir(const char *camino, char *buffer) {
     int result;
     unsigned int posInodoRaiz, p_inodo, p_entrada;
     struct STAT stat, s_aux;
-    char *c;
+    char str[12];
 
     //Buffer para lecturas de entradas
     struct entrada entradas[BLOCKSIZE/sizeof(struct entrada)];
@@ -334,11 +333,12 @@ int mi_dir(const char *camino, char *buffer) {
     int offset = 0;
     //Inicializar buffer a 0's
     memset(entradas, 0, sizeof(entradas));
+    memset(str, 0, sizeof(str));
 
     //Lectura de superbloque para obtener posición de inodo raiz
     if(bread(posSB, &SB) == -1) {
         fprintf(stderr, "Error en lectura de superbloque. "
-        "Función -> mi_creat()");
+        "Función -> mi_dir()\n");
     }
 
     posInodoRaiz = SB.posInodoRaiz;
@@ -346,14 +346,16 @@ int mi_dir(const char *camino, char *buffer) {
     //Obtener inodo correspondiente a directorio
     result = buscar_entrada(camino, &posInodoRaiz, &p_inodo, &p_entrada, 0, 7);
 
-    /*
-        TRATAR ERRORES
-    */
+    if (result==-1) {
+        fprintf(stderr, "Error: No existe el archivo o directorio. "
+        "Función -> mi_dir()\n");
+        exit(-1);
+    }
 
     //Lectura de inodo
     if (mi_stat_f(p_inodo, &stat) == -1) {
         return fprintf(stderr,"Error en lectura de inodo. "
-        "Función -> mi_dir()");
+        "Función -> mi_dir()\n");
         return -1;
     }
 
@@ -374,7 +376,7 @@ int mi_dir(const char *camino, char *buffer) {
     //Leer primer bloque de entradas
     if (mi_read_f(p_inodo, entradas, offset, sizeof(entradas)) == -1) {
         fprintf(stderr, "Error: imposible leer desde disco. "
-        "Función -> mi_dir()");
+        "Función -> mi_dir()\n");
         return -1;
     }
 
@@ -391,7 +393,9 @@ int mi_dir(const char *camino, char *buffer) {
 
         } else {
             //Concatenar información sobre tipo
-            strcat(buffer, s_aux.tipo + "   ");
+            sprintf(str,"%c", s_aux.tipo);
+            strcat(buffer, str);
+            strcat(buffer, "      ");
 
             //Concatenar información sobre permisos de lectura
             if ((s_aux.permisos & 4) == 4) {
@@ -412,12 +416,12 @@ int mi_dir(const char *camino, char *buffer) {
                 strcat(buffer, "-");
             }
 
-            strcat(buffer, "    "); //Tabulación entre columnas
+            strcat(buffer, "        "); //Tabulación entre columnas
 
             //Formatear información de mtime de inodo
             struct tm *tm; //ver info: struct tm
             char tmp[100];
-            tm = localtime(&stat.mtime);
+            tm = localtime(&s_aux.mtime);
             sprintf(tmp,"%d-%02d-%02d %02d:%02d:%02d\t",tm->tm_year+1900,
                     tm->tm_mon+1,tm->tm_mday,tm->tm_hour,tm->tm_min,tm->tm_sec);
             //Concatenar información de mtime
@@ -425,9 +429,8 @@ int mi_dir(const char *camino, char *buffer) {
             strcat(buffer, "    ");
             
             //Concatenar tamaño del directorio/fichero
-            c = malloc(sizeof(char));
-            *c = s_aux.tamEnBytesLog + '0';
-            strcat(buffer, c);
+            sprintf(str,"%d",s_aux.tamEnBytesLog);
+            strcat(buffer, str);
             strcat(buffer, "    ");
 
             //Concatenar nombre de entrada
@@ -445,7 +448,7 @@ int mi_dir(const char *camino, char *buffer) {
             offset += sizeof(entradas);
             if (mi_read_f(p_inodo, entradas, offset, sizeof(entradas)) == -1) {
                 fprintf(stderr, "Error: imposible leer desde disco. "
-                "Función -> mi_dir()");
+                "Función -> mi_dir()\n");
                 return -1;
             }
             index = 0;
@@ -486,7 +489,8 @@ int mi_chmod(const char *camino, unsigned char permisos) {
     //Lectura de superbloque para obtener posición de inodo raiz
     if(bread(posSB, &SB) == -1) {
         fprintf(stderr, "Error en lectura de superbloque. "
-        "Función -> mi_creat()");
+        "Función -> mi_chmod()\n");
+        exit(-1);
     }
 
     posInodoRaiz = SB.posInodoRaiz;
@@ -494,9 +498,11 @@ int mi_chmod(const char *camino, unsigned char permisos) {
     //Obtener inodo correspondiente a directorio
     result = buscar_entrada(camino, &posInodoRaiz, &p_inodo, &p_entrada, 0, 7);
 
-    /*
-        TRATAR ERRORES
-    */
+    if (result==-1) {
+         fprintf(stderr, "Error al buscar entrada. "
+        "Función -> mi_chmod()\n");
+        return -1; 
+    }
 
    //Cambiar permisos con mi_chmod_f
    if (mi_chmod_f(p_inodo, permisos) == -1) {
@@ -537,7 +543,7 @@ int mi_stat(const char *camino, struct STAT *p_stat) {
     //Lectura de superbloque para obtener posición de inodo raiz
     if(bread(posSB, &SB) == -1) {
         fprintf(stderr, "Error en lectura de superbloque. "
-        "Función -> mi_creat()");
+        "Función -> mi_stat()\n");
     }
 
     posInodoRaiz = SB.posInodoRaiz;
@@ -545,17 +551,15 @@ int mi_stat(const char *camino, struct STAT *p_stat) {
     //Obtener inodo correspondiente a directorio
     result = buscar_entrada(camino, &posInodoRaiz, &p_inodo, &p_entrada, 0, 7);
 
-    /*
-        TRATAR ERRORES
-    */
-
-    //Imprimir por pantalla el número de inodo ----- NIVEL 9
-    printf("Nº de inodo: %i\n", p_inodo);
+    if (result==-1) {
+         fprintf(stderr, "Error al buscar entrada. "
+        "Función -> mi_stat()\n");
+    }
 
     //Obtención de datos
     if (mi_stat_f(p_inodo, p_stat) == -1) {
         fprintf(stderr, "Error: no se ha podido obtener el estatus del inodo."
-        " Función -> mi_stat()");
+        " Función -> mi_stat()\n");
         return -1;
     }
 

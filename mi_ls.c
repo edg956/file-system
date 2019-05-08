@@ -26,8 +26,12 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
+    //Limpiar buffers
+    memset(buffer, 0, BLOCKSIZE);
+    memset(buffer_aux, 0, BLOCKSIZE);
+
     //Leer el directorio y llenar buffer
-    cont = mi_dir(argv[1], buffer);
+    cont = mi_dir(argv[2], buffer);
     if (cont == -1) {
         perror("Error: no se ha podido leer el directorio.");
         exit(-1);
@@ -35,8 +39,8 @@ int main(int argc, char **argv) {
 
     //Impresion por pantalla de cabecera
     printf("Total entradas: %i\n", cont);
-    puts("Tipo  Permisos    mTime           Tamaño  Nombre");
-    puts("---------------------------------------------------");
+    puts("Tipo  Permisos    mTime                  Tamaño  Nombre");
+    puts("------------------------------------------------------------");
 
     cont = 0; //Índice
     //Tratamiento del buffer
@@ -44,7 +48,7 @@ int main(int argc, char **argv) {
         //Si es caracter de separación, imprimir buffer auxiliar
         if (buffer[cont] == '|') {
             printf("%s\n", buffer_aux);
-            cont2 = 0;
+            cont2 = -1;
         } else {
             //Seguir copiando del buffer al buffer auxiliar
             if (cont2 < AUX_BUF_SIZE) {
