@@ -1,4 +1,5 @@
 #include 'directorios.h'
+#include <string.h>
 
 /*
 Programa (comando) que muestra TODO el contenido de un fichero.
@@ -9,6 +10,35 @@ Programa (comando) que muestra TODO el contenido de un fichero.
     todas las sentencias involucradas.
 */
 int main (int argc, char **argv){
-    
+
+int bytesLeidos;
+int totalBytesLeidos = 0;
+int offset = 0;
+unsigned char tamBuffer[BLOCKSIZE];
+struct STAT stat;
+
+char *camino = argv[2];
+if (argc != 3){
+    perror("Error: número de argumentos incorrecto.\n");
+    exit(-1);
+}
+//Comprovamos que la ruta sea la de un fichero
+if (camino [strlen(camino) - 1] == '/'){    
+    perror("Error: La ruta no es un fichero.\n");
+    exit(-1);
+}    
+memset(tamBuffer, 0, BLOCKSIZE);
+
+//Pasamos por todos los bloques para leer los bytes
+while ((bytesLeidos = mi_read_f(*camino, tamBuffer, offset, BLOCKSIZE)) > 0){
+    write(1, tamBuffer, bytesLeidos);
+    memset(tamBuffer, 0, BLOCKSIZE);
+    offset += BLOCKSIZE;
+    totalBytesLeidos += bytesLeidos;
+}
+printf("Bytes Leidos: %i\n", totalBytesLeidos);
+mi_stat_f(*camino, &stat);
+printf ("tamEnBytesLog: %i\n", stat.tamEnBytesLog);
+return 0;    
     
 }
