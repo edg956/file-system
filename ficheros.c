@@ -41,6 +41,7 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
     
     //Comprobación de permisos
     if((in.permisos & 2) != 2){
+        fprintf(stderr, "Error: Permiso denegado de escritura.\n");
         return -1;                                         
     }   
 
@@ -182,14 +183,14 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     
     //Lectura del inodo con el que se trabajará. 
     if (leer_inodo(ninodo, &inodo) == -1) {
-       perror("Error: no se ha podido leer el inodo deseado."
+       fprintf(stderr, "Error: no se ha podido leer el inodo deseado."
        "Función -> mi_read_f()");
        exit(-1);
     }
 
     //Comprobación inicial de los permisos de lectura del inodo. 
     if ((inodo.permisos & 4)!=4) { 
-       perror("Error: no se ha podido leer el inodo deseado. " 
+       fprintf(stderr, "Error: no se ha podido leer el inodo deseado. " 
        "Permisos incorrectos. Función -> mi_read_f()");
        exit(-1);
     }
@@ -239,7 +240,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
 
         //Se lee el primer bloque (entero) y se almacena en el buffer. 
         if (bread(bfisico, auxBuff)==-1) {
-            perror("Error: no se ha podido leer el bloque deseado." 
+            fprintf(stderr, "Error: no se ha podido leer el bloque deseado." 
             "Función -> mi_read_f()");
             exit(-1);  
         }
@@ -268,7 +269,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
             /*Se copia el bloque físico correspondiente al bloque lógico en
             un buffer auxiliar.*/
             if (bread(bfisico, auxBuff)==-1) {
-                perror("Error: no se ha podido leer el bloque deseado." 
+                fprintf(stderr, "Error: no se ha podido leer el bloque deseado." 
                 "Función -> mi_read_f()");
                 exit(-1);   
             }
@@ -297,7 +298,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     }else {
         //Se lee el bloque entero y se almacena en el buffer auxiliar. 
         if (bread(bfisico, auxBuff)==-1) {
-            perror("Error: no se ha podido leer el bloque deseado." 
+            fprintf(stderr, "Error: no se ha podido leer el bloque deseado." 
             "Función -> mi_read_f()");
             exit(-1);  
         }
