@@ -10,6 +10,8 @@ int main(int argc, char **argv) {
     struct STAT stat;
     struct tm *ts;
     char buf[80];
+    char errbuff[BLOCKSIZE]; //Buffer de errores. 
+    int result; 
 
     //Comprobación de parámetros enviados al programa. 
     if (argc != 3) {
@@ -24,9 +26,15 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
+    //Inicialización del buffer de errores. 
+    memset(errbuff, 0, sizeof(errbuff));
+
+    result = mi_stat(argv[2], &stat) ;
+
     //Llamada a mi_stat()
-    if (mi_stat(argv[2], &stat) == -1) {
-        perror("Error: no se ha podido leer información del fichero");
+    if (result < 0) {
+        control_errores_buscar_entrada(result, errbuff);
+        fprintf(stderr, "%s", errbuff);
         exit(-1);
     }
 
