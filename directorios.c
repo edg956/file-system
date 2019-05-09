@@ -780,7 +780,7 @@ int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nby
         + Número de bytes escritos. 
         + <0: Algún error ocurrido. 
 */
-int mi_write (const char *camino, const void *buf, unsigned int offset, unsigned int nbytes){
+int mi_write (const char *camino, const void *buf, unsigned int offset, unsigned int nbytes) {
     
     //Declaraciones.
     int bytesEscritos;    
@@ -818,4 +818,129 @@ int mi_write (const char *camino, const void *buf, unsigned int offset, unsigned
     }
 
     return bytesEscritos;
+
+}
+/*
+        Función que enlaza un fichero a crear sobre la ruta camino2 a la ruta
+        camino1.
+
+    Funciones a las que llama:
+        + ficheros_basico.h - leer_inodo()
+        + ficheros_basico.h - escribir_inodo()
+        + ficheros_basico.h - liberar_inodo()
+        + ficheros.h - mi_write_f()
+        + ficheros.h - mi_read_f()
+        + directorios.h - buscar_entrada()
+        
+    Funciones desde donde es llamado:
+
+    Parámetros de entrada:
+        + const char *camino1
+        + const char *camino2
+
+    Parámetros de salida:
+        + 0: Ejecución correcta
+        + (-1): Error
+*/
+int mi_link(const char *camino1, const char *camino2) {
+    
+    //Declaraciones
+    struct inodo inodo1, inodo2;
+    struct entrada entrada;
+    int p_inodo_dir = 0;
+    int p_inodo1 = 0, p_inodo2 = 0;
+    int p_entrada1 = 0, p_entrada2 = 0;
+    int buscar_entrada;
+    
+    //Comprobar que el fichero al que apunta camino1 exista
+    buscar_entrada = buscar_entrada(camino1, &p_inodo_dir, &p_inodo1, &p_entrada1, 0, 6);
+    
+    if (buscar_entrada < -1){
+        printf ("Error!");
+        return -1;
+    }
+
+    /*Comprobar el inodo*/
+    //Lectura de inodo
+    if (leer_inodo(p_inodo1, &inodo1) < 0) {
+        fprintf(stderr, "Error: lectura de inodo fallida. Función -> mi_link()");
+        return -1;
+    }
+    //Comprobar que sea fichero
+    if (inodo1.tipo /= 'f') {
+        fprintf(stderr, "Error: no se puede enlazar una ruta a un directorio. "
+        "Función -> mi_link()\n");
+        return -1;
+    }
+    //Comprobar que se tenga permisos de lectura
+    if ((inodo1.permisos & 4) != 4) {
+        fprintf(stderr, "Error: no se tiene permisos de lectura para la ruta "
+        "a enlazar. Función -> mi_link()\n");
+        return -1;
+    }
+
+    //Comprobar que el fichero al que apunta camino2 no exista
+    buscar_entrada = buscar_entrada(camino1, &p_inodo_dir, &p_inodo2, &p_entrada2, 1, 6);
+    
+    if (buscar_entrada < -1){
+        printf ("Error!");
+        return -1;
+    }
+
+    /*Comprobar el inodo*/
+    //Lectura de inodo
+    if (leer_inodo(p_inodo2, &inodo2) < 0) {
+        fprintf(stderr, "Error: lectura de inodo fallida. Función -> mi_link()");
+        return -1;
+    }
+    //Comprobar que sea fichero
+    if (inodo2.tipo /= 'f') {
+        fprintf(stderr, "Error: no se puede enlazar una ruta de un directorio "
+        "a la ruta origen. Función -> mi_link()\n");
+        return -1;
+    }
+    //Comprobar que se tenga permisos de lectura
+    if ((inodo2.permisos & 4) != 4) {
+        fprintf(stderr, "Error: no se tiene permisos de lectura para la ruta "
+        "a enlazar. Función -> mi_link()\n");
+        return -1;
+    }
+    //Lectura de la entrada dentro del inodo
+    if (mi_read_f(p_inodo2, &entrada, p_entrada2*sizeof(struct entrada), 
+    sizeof(struct entrada)) == -1) {
+        fprintf(stderr, "Error: imposible leer entrada de ruta a enlazar. "
+        "Función -> mi_link()\n");
+        return -1;
+    }
+
+    //Modificar puntero al inodo de la entrada
+    entrada.ninodo = p_inodo1;
+
+    //Escritura de la entrada dentro del inodo
+    if (mi_write_f(p_inodo2, &entrada, p_entrada2*sizeof(struct entrada),
+    sizeof(struct entrada)) == -1) {
+        fprintf(stderr, "Error: imposible escribir entrada de ruta a enlazar. "
+        "Función -> mi_link()\n");
+        return -1;
+    }
+
+    //Modificar número de enlaces del inodo origen
+    inodo1.nlinks++;
+    inodo1.ctime = time(NULL);
+
+    //Guardar inodo
+    if (escribir_inodo(p_inodo1, inodo1) == -1) {
+        fprintf(stderr, "Error: imposible salvar inodo de ruta origen. "
+        "Función -> mi_link()\n");
+        return -1;
+    }
+
+    //Liberar inodo del camino a enlazar
+    if (liberar_inodo(p_inodo2) == -1) {
+        fprintf("Error: no se ha podido liberar el inodo de la ruta a enlazar."
+        " Función -> mi_link()\n");
+        return -1;
+    }
+
+    return 0;
 }
