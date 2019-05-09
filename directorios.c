@@ -7,7 +7,6 @@
 
 /*----------------------------FUNCIONES DE NIVEL 8----------------------------*/
 
-
 /*
     Descripción:
         Dada una cadena de caracteres camino (que comience por '/'), 
@@ -18,11 +17,8 @@
             inicial = "dir1" (devuelve DIRECTORIO)
             final = "/dir2/fichero"
 
-    Funciones a las que llama:
-
-        
     Funciones desde donde es llamado:
-
+        + directorios.h - buscar_entrada()
 
     Parámetros de entrada:
         + const char *camino
@@ -36,13 +32,17 @@
         + (-1): Ruta inválida
 */
 int extraer_camino(const char *camino, char *inicial, char *final, char *tipo) {
+   
+    //Devuelve -1 en caso de que el camino no comience por el carácter '/'
     if (camino[0] != '/'){
-        return -1;              //Devuelve -1 en caso de que el camino no comience por el carácter '/'
+        return -1;             
     }
     int i = 1;
+
     /*
-    En el siguiente bucle guardaremos en inicial la porción comprendida entre los dos primeros '/' o en el caso
-    que no haya un segundo '/' guarda camino en inicial también.
+    En el siguiente bucle guardaremos en inicial la porción comprendida entre
+    los dos primeros '/' o en el caso que no haya un segundo '/' guarda camino 
+    en inicial también.
     */
     while ((camino[i] != '/') && (camino[i] != '\0')){  
         inicial[i-1] = camino[i];
@@ -51,10 +51,11 @@ int extraer_camino(const char *camino, char *inicial, char *final, char *tipo) {
 
     inicial[i-1] = '\0'; //Marcar fin de String.
     
+    //Devolvemos 0 por que lo que hay en el camino corresponde a un fichero.
     if (i == strlen(camino)){
         *final = '\0';
         *tipo = 'f';
-        return 0;               //Devolvemos 0 por que lo que hay en el camino corresponde a un fichero
+        return 0;               
     }
 
     int j = 0;
@@ -65,9 +66,10 @@ int extraer_camino(const char *camino, char *inicial, char *final, char *tipo) {
     }
     *tipo = 'd';
     final[j] = '\0';
-    return 1;                   //Devolvemos 1 por quelo que hay en el camino corresponde a un directorio
+    
+    //Devolvemos 1 por quelo que hay en el camino corresponde a un directorio.
+    return 1;                   
 }
-
 
 /*
     Descripción:    
@@ -75,11 +77,21 @@ int extraer_camino(const char *camino, char *inicial, char *final, char *tipo) {
         entre las entradas del inodo correspondiente a su directorio padre.
 
     Funciones a las que llama:
-        +
+        + ficheros_basico.h - leer_inodo()
+        + ficheros_basico.h - reservar_inodo()
+        + ficheros_basico.h - liberar_inodo()
+        + ficheros.h - mi_read_f()
+        + ficheros.h - mi_write_f()
         + directorios.h - extraer_camino()
         + directorios.h - buscar_entrada()
         
     Funciones desde donde es llamado:
+        + directorios.h - buscar_entrada()
+        + directorios.h - mi_creat()
+        + directorios.h - mi_dir()
+        + directorios.h - mi_chmod()
+        + directorios.h - mi_stat();
+        + directorios.h - mi_touch(); 
 
     Parámetros de entrada:
         + const char *camino_parcial
@@ -90,6 +102,16 @@ int extraer_camino(const char *camino, char *inicial, char *final, char *tipo) {
         + unsigned char permisos
 
     Parámetros de salida:
+        + 0: Ejecución correcta. 
+        + (-1): Error: Camino incorrecto. 
+        + (-2): Error: El inodo no se ha podido leer correctamente. 
+        + (-3): Error: Permiso denegado de lectura. 
+        + (-4): Error: No existe el archivo o directorio. 
+        + (-5): Error: Permiso denegado de escritura. 
+        + (-6): Error: No existe algún directorio intermedio. 
+        + (-7): Error: EXIT_FAILURE.
+        + (-8): Error: No se puede crear una entrada en un fichero. 
+        + (-9): Error: Entrada ya existente. 
 
 */
 int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsigned int *p_inodo, unsigned int *p_entrada, char reservar, unsigned char permisos) {
@@ -115,7 +137,8 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     }
 
     /*MENSAJE DE NIVEL 9  -----------------------------------------------------------------------------------------------------------------*/
-    printf("[buscar_entrada()-> inicial: %s, final: %s, reservar: %i]\n", inicial, final, reservar);
+    printf("[buscar_entrada()-> inicial: %s, final: %s, " 
+    "reservar: %i]\n", inicial, final, reservar);
 
     //Buscamos la entrada cuyo nombre se encuentra en la inicial. 
     if (leer_inodo(*p_inodo_dir, &inodo_dir) == -1) {
@@ -124,7 +147,8 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     
     if ((inodo_dir.permisos & 4)!=4) {
         /*MENSAJE NIVEL 9- ----------------------------------------------------------------------------------------------------------------*/
-        fprintf(stderr,"[buscar_entrada()-> inodo %d no tiene permisos de lectura]\n", *p_inodo_dir);
+        fprintf(stderr,"[buscar_entrada()-> inodo %d no tiene permisos "
+        "de lectura]\n", *p_inodo_dir);
         return -3; 
     } 
 
@@ -157,7 +181,8 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
                (strcmp(inicial, entradas[index].nombre) != 0)) {
             nentrada++;
             index++;
-            offset += sizeof(struct entrada);   //Guardar offset para posterior escritura
+            //Guardar offset para posterior escritura
+            offset += sizeof(struct entrada);   
 
             if (index == BLOCKSIZE/sizeof(struct entrada)) {
                 index = 0;
@@ -207,10 +232,13 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
                         ninodo = reservar_inodo('f', permisos); 
                         entradas[index].ninodo = ninodo; 
                     }
-                    /*MENSAJES DE NIVEL 9                                           */
+                    /*MENSAJES DE NIVEL 9 ------------------------------------------------------------------------- */
                     
-                    printf("[buscar_entrada()-> entrada.nombre: %s, entrada.ninodo: %i]\n", entradas[index].nombre, entradas[index].ninodo);
-                    printf("[buscar_entrada()-> reservado inodo %d tipo %c con permisos %d]\n", ninodo, tipo, permisos);
+                    printf("[buscar_entrada()-> "
+                    "entrada.nombre: %s, entrada.ninodo: "
+                    "%i]\n", entradas[index].nombre, entradas[index].ninodo);
+                    printf("[buscar_entrada()-> reservado inodo %d tipo %c "
+                    "con permisos %d]\n", ninodo, tipo, permisos);
 
                     if (mi_write_f(*p_inodo_dir, &entradas[index], offset, sizeof(struct entrada))==-1) {
                         
@@ -243,7 +271,7 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
 
 /*
     Descripción:    
-        Función que crea un directorio/fichero y su entrada de directorio
+        Función que crea un directorio y su entrada de directorio
 
     Funciones a las que llama:
         + bloques.h - bread()
@@ -586,6 +614,24 @@ int mi_stat(const char *camino, struct STAT *p_stat) {
 }
 
 //------------------------FUNCIÓN OPCIONAL NIVEL 9------------------------------
+/*
+    Descripción:    
+        Función que crea un fichero y su entrada de fichero
+
+    Funciones a las que llama:
+        + bloques.h - bread()
+        + directorios.h - buscar_entrada()
+        
+    Funciones desde donde es llamado:
+
+    Parámetros de entrada:
+        + const char *camino
+        + unsigned char permisos
+
+    Parámetros de salida:
+        + 0: Ejecución correcta
+        + (-1): Error
+*/
 int mi_touch(const char *camino, unsigned char permisos) {
 
     //Declaraciones
@@ -601,7 +647,8 @@ int mi_touch(const char *camino, unsigned char permisos) {
     }
 
     if (camino[i-1]=='/') {
-        fprintf(stderr, "Error: Para crear directorios se tiene que usar el comando mi_mkdir\n");
+        fprintf(stderr, "Error: Para crear directorios se tiene que usar "
+        "el comando mi_mkdir\n");
         return -1; 
     }
 
@@ -628,6 +675,26 @@ int mi_touch(const char *camino, unsigned char permisos) {
 
 }
 
+/*
+    Descripción:    
+        Función para diferenciar todos los tipos de errores que puede generar
+        la función buscar_entrada. 
+        
+    Funciones desde donde es llamado:
+        + directorios.h - mi_creat()
+        + directorios.h - mi_dir()
+        + directorios.h - mi_chmod()
+        + directorios.h - mi_stat();
+        + directorios.h - mi_touch(); 
+
+    Parámetros de entrada:
+        + int nerror: número de error de buscar_entrada.
+        + char *buffer. 
+
+    Parámetros de salida:
+        + 0: Ejecución correcta
+        + (-1): Error
+*/
 int control_errores_buscar_entrada(int nerror, char *buffer) {
     
     switch (nerror) {
