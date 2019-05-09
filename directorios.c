@@ -111,23 +111,21 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     memset(final, 0, NAME_MAX_LENGTH);
 
     if (extraer_camino(camino_parcial, inicial, final, &tipo)==-1) {
-        fprintf(stderr, "Error: camino incorrecto.\n");
-        exit(-1); 
+        return -1; 
     }
 
-    /*MENSAJE DE NIVEL 9                                                            */
+    /*MENSAJE DE NIVEL 9  -----------------------------------------------------------------------------------------------------------------*/
     printf("[buscar_entrada()-> inicial: %s, final: %s, reservar: %i]\n", inicial, final, reservar);
 
     //Buscamos la entrada cuyo nombre se encuentra en la inicial. 
     if (leer_inodo(*p_inodo_dir, &inodo_dir) == -1) {
-        fprintf(stderr, "Error en lectura del inodo."
-        "Función -> buscar_entrada()\n");
-        return -1;
+        return -2;
     }
     
     if ((inodo_dir.permisos & 4)!=4) {
+        /*MENSAJE NIVEL 9- ----------------------------------------------------------------------------------------------------------------*/
         fprintf(stderr,"[buscar_entrada()-> inodo %d no tiene permisos de lectura]\n", *p_inodo_dir);
-        exit(-1);
+        return -3; 
     } 
 
     //Declaraciones.
@@ -176,24 +174,19 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
             //Modo consulta. Como no existe retornamos error. 
             case 0: 
 
-                return -1; 
+                return -4; 
                 break; 
 
             //Modo escritura. 
             case 1: 
 
                 if (inodo_dir.tipo == 'f') {
-                    fprintf(stderr, "Error no se puede crear entrada en un fichero."
-                    "Función -> buscar_entrada()");
-                    return -1;
+                    return -8;
                 }
 
                 //Si es directorio comprobar que tiene permiso de escritura. 
                 if ((inodo_dir.permisos & 2)!=2) {
-
-                    fprintf(stderr, "Error en los permisos de escritura del inodo. "
-                    "Función -> buscar_entrada()");
-                    return -1;
+                    return -5;
                     
                 }else{
 
@@ -206,9 +199,7 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
                             entradas[index].ninodo = ninodo; 
                         }else{
                             //Cuelgan más directorios o ficheros. 
-                             fprintf(stderr, "Error no existe directorio intermedio. "
-                             "Función -> buscar_entrada()");
-                             return -1; 
+                             return -6; 
                         }
 
                     }else{
@@ -226,9 +217,7 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
                         if (entradas[index].ninodo!=-1) {
                             liberar_inodo(entradas[index].ninodo);
                         }
-                        fprintf(stderr, "EXIT_FAILURE. "
-                        "Función -> buscar_entrada()");
-                        exit(-1);
+                        return -7;
                 }
             }
         }
@@ -237,7 +226,7 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     if (!strcmp(final, "\0") || !strcmp(final, "/")) {
         if ((nentrada < numentradas) && (reservar==1)) {
             //Modo escritura y la entrada ya existe.
-            return -1; 
+            return -9; 
         }
 
         //Se corta la recursividad.
@@ -275,6 +264,10 @@ int mi_creat(const char *camino, unsigned char permisos) {
     struct superbloque SB;
     int result;
     unsigned int posInodoRaiz, p_inodo, p_entrada;
+    char errbuff[BUF_SIZE]; //Buffer de errores. 
+
+    //Inicialización del buffer de errores. 
+    memset(errbuff, 0, sizeof(errbuff));
 
     //Lectura de superbloque para obtener posición de inodo raiz
     if(bread(posSB, &SB) == -1) {
@@ -286,12 +279,12 @@ int mi_creat(const char *camino, unsigned char permisos) {
 
     result = buscar_entrada(camino, &posInodoRaiz, &p_inodo, &p_entrada, 1, permisos);
 
-    if (result==-1) {
-         fprintf(stderr, "Error al buscar entrada. "
-        "Función -> mi_creat()\n");
+    if (result < 0) {
+        control_errores_buscar_entrada(result, errbuff);
+        fprintf(stderr, "%s", errbuff);
+        return -1; 
     }
 
-    //Todavía por definir la diferenciación entre errores--------------------------------------------------------_> revisar
     return 0;
 }
 
@@ -325,15 +318,22 @@ int mi_dir(const char *camino, char *buffer) {
     unsigned int posInodoRaiz, p_inodo, p_entrada;
     struct STAT stat, s_aux;
     char str[12];
+    char errbuff[BUF_SIZE]; //Buffer de errores. 
+ 
+
 
     //Buffer para lecturas de entradas
     struct entrada entradas[BLOCKSIZE/sizeof(struct entrada)];
     int index = 0;      //Iterar sobre buffer
     int limit = sizeof(entradas)/sizeof(entradas[0]);   //Limite de iterador
     int offset = 0;
+    
     //Inicializar buffer a 0's
     memset(entradas, 0, sizeof(entradas));
     memset(str, 0, sizeof(str));
+
+    //Inicialización del buffer de errores.
+    memset(errbuff, 0, sizeof(errbuff));
 
     //Lectura de superbloque para obtener posición de inodo raiz
     if(bread(posSB, &SB) == -1) {
@@ -564,4 +564,63 @@ int mi_stat(const char *camino, struct STAT *p_stat) {
     }
 
     return 0;
+}
+
+int control_errores_buscar_entrada(int nerror, char *buffer) {
+    
+    switch (nerror) {
+
+        case -1: 
+
+        buffer = "\nError: Camino incorrecto.\n"; 
+        break; 
+
+        case -2: 
+
+        buffer = "\nError: El inodo no se ha podido leer correctamente.\n";
+        break; 
+
+        case -3:  
+
+        buffer = "\nError: Permiso denegado de lectura.\n"; 
+
+        break; 
+
+        case -4: 
+        buffer = "\nError: No existe el archivo o el directorio.\n"; 
+
+        break; 
+
+        case -5: 
+
+        buffer = "\nError: Permiso denegado de escritura"; 
+
+        break; 
+
+        case -6: 
+
+        buffer = "\nError: No existe algún directorio intermedio\n";
+
+        break; 
+
+        case -7: 
+
+        buffer = "\nEXIT_FAILURE\n"; 
+
+        break; 
+
+        case -8: 
+
+        buffer = "\nError: No se puede crear entrada en un fichero\n";
+
+        break; 
+
+        case -9: 
+
+        buffer = "\nError: Entrada ya existente\n";
+
+    }
+
+        return 0; 
+
 }
