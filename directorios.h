@@ -10,6 +10,8 @@ int mi_creat(const char *camino, unsigned char permisos);
 int mi_dir(const char *camino, char *buffer);
 int mi_chmod(const char *camino, unsigned char permisos);
 int mi_stat(const char *camino, struct STAT *p_stat);
+int mi_touch(const char *camino, unsigned char permisos);
+
 int control_errores_buscar_entrada(int nerror, char *buffer);
 
 /*ESTRUCTURAS DE CAPA DE DIRECTORIO*/

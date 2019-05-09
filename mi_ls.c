@@ -16,13 +16,13 @@ int main(int argc, char **argv) {
 
     //Comprobación de parámetros enviados al programa. 
     if (argc != 3) {
-        perror("Error: formato de comando: ./nombre_de_programa <nombre_de_fichero_disco> </ruta_directorio>\n");
+        fprintf(stderr, "Error: formato de comando: ./nombre_de_programa <nombre_de_fichero_disco> </ruta_directorio>\n");
         exit(-1);
     }
 
     //Montaje del disco virtual.
     if (bmount(argv[1]) == -1) {
-        perror("Error: no se ha podido abrir el directorio indicado.\n");
+        fprintf(stderr, "Error: no se ha podido abrir el directorio indicado.\n");
         exit(-1);
     }
 
@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
     //Leer el directorio y llenar buffer
     cont = mi_dir(argv[2], buffer);
     if (cont == -1) {
-        perror("Error: no se ha podido leer el directorio.");
+        fprintf(stderr, "Error: no se ha podido leer el directorio.\n");
         exit(-1);
     }
 
@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
 
     //Desmontaje del dispositivo virtual.
     if (bumount() == -1) {
-        perror("Error: no se ha podido cerrar el fichero.\n");
+        fprintf(stderr, "Error: no se ha podido cerrar el fichero.\n");
         exit(-1);
     }
 }

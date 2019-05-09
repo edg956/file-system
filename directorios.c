@@ -264,7 +264,18 @@ int mi_creat(const char *camino, unsigned char permisos) {
     struct superbloque SB;
     int result;
     unsigned int posInodoRaiz, p_inodo, p_entrada;
-    char errbuff[BUF_SIZE]; //Buffer de errores. 
+    char errbuff[BUF_SIZE]; //Buffer de errores.  
+    int i=0; 
+
+    //Comprobación de que el último carácter sea '/' (creación de fichero).
+    while (camino[i]!='\0') {
+        i++;
+    }
+
+    if (camino[i-1]!='/') {
+        fprintf(stderr, "Error: Para crear archivos se debe usar el comando mi_touch\n");
+        return -1; 
+    }
 
     //Inicialización del buffer de errores. 
     memset(errbuff, 0, sizeof(errbuff));
@@ -319,15 +330,13 @@ int mi_dir(const char *camino, char *buffer) {
     struct STAT stat, s_aux;
     char str[12];
     char errbuff[BUF_SIZE]; //Buffer de errores. 
- 
-
 
     //Buffer para lecturas de entradas
     struct entrada entradas[BLOCKSIZE/sizeof(struct entrada)];
     int index = 0;      //Iterar sobre buffer
     int limit = sizeof(entradas)/sizeof(entradas[0]);   //Limite de iterador
     int offset = 0;
-    
+
     //Inicializar buffer a 0's
     memset(entradas, 0, sizeof(entradas));
     memset(str, 0, sizeof(str));
@@ -346,10 +355,10 @@ int mi_dir(const char *camino, char *buffer) {
     //Obtener inodo correspondiente a directorio
     result = buscar_entrada(camino, &posInodoRaiz, &p_inodo, &p_entrada, 0, 7);
 
-    if (result==-1) {
-        fprintf(stderr, "Error: No existe el archivo o directorio. "
-        "Función -> mi_dir()\n");
-        exit(-1);
+    if (result < 0) {
+        control_errores_buscar_entrada(result, errbuff);
+        fprintf(stderr, "%s", errbuff);
+        return -1; 
     }
 
     //Lectura de inodo
@@ -485,6 +494,10 @@ int mi_chmod(const char *camino, unsigned char permisos) {
     struct superbloque SB;
     int result;
     unsigned int posInodoRaiz, p_inodo, p_entrada;
+    char errbuff[BUF_SIZE]; //Buffer de errores. 
+
+    //Inicialización del buffer de errores. 
+    memset(errbuff, 0, sizeof(errbuff));
 
     //Lectura de superbloque para obtener posición de inodo raiz
     if(bread(posSB, &SB) == -1) {
@@ -497,10 +510,10 @@ int mi_chmod(const char *camino, unsigned char permisos) {
 
     //Obtener inodo correspondiente a directorio
     result = buscar_entrada(camino, &posInodoRaiz, &p_inodo, &p_entrada, 0, 7);
-
-    if (result==-1) {
-         fprintf(stderr, "Error al buscar entrada. "
-        "Función -> mi_chmod()\n");
+    
+    if (result < 0) {
+        control_errores_buscar_entrada(result, errbuff);
+        fprintf(stderr, "%s", errbuff);
         return -1; 
     }
 
@@ -512,6 +525,7 @@ int mi_chmod(const char *camino, unsigned char permisos) {
    }
 
    return 0;
+
 }
 
 /*
@@ -539,6 +553,10 @@ int mi_stat(const char *camino, struct STAT *p_stat) {
     struct superbloque SB;
     int result;
     unsigned int posInodoRaiz, p_inodo, p_entrada;
+    char errbuff[BUF_SIZE]; //Buffer de errores. 
+
+    //Inicialización del buffer de errores. 
+    memset(errbuff, 0, sizeof(errbuff));
 
     //Lectura de superbloque para obtener posición de inodo raiz
     if(bread(posSB, &SB) == -1) {
@@ -551,9 +569,10 @@ int mi_stat(const char *camino, struct STAT *p_stat) {
     //Obtener inodo correspondiente a directorio
     result = buscar_entrada(camino, &posInodoRaiz, &p_inodo, &p_entrada, 0, 7);
 
-    if (result==-1) {
-         fprintf(stderr, "Error al buscar entrada. "
-        "Función -> mi_stat()\n");
+    if (result < 0) {
+        control_errores_buscar_entrada(result, errbuff);
+        fprintf(stderr, "%s", errbuff);
+        return -1; 
     }
 
     //Obtención de datos
@@ -566,61 +585,90 @@ int mi_stat(const char *camino, struct STAT *p_stat) {
     return 0;
 }
 
+//------------------------FUNCIÓN OPCIONAL NIVEL 9------------------------------
+int mi_touch(const char *camino, unsigned char permisos) {
+
+    //Declaraciones
+    struct superbloque SB;
+    int result;
+    unsigned int posInodoRaiz, p_inodo, p_entrada;
+    char errbuff[BUF_SIZE]; //Buffer de errores. 
+    int i=0;
+
+    //Comprobación del último carácter. 
+    while(camino[i] != '\0') {
+        i++;
+    }
+
+    if (camino[i-1]=='/') {
+        fprintf(stderr, "Error: Para crear directorios se tiene que usar el comando mi_mkdir\n");
+        return -1; 
+    }
+
+    //Inicialización del buffer de errores. 
+    memset(errbuff, 0, sizeof(errbuff));
+
+    //Lectura de superbloque para obtener posición de inodo raiz
+    if(bread(posSB, &SB) == -1) {
+        fprintf(stderr, "Error en lectura de superbloque. "
+        "Función -> mi_creat()\n");
+    }
+
+    posInodoRaiz = SB.posInodoRaiz;
+
+    result = buscar_entrada(camino, &posInodoRaiz, &p_inodo, &p_entrada, 1, permisos);
+
+    if (result < 0) {
+        control_errores_buscar_entrada(result, errbuff);
+        fprintf(stderr, "%s", errbuff);
+        return -1; 
+    }
+
+    return 0;
+
+}
+
 int control_errores_buscar_entrada(int nerror, char *buffer) {
     
     switch (nerror) {
 
         case -1: 
-
-        buffer = "\nError: Camino incorrecto.\n"; 
+        strcpy(buffer, "\nError: Camino incorrecto.\n");
         break; 
 
         case -2: 
-
-        buffer = "\nError: El inodo no se ha podido leer correctamente.\n";
+        strcpy(buffer, "\nError: El inodo no se ha podido leer correctamente.\n");
         break; 
 
         case -3:  
-
-        buffer = "\nError: Permiso denegado de lectura.\n"; 
-
+        strcpy(buffer, "\nError: Permiso denegado de lectura.\n");
         break; 
 
         case -4: 
-        buffer = "\nError: No existe el archivo o el directorio.\n"; 
-
+        strcpy(buffer, "\nError: No existe el archivo o el directorio.\n");
         break; 
 
         case -5: 
-
-        buffer = "\nError: Permiso denegado de escritura"; 
-
+        strcpy(buffer, "\nError: Permiso denegado de escritura\n");
         break; 
 
         case -6: 
-
-        buffer = "\nError: No existe algún directorio intermedio\n";
-
+        strcpy(buffer, "\nError: No existe algún directorio intermedio\n");
         break; 
 
         case -7: 
-
-        buffer = "\nEXIT_FAILURE\n"; 
-
+        strcpy(buffer, "\nEXIT_FAILURE\n");
         break; 
 
         case -8: 
-
-        buffer = "\nError: No se puede crear entrada en un fichero\n";
-
+        strcpy(buffer, "\nError: No se puede crear entrada en un fichero\n");
         break; 
 
         case -9: 
-
-        buffer = "\nError: Entrada ya existente\n";
+        strcpy(buffer, "\nError: Entrada ya existente\n");
 
     }
 
-        return 0; 
+    return 0; 
 
 }
