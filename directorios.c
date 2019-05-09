@@ -795,9 +795,47 @@ int control_errores_buscar_entrada(int nerror, char *buffer) {
 
         case -9: 
         strcpy(buffer, "Error: Entrada ya existente\n");
+    }
+    return 0; 
+}
 
+int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nbytes) {
+
+    int bytesleidos;
+    unsigned int p_inodo_dir = 0;
+    unsigned int p_inodo = 0;
+    unsigned int p_entrada = 0;
+    int buscar_ent = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0);
+
+    if (buscar_ent < 0){
+        return buscar_ent;          //Error de lectura
+
+    }else{
+        bytesleidos = mi_read_f(p_inodo, buf, offset, nbytes);
+        if (bytesleidos < 0){
+            return -1;
+        }
+        return bytesleidos;
+    }   
+
+}
+
+int mi_write (const char *camino, const void *buf, unsigned int offset, unsigned int nbytes){
+    int bytesEscritos;    
+    unsigned int p_inodo_dir = 0;
+    unsigned int p_inodo = 0;
+    unsigned int p_entrada = 0;
+    int buscar_ent = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 6);
+
+    if (buscar_entrada < 0){
+        return buscar_ent;
     }
 
-    return 0; 
+    bytesEscritos = mi_write_f (p_inodo, buf, offset, nbytes);
+    if (bytesEscritos < 0){
+        
+        return -1;
+    }
 
+    return bytesEscritos;
 }

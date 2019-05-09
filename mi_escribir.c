@@ -11,8 +11,8 @@ Ha de mostrar la cantidad de bytes escritos.
 */
 int main (int argc, char **argv) {
 
-int longitud = 0;
-int offset = 0;
+unsigned int longitud = 0;
+unsigned int offset = 0;
 int bytesEscritos = 0;
 
 if(argc != 5){
@@ -26,18 +26,30 @@ if(camino[strlen(camino) - 1] == '/'){
     exit(-1);
 }
 
-offset = atoi(argv[4]); // no se si esta bien pero sino no sabia como hacerlo
+//Montaje del disco virtual. 
+    if (bmount(argv[1]) == -1) {
+        fprintf(stderr, "Error: no se ha podido abrir el directorio indicado.\n");
+        exit(-1);
+    }
+
+offset = strtol(argv[4], NULL, 10);
 longitud = strlen(argv[3]);
 char buffer[longitud];
 strcpy(buffer, argv[3]);
 
-bytesEscritos = mi_write(camino, &buffer, offset, longitud);
+bytesEscritos = mi_write(camino, buffer, offset, longitud);
+
 if(bytesEscritos == -1){
-    perror ("Error.\n");
+    printf("Bytes escritos: %i\n", bytesEscritos+1);
     exit(-1);
 }
 
 printf("Longitud texto: %i\n", longitud);
 printf("Bytes escritos: %i\n", bytesEscritos);
 
+    //Desmontaje del dispositivo virtual. 
+    if (bumount() == -1) {
+        fprintf(stderr, "Error: no se ha podido cerrar el fichero.\n");
+        exit(-1);
+    }
 }

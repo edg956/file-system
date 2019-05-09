@@ -1,4 +1,4 @@
-#include 'directorios.h'
+#include "directorios.h"
 #include <string.h>
 
 /*
@@ -13,20 +13,27 @@ int main (int argc, char **argv){
 
 int bytesLeidos;
 int totalBytesLeidos = 0;
-int offset = 0;
+unsigned int offset = 0;
 unsigned char tamBuffer[BLOCKSIZE];
 struct STAT stat;
-
 char *camino = argv[2];
+
 if (argc != 3){
     perror("Error: número de argumentos incorrecto.\n");
     exit(-1);
 }
-//Comprovamos que la ruta sea la de un fichero
+//Comprobamos que la ruta sea la de un fichero
 if (camino [strlen(camino) - 1] == '/'){    
     perror("Error: La ruta no es un fichero.\n");
     exit(-1);
 }    
+
+//Montaje del disco virtual. 
+    if (bmount(argv[1]) == -1) {
+        fprintf(stderr, "Error: no se ha podido abrir el directorio indicado.\n");
+        exit(-1);
+    }
+
 memset(tamBuffer, 0, BLOCKSIZE);
 
 //Pasamos por todos los bloques para leer los bytes
@@ -39,6 +46,12 @@ while ((bytesLeidos = mi_read_f(*camino, tamBuffer, offset, BLOCKSIZE)) > 0){
 printf("Bytes Leidos: %i\n", totalBytesLeidos);
 mi_stat_f(*camino, &stat);
 printf ("tamEnBytesLog: %i\n", stat.tamEnBytesLog);
-return 0;    
     
+//Desmontaje del dispositivo virtual. 
+    if (bumount() == -1) {
+        fprintf(stderr, "Error: no se ha podido cerrar el fichero.\n");
+        exit(-1);
+    }
+
+return 0;    
 }

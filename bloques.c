@@ -129,7 +129,7 @@ int bwrite(unsigned int nbloque, const void *buf) {
 */
 int bread(unsigned int nbloque, void *buf) {
     int bbread;
- 
+
     //Mover puntero de escritura/lectura hasta el bloque deseado
     if (lseek(descriptor,nbloque*BLOCKSIZE,SEEK_SET) != nbloque*BLOCKSIZE) {
         return -1;
