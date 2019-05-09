@@ -8,6 +8,8 @@
 int main(int argc, char **argv) {
 
     int result = 0;
+    char errbuff[BLOCKSIZE]; //Buffer de errores.  
+
 
     //Comprobación de parámetros enviados al programa. 
     if (argc != 4) {
@@ -17,7 +19,7 @@ int main(int argc, char **argv) {
 
     //Comprobar correción de permisos introducidos
     if (strlen(argv[2]) != 1 || (atoi(argv[2]) & 248) != 0) {
-        fprintf(stderr, "Error: rango permitido para permisos: [0,7]");
+        fprintf(stderr, "Error: Rango de permisos incorrecto. Ej: [0,7]\n");
         exit(-1);
     }
 
@@ -30,9 +32,13 @@ int main(int argc, char **argv) {
     //Llamada a mi_creat para crear directorio
     result = mi_creat(argv[3], atoi(argv[2]));
 
+    //Inicialización del buffer de errores. 
+    memset(errbuff, 0, sizeof(errbuff));
+
     //Check errores
-    if (result == -1) {
-        //fprintf(stderr, "Error: no se ha podido crear directorio o fichero.\n");
+    if (result < 0) {
+        control_errores_buscar_entrada(result, errbuff);
+        fprintf(stderr, "%s", errbuff);
         exit(-1);
     }
 

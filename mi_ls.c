@@ -13,6 +13,7 @@ int main(int argc, char **argv) {
     char buffer_aux[AUX_BUF_SIZE];
     int cont = 0;
     int cont2 = 0;
+    char errbuff[BLOCKSIZE]; //Buffer de errores. 
 
     //Comprobación de parámetros enviados al programa. 
     if (argc != 3) {
@@ -30,10 +31,14 @@ int main(int argc, char **argv) {
     memset(buffer, 0, BLOCKSIZE);
     memset(buffer_aux, 0, BLOCKSIZE);
 
+    //Inicialización del buffer de errores.
+    memset(errbuff, 0, sizeof(errbuff));
+
     //Leer el directorio y llenar buffer
     cont = mi_dir(argv[2], buffer);
-    if (cont == -1) {
-        fprintf(stderr, "Error: no se ha podido leer el directorio.\n");
+    if (cont < 0) {
+        control_errores_buscar_entrada(cont, errbuff);
+        fprintf(stderr, "%s", errbuff);    
         exit(-1);
     }
 
