@@ -21,3 +21,8 @@ struct entrada {
     char nombre[60];
     unsigned int ninodo;
 };
+
+struct UltimaEntrada {
+    char camino [512];
+    int p_inodo;
+};

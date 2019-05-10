@@ -37,12 +37,13 @@ if (camino [strlen(camino) - 1] == '/'){
 memset(tamBuffer, 0, BLOCKSIZE);
 
 //Pasamos por todos los bloques para leer los bytes
-while ((bytesLeidos = mi_read_f(*camino, tamBuffer, offset, BLOCKSIZE)) > 0){
+while ((bytesLeidos = mi_read(camino, tamBuffer, offset, BLOCKSIZE)) > 0){
     write(1, tamBuffer, bytesLeidos);
     memset(tamBuffer, 0, BLOCKSIZE);
     offset += BLOCKSIZE;
     totalBytesLeidos += bytesLeidos;
 }
+
 printf("Bytes Leidos: %i\n", totalBytesLeidos);
 mi_stat_f(*camino, &stat);
 printf ("tamEnBytesLog: %i\n", stat.tamEnBytesLog);

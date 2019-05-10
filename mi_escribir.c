@@ -19,6 +19,7 @@ if(argc != 5){
     perror("Error de sintaxis: mi_escribir <disco> </ruta_fichero> <texto> <offset>\n");
     exit(-1);
 }
+
 char *camino = argv[2];
 
 if(camino[strlen(camino) - 1] == '/'){

@@ -184,14 +184,14 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     //Lectura del inodo con el que se trabajará. 
     if (leer_inodo(ninodo, &inodo) == -1) {
        fprintf(stderr, "Error: no se ha podido leer el inodo deseado."
-       "Función -> mi_read_f()");
+       "Función -> mi_read_f()\n");
        exit(-1);
     }
 
     //Comprobación inicial de los permisos de lectura del inodo. 
     if ((inodo.permisos & 4)!=4) { 
        fprintf(stderr, "Error: no se ha podido leer el inodo deseado. " 
-       "Permisos incorrectos. Función -> mi_read_f()");
+       "Permisos incorrectos. Función -> mi_read_f()\n");
        exit(-1);
     }
 

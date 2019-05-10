@@ -4,6 +4,7 @@
 
 #define BUF_SIZE BLOCKSIZE
 #define NAME_MAX_LENGTH 60     //EXT2 filename size limit
+struct UltimaEntrada UltimaEntradaLectura;
 
 /*----------------------------FUNCIONES DE NIVEL 8----------------------------*/
 
@@ -702,7 +703,23 @@ int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nby
     unsigned int p_inodo_dir = 0;
     unsigned int p_inodo = 0;
     unsigned int p_entrada = 0;
-    int buscar_ent = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0);
+    int buscar_ent = 0;
+
+    if (strcmp(camino, UltimaEntradaLectura.camino)==0) {
+
+        p_inodo = UltimaEntradaLectura.p_inodo;
+        /*COMENTARIO NIVEL 10------------------------------------------------------------------------------------------->*/ 
+        printf("\n[mi_read() → Utilizamos la caché de lectura en vez de llamar a buscar_entrada()]\n");
+        
+    }else{
+
+    buscar_ent = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0);
+    UltimaEntradaLectura.p_inodo = p_inodo; 
+    strcpy(UltimaEntradaLectura.camino, camino);
+    
+    /*COMENTARIO NIVEL 10------------------------------------------------------------------------------------------->*/ 
+    printf("\n[mi_read() → Actualizamos la caché de lectura]\n");
+    }
 
     if (buscar_ent < 0){
         return buscar_ent;          //Error de lectura
@@ -729,6 +746,7 @@ int mi_write (const char *camino, const void *buf, unsigned int offset, unsigned
     }
 
     bytesEscritos = mi_write_f (p_inodo, buf, offset, nbytes);
+
     if (bytesEscritos < 0){
         
         return -1;
