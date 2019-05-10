@@ -698,72 +698,124 @@ int control_errores_buscar_entrada(int nerror, char *buffer) {
 
 /*----------------------------FUNCIONES NIVEL 10------------------------------*/
 
+/*
+    Descripción:    
+        Función de directorios.c para leer los nbytes del fichero indicado por 
+        camino, a partir del offset pasado por parámetro y copiarlos en un 
+        buffer.
+        
+    Funciones desde donde es llamado:
+        + mi_cat.c - main()
+
+    Parámetros de entrada:
+        + const char *camino
+        + void *buf
+        + unsigned int offset
+        + unsigned int nbytes
+
+    Parámetros de salida:
+        + Número de bytes leídos. 
+        + <0: Algún error ocurrido. 
+*/
 int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nbytes) {
 
+    //Declaraciones. 
     int bytesleidos;
     unsigned int p_inodo_dir = 0;
     unsigned int p_inodo = 0;
     unsigned int p_entrada = 0;
     int buscar_ent = 0;
 
+    //Verificación inicial para no tener que llamar a buscar_entrada. 
     if (strcmp(camino, UltimaEntradaLectura.camino)==0) {
 
         p_inodo = UltimaEntradaLectura.p_inodo;
         /*COMENTARIOS NIVEL 10------------------------------------------------------------------------------------------->*/ 
         printf("\n\033[0;31m[mi_read() → Utilizamos la caché de lectura en vez de llamar a buscar_entrada()]\033[0m\n");
 
-    }else{
+    } else {
 
-    buscar_ent = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0);
-    UltimaEntradaLectura.p_inodo = p_inodo; 
-    strcpy(UltimaEntradaLectura.camino, camino);
+        buscar_ent = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0);
+
+        //Actualización de la caché de lectura. 
+        UltimaEntradaLectura.p_inodo = p_inodo; 
+        strcpy(UltimaEntradaLectura.camino, camino);
     
-    /*COMENTARIOS NIVEL 10------------------------------------------------------------------------------------------->*/ 
-    printf("\n\033[0;31m[mi_read() → Actualizamos la caché de lectura]\033[0m\n");
+        /*COMENTARIOS NIVEL 10------------------------------------------------------------------------------------------->*/ 
+        printf("\n\033[0;31m[mi_read() → Actualizamos la caché de lectura]\033[0m\n");
     }
 
-
+    //Error durante la lectura. Se pasa el error a la función origen. 
     if (buscar_ent < 0){
-        return buscar_ent;          //Error de lectura
-
+        return buscar_ent;
     }
 
+    //Se realiza la lectura y se guarda la cantidad de bytes leídos. 
     bytesleidos = mi_read_f(p_inodo, buf, offset, nbytes);
+
+    //Error en mi_read_f()
     if (bytesleidos < 0){
         return -1;
     }
+
     return bytesleidos;
 }
 
+/*
+    Descripción:    
+        Función de directorios.c para escribir contenido en un fichero.
+        Buscaremos la entrada camino con buscar_entrada() para obtener 
+        el p_inodo.
+        
+    Funciones desde donde es llamado:
+        + mi_escribir.c - main()
+
+    Parámetros de entrada:
+        + const char *camino
+        + void *buf
+        + unsigned int offset
+        + unsigned int nbytes
+
+    Parámetros de salida:
+        + Número de bytes escritos. 
+        + <0: Algún error ocurrido. 
+*/
 int mi_write (const char *camino, const void *buf, unsigned int offset, unsigned int nbytes){
+    
+    //Declaraciones.
     int bytesEscritos;    
     unsigned int p_inodo_dir = 0;
     unsigned int p_inodo = 0;
     unsigned int p_entrada = 0;
     int buscar_ent = 0; 
 
+    //Comprobación para no tener que llamar cada vez a la función buscar_entrada. 
     if (strcmp(camino, UltimaEntradaLectura.camino)==0) {
+
         p_inodo = UltimaEntradaLectura.p_inodo;
 
-    }else{
+    } else {
 
         buscar_ent = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 6);
+
+        //Actualización de la caché de escritura. 
         UltimaEntradaLectura.p_inodo = p_inodo; 
         strcpy(UltimaEntradaLectura.camino, camino);
         /*COMENTARIO NIVEL 10------------------------------------------------------------------------------------------->*/ 
         printf("\n\033[0;31m[mi_write() → Actualizamos la caché de escritura]\033[0m\n");
-
     }
 
+    //Algúin error ocurrido en buscar_entrada. Se tratará en la función origen. 
     if (buscar_entrada < 0){
         return buscar_ent;
     }
 
     bytesEscritos = mi_write_f(p_inodo, buf, offset, nbytes);
 
+    //Error en mi_write_f()
     if (bytesEscritos < 0){
-        
         return -1;
     }
+
     return bytesEscritos;
 }

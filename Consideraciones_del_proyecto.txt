@@ -7,3 +7,7 @@
 4. Definición de estructura inodo (Consultar solución voluntaria para el padding en el Nivel 2).
 
 5. Poner en documentación que hemos implementado la funciòn opcional del nivel 9
+
+6. implementadas las mejoras de la cache de lectura y escritura del nivel 10 
+
+7. mi_escribir dice que ha escrito cuando se le pasa un fichero que no existe. 
