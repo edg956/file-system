@@ -14,7 +14,7 @@ int main (int argc, char **argv){
 int bytesLeidos;
 int totalBytesLeidos = 0;
 unsigned int offset = 0;
-unsigned char tamBuffer[BLOCKSIZE];
+unsigned char tamBuffer[BLOCKSIZE*4];
 struct STAT stat;
 char *camino = argv[2];
 
@@ -37,16 +37,15 @@ if (camino [strlen(camino) - 1] == '/'){
 memset(tamBuffer, 0, BLOCKSIZE);
 
 //Pasamos por todos los bloques para leer los bytes
-while ((bytesLeidos = mi_read(camino, tamBuffer, offset, BLOCKSIZE)) > 0){
+while ((bytesLeidos = mi_read(camino, tamBuffer, offset, BLOCKSIZE*4)) > 0){
     write(1, tamBuffer, bytesLeidos);
-    memset(tamBuffer, 0, BLOCKSIZE);
-    offset += BLOCKSIZE;
+    memset(tamBuffer, 0, BLOCKSIZE*4);
+    offset += BLOCKSIZE*4;
     totalBytesLeidos += bytesLeidos;
 }
 
 printf("Bytes Leidos: %i\n", totalBytesLeidos);
 mi_stat_f(*camino, &stat);
-printf ("tamEnBytesLog: %i\n", stat.tamEnBytesLog);
     
 //Desmontaje del dispositivo virtual. 
     if (bumount() == -1) {

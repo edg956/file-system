@@ -114,6 +114,7 @@ int extraer_camino(const char *camino, char *inicial, char *final, char *tipo) {
         + (-8): Error: No se puede crear una entrada en un fichero. 
         + (-9): Error: Entrada ya existente. 
 
+        ------------------------------------------------------------------------------------> falta decir que modifica los parametros que el entran
 */
 int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsigned int *p_inodo, unsigned int *p_entrada, char reservar, unsigned char permisos) {
     //Declaraciones
@@ -138,8 +139,8 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     }
 
     /*MENSAJE DE NIVEL 9  -----------------------------------------------------------------------------------------------------------------*/
-    printf("[buscar_entrada()-> inicial: %s, final: %s, " 
-    "reservar: %i]\n", inicial, final, reservar);
+   // printf("[buscar_entrada()-> inicial: %s, final: %s, " 
+  //  "reservar: %i]\n", inicial, final, reservar);
 
     //Buscamos la entrada cuyo nombre se encuentra en la inicial. 
     if (leer_inodo(*p_inodo_dir, &inodo_dir) == -1) {
@@ -148,8 +149,8 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     
     if ((inodo_dir.permisos & 4)!=4) {
         /*MENSAJE NIVEL 9- ----------------------------------------------------------------------------------------------------------------*/
-        fprintf(stderr,"[buscar_entrada()-> inodo %d no tiene permisos "
-        "de lectura]\n", *p_inodo_dir);
+       // fprintf(stderr,"[buscar_entrada()-> inodo %d no tiene permisos "
+      //  "de lectura]\n", *p_inodo_dir);
         return -3; 
     } 
 
@@ -235,11 +236,11 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
                     }
                     /*MENSAJES DE NIVEL 9 ------------------------------------------------------------------------- */
                     
-                    printf("[buscar_entrada()-> "
+                   /* printf("[buscar_entrada()-> "
                     "entrada.nombre: %s, entrada.ninodo: "
                     "%i]\n", entradas[index].nombre, entradas[index].ninodo);
                     printf("[buscar_entrada()-> reservado inodo %d tipo %c "
-                    "con permisos %d]\n", ninodo, tipo, permisos);
+                    "con permisos %d]\n", ninodo, tipo, permisos);*/
 
                     if (mi_write_f(*p_inodo_dir, &entradas[index], offset, sizeof(struct entrada))==-1) {
                         
@@ -708,30 +709,30 @@ int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nby
     if (strcmp(camino, UltimaEntradaLectura.camino)==0) {
 
         p_inodo = UltimaEntradaLectura.p_inodo;
-        /*COMENTARIO NIVEL 10------------------------------------------------------------------------------------------->*/ 
-        printf("\n[mi_read() → Utilizamos la caché de lectura en vez de llamar a buscar_entrada()]\n");
-        
+        /*COMENTARIOS NIVEL 10------------------------------------------------------------------------------------------->*/ 
+        printf("\n\033[0;31m[mi_read() → Utilizamos la caché de lectura en vez de llamar a buscar_entrada()]\033[0m\n");
+
     }else{
 
     buscar_ent = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0);
     UltimaEntradaLectura.p_inodo = p_inodo; 
     strcpy(UltimaEntradaLectura.camino, camino);
     
-    /*COMENTARIO NIVEL 10------------------------------------------------------------------------------------------->*/ 
-    printf("\n[mi_read() → Actualizamos la caché de lectura]\n");
+    /*COMENTARIOS NIVEL 10------------------------------------------------------------------------------------------->*/ 
+    printf("\n\033[0;31m[mi_read() → Actualizamos la caché de lectura]\033[0m\n");
     }
+
 
     if (buscar_ent < 0){
         return buscar_ent;          //Error de lectura
 
-    }else{
-        bytesleidos = mi_read_f(p_inodo, buf, offset, nbytes);
-        if (bytesleidos < 0){
-            return -1;
-        }
-        return bytesleidos;
-    }   
+    }
 
+    bytesleidos = mi_read_f(p_inodo, buf, offset, nbytes);
+    if (bytesleidos < 0){
+        return -1;
+    }
+    return bytesleidos;
 }
 
 int mi_write (const char *camino, const void *buf, unsigned int offset, unsigned int nbytes){
@@ -739,18 +740,30 @@ int mi_write (const char *camino, const void *buf, unsigned int offset, unsigned
     unsigned int p_inodo_dir = 0;
     unsigned int p_inodo = 0;
     unsigned int p_entrada = 0;
-    int buscar_ent = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 6);
+    int buscar_ent = 0; 
+
+    if (strcmp(camino, UltimaEntradaLectura.camino)==0) {
+        p_inodo = UltimaEntradaLectura.p_inodo;
+
+    }else{
+
+        buscar_ent = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 6);
+        UltimaEntradaLectura.p_inodo = p_inodo; 
+        strcpy(UltimaEntradaLectura.camino, camino);
+        /*COMENTARIO NIVEL 10------------------------------------------------------------------------------------------->*/ 
+        printf("\n\033[0;31m[mi_write() → Actualizamos la caché de escritura]\033[0m\n");
+
+    }
 
     if (buscar_entrada < 0){
         return buscar_ent;
     }
 
-    bytesEscritos = mi_write_f (p_inodo, buf, offset, nbytes);
+    bytesEscritos = mi_write_f(p_inodo, buf, offset, nbytes);
 
     if (bytesEscritos < 0){
         
         return -1;
     }
-
     return bytesEscritos;
 }

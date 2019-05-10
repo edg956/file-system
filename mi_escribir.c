@@ -38,6 +38,8 @@ longitud = strlen(argv[3]);
 char buffer[longitud];
 strcpy(buffer, argv[3]);
 
+printf("Longitud texto: %i\n", longitud);
+
 bytesEscritos = mi_write(camino, buffer, offset, longitud);
 
 if(bytesEscritos == -1){
@@ -45,10 +47,9 @@ if(bytesEscritos == -1){
     exit(-1);
 }
 
-printf("Longitud texto: %i\n", longitud);
 printf("Bytes escritos: %i\n", bytesEscritos);
 
-    //Desmontaje del dispositivo virtual. 
+//Desmontaje del dispositivo virtual. 
     if (bumount() == -1) {
         fprintf(stderr, "Error: no se ha podido cerrar el fichero.\n");
         exit(-1);
