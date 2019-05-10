@@ -292,17 +292,13 @@ int mi_creat(const char *camino, unsigned char permisos) {
     struct superbloque SB;
     int result;
     unsigned int posInodoRaiz, p_inodo, p_entrada;
-    int i=0; 
 
     //Comprobación de que el último carácter sea '/' (creación de fichero).
-    while (camino[i]!='\0') {
-        i++;
-    }
 
-    if (camino[i-1]!='/') {
-        fprintf(stderr, "Error: Para crear archivos se debe usar el comando mi_touch\n");
-        exit(-1); 
-    }
+    if (camino [strlen(camino) - 1] != '/'){    
+    fprintf(stderr, "Error: Para crear ficheros se tiene que usar el comando mi_touch.\n");
+    exit(-1);
+    }    
 
     //Lectura de superbloque para obtener posición de inodo raiz
     if(bread(posSB, &SB) == -1) {
@@ -614,18 +610,11 @@ int mi_touch(const char *camino, unsigned char permisos) {
     struct superbloque SB;
     int result;
     unsigned int posInodoRaiz, p_inodo, p_entrada;
-    int i=0;
-
-    //Comprobación del último carácter. 
-    while(camino[i] != '\0') {
-        i++;
-    }
-
-    if (camino[i-1]=='/') {
-        fprintf(stderr, "Error: Para crear directorios se tiene que usar "
-        "el comando mi_mkdir\n");
-        exit(-1);; 
-    }
+   
+    if (camino [strlen(camino) - 1] == '/'){    
+    fprintf(stderr, "Error: Para crear directorios se tiene que usar el comando mi_mkdir.\n");
+    exit(-1);
+    }    
 
     //Lectura de superbloque para obtener posición de inodo raiz
     if(bread(posSB, &SB) == -1) {
@@ -640,9 +629,7 @@ int mi_touch(const char *camino, unsigned char permisos) {
     if (result < 0) {
         return result; 
     }
-
     return 0;
-
 }
 
 /*
