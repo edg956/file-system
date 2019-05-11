@@ -330,6 +330,7 @@ int mi_creat(const char *camino, unsigned char permisos) {
         + (-1): Error
 */
 int mi_dir(const char *camino, char *buffer) {
+    
     //Declaraciones
     struct superbloque SB;
     int result;
@@ -972,7 +973,10 @@ int mi_unlink(const char *camino) {
     int buscar_ent; 
     struct inodo inodo, inodo2, inodo3; 
     int nentradas;
-    struct entrada entrada; 
+    struct entrada entrada;
+    int offset = 0; 
+    struct entrada entradas[BLOCKSIZE/sizeof(struct entrada)];
+    int max = sizeof(entradas)/sizeof(entradas[0]);
 
     buscar_ent = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 6);
 
@@ -987,7 +991,7 @@ int mi_unlink(const char *camino) {
         return -1;
     }
 
-    //Comprobación de que sea directorio y no este vacío. 
+    //Comprobación que si es directorio no este vacío. 
     if ((inodo.tipo=='d') && (inodo.tamEnBytesLog > 0)) {
         fprintf(stderr, "Error: No se puede realizar el borrado. Función -> mi_link()\n");
         return -1;
@@ -1017,17 +1021,19 @@ int mi_unlink(const char *camino) {
 
         //Caso que la entrada a quitar no sea la última. 
 
-        //Se lee el inodo de la última entrada. 
-        if (leer_inodo(,&inodo3)==-1) {
-            fprintf(stderr, "Error: La lectura del inodo padre ha fallado. Función -> mi_unlink()\n");
-            return -1;             
+        //Lectura de la primera entrada. 
+        if (mi_read_f(p_inodo_dir, entradas, offset, sizeof(entradas))==-1) {
+            fprintf(stderr, "Error: No se ha podido leer la primera entrada del directorio.\n");
+            return -1; 
         }
 
-        //Se lee la última entrada
-        if (mi_read_f(, &entrada)==-1) {
+        //Se itera hasta la última entrada. 
+        for (int index = 1; entradas[index].ninodo != 0 && index < max; index++) {
 
-        }   
+            
 
+        }
+        
         //Se coloca en la posición de la entrada que queremos eliminar. 
 
         //Truncar el inodo en la última entrada. 

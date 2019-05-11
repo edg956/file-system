@@ -21,10 +21,11 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    //Check de errores
-
-
-
+    //Comprobar que no se intente eliminar la raíz. 
+    if (argv[2]=='/') {
+        fprintf(stderr, "Error: No se puede eliminar el directorio raíz.\n");
+        exit(-1);
+    }
 
     //Montaje del disco virtual. 
     if (bmount(argv[1]) == -1) {
@@ -32,9 +33,11 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    //LLamada a la función mi_unlink.
-
-
+    //Llamada a la función mi_unlink. 
+    if (mi_unlink(argv[2])==-1) {
+        fprintf(stderr, "Ha ocurrido un error al eliminar el fichero o directorio\n");
+        exit(-1);
+    }
 
     //Desmontaje del dispositivo virtual. 
     if (bumount() == -1) {
