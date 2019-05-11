@@ -21,6 +21,9 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
+    //Check de errores
+
+
 
 
     //Montaje del disco virtual. 
@@ -29,7 +32,7 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    
+    //LLamada a la función mi_unlink.
 
 
 
