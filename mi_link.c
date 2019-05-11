@@ -8,10 +8,14 @@
 int main(int argc, char **argv) {
 
     int var = 0;
+    char errbuff[BLOCKSIZE]; 
+
+    //Inicialización del buffer de errores. 
+    memset(errbuff, 0, sizeof(errbuff));
 
     //Comprobación de parámetros enviados al programa. 
     if (argc != 4) {
-        perror("Error: formato de comando: ./nombre_de_programa <nombre_de_fichero_disco> <permisos> </ruta>\n");
+        fprintf(stderr, "Error: formato de comando: ./nombre_de_programa <nombre_de_fichero_disco> <permisos> </ruta>\n");
         exit(-1);
     }
 
@@ -37,7 +41,7 @@ int main(int argc, char **argv) {
 
     //Montaje del disco virtual. 
     if (bmount(argv[1]) == -1) {
-        perror("Error: no se ha podido abrir el directorio indicado.\n");
+        fprintf(stderr, "Error: no se ha podido abrir el directorio indicado.\n");
         exit(-1);
     }
 
@@ -46,13 +50,19 @@ int main(int argc, char **argv) {
 
     //Check errores
     if (var == -1) {
-        perror("Error: no se ha podido crear directorio o fichero.");
+        fprintf(stderr, "Error: no se ha podido crear directorio o fichero.\n");
         exit(-1);
+    }
+
+    //Check errores de buscar entrada. 
+    if (var < -1) {
+        control_errores_buscar_entrada(var, errbuff);
+        fprintf(stderr, "%s", errbuff);
     }
 
     //Desmontaje del dispositivo virtual. 
     if (bumount() == -1) {
-        perror("Error: no se ha podido cerrar el fichero.\n");
+        fprintf(stderr, "Error: no se ha podido cerrar el fichero.\n");
         exit(-1);
     }
 }

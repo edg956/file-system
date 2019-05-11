@@ -135,12 +135,8 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     memset(final, 0, NAME_MAX_LENGTH);
 
     if (extraer_camino(camino_parcial, inicial, final, &tipo)==-1) {
-        return -1; 
+        return -10; 
     }
-
-    /*MENSAJE DE NIVEL 9  -----------------------------------------------------------------------------------------------------------------*/
-   // printf("[buscar_entrada()-> inicial: %s, final: %s, " 
-  //  "reservar: %i]\n", inicial, final, reservar);
 
     //Buscamos la entrada cuyo nombre se encuentra en la inicial. 
     if (leer_inodo(*p_inodo_dir, &inodo_dir) == -1) {
@@ -148,9 +144,6 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     }
     
     if ((inodo_dir.permisos & 4)!=4) {
-        /*MENSAJE NIVEL 9- ----------------------------------------------------------------------------------------------------------------*/
-       // fprintf(stderr,"[buscar_entrada()-> inodo %d no tiene permisos "
-      //  "de lectura]\n", *p_inodo_dir);
         return -3; 
     } 
 
@@ -234,13 +227,6 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
                         ninodo = reservar_inodo('f', permisos); 
                         entradas[index].ninodo = ninodo; 
                     }
-                    /*MENSAJES DE NIVEL 9 ------------------------------------------------------------------------- */
-                    
-                   /* printf("[buscar_entrada()-> "
-                    "entrada.nombre: %s, entrada.ninodo: "
-                    "%i]\n", entradas[index].nombre, entradas[index].ninodo);
-                    printf("[buscar_entrada()-> reservado inodo %d tipo %c "
-                    "con permisos %d]\n", ninodo, tipo, permisos);*/
 
                     if (mi_write_f(*p_inodo_dir, &entradas[index], offset, sizeof(struct entrada))==-1) {
                         
@@ -290,6 +276,7 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
         + (-1): Error
 */
 int mi_creat(const char *camino, unsigned char permisos) {
+
     //Declaraciones
     struct superbloque SB;
     int result;
@@ -658,7 +645,7 @@ int control_errores_buscar_entrada(int nerror, char *buffer) {
     
     switch (nerror) {
 
-        case -1: 
+        case -10: 
         strcpy(buffer, "Error: Camino incorrecto.\n");
         break; 
 
@@ -820,7 +807,11 @@ int mi_write (const char *camino, const void *buf, unsigned int offset, unsigned
     return bytesEscritos;
 
 }
+
+/*----------------------------FUNCIONES NIVEL 11------------------------------*/
+
 /*
+    Descripción:
         Función que enlaza un fichero a crear sobre la ruta camino2 a la ruta
         camino1.
 
@@ -847,17 +838,18 @@ int mi_link(const char *camino1, const char *camino2) {
     //Declaraciones
     struct inodo inodo1, inodo2;
     struct entrada entrada;
-    int p_inodo_dir = 0;
-    int p_inodo1 = 0, p_inodo2 = 0;
-    int p_entrada1 = 0, p_entrada2 = 0;
-    int buscar_entrada;
+    unsigned int p_inodo_dir = 0;
+    unsigned int p_inodo1 = 0, p_inodo2 = 0;
+    unsigned int p_entrada1 = 0, p_entrada2 = 0;
+    int buscar_ent;
     
     //Comprobar que el fichero al que apunta camino1 exista
-    buscar_entrada = buscar_entrada(camino1, &p_inodo_dir, &p_inodo1, &p_entrada1, 0, 6);
+    buscar_ent = buscar_entrada(camino1, &p_inodo_dir, &p_inodo1, &p_entrada1, 0, 6);
     
-    if (buscar_entrada < -1){
-        printf ("Error!");
-        return -1;
+    //Recuperación de errores de buscar entrada en el programa origen. 
+    if (buscar_ent < -1) {
+        puts("1");
+        return buscar_ent;
     }
 
     /*Comprobar el inodo*/
@@ -866,12 +858,14 @@ int mi_link(const char *camino1, const char *camino2) {
         fprintf(stderr, "Error: lectura de inodo fallida. Función -> mi_link()");
         return -1;
     }
+
     //Comprobar que sea fichero
-    if (inodo1.tipo /= 'f') {
+    if (inodo1.tipo != 'f') {
         fprintf(stderr, "Error: no se puede enlazar una ruta a un directorio. "
         "Función -> mi_link()\n");
         return -1;
     }
+
     //Comprobar que se tenga permisos de lectura
     if ((inodo1.permisos & 4) != 4) {
         fprintf(stderr, "Error: no se tiene permisos de lectura para la ruta "
@@ -880,11 +874,16 @@ int mi_link(const char *camino1, const char *camino2) {
     }
 
     //Comprobar que el fichero al que apunta camino2 no exista
-    buscar_entrada = buscar_entrada(camino1, &p_inodo_dir, &p_inodo2, &p_entrada2, 1, 6);
+    printf("CAMINO 2: %s\n", camino2);
+    buscar_ent = buscar_entrada(camino2, &p_inodo_dir, &p_inodo2, &p_entrada2, 1, 6);
     
-    if (buscar_entrada < -1){
-        printf ("Error!");
-        return -1;
+    //Recuperación de errores de buscar entrada en el programa origen. 
+    // -4 es el código de error de fichero no existente de la función buscar 
+    //entrada. 
+
+    if (buscar_ent != -4) {
+        puts("2");
+        return buscar_ent;
     }
 
     /*Comprobar el inodo*/
@@ -893,18 +892,21 @@ int mi_link(const char *camino1, const char *camino2) {
         fprintf(stderr, "Error: lectura de inodo fallida. Función -> mi_link()");
         return -1;
     }
+    
     //Comprobar que sea fichero
-    if (inodo2.tipo /= 'f') {
+    if (inodo2.tipo != 'f') {
         fprintf(stderr, "Error: no se puede enlazar una ruta de un directorio "
         "a la ruta origen. Función -> mi_link()\n");
         return -1;
     }
+
     //Comprobar que se tenga permisos de lectura
     if ((inodo2.permisos & 4) != 4) {
         fprintf(stderr, "Error: no se tiene permisos de lectura para la ruta "
         "a enlazar. Función -> mi_link()\n");
         return -1;
     }
+
     //Lectura de la entrada dentro del inodo
     if (mi_read_f(p_inodo2, &entrada, p_entrada2*sizeof(struct entrada), 
     sizeof(struct entrada)) == -1) {
@@ -937,10 +939,34 @@ int mi_link(const char *camino1, const char *camino2) {
 
     //Liberar inodo del camino a enlazar
     if (liberar_inodo(p_inodo2) == -1) {
-        fprintf("Error: no se ha podido liberar el inodo de la ruta a enlazar."
+        fprintf(stderr, "Error: no se ha podido liberar el inodo de la ruta a enlazar."
         " Función -> mi_link()\n");
         return -1;
     }
 
     return 0;
+}
+
+/*
+    Descripción: 
+        Borra la entrada de directorio especificada (no hay que olvidar 
+        actualizar la cantidad de enlaces en el inodo) y, en caso de que fuera 
+        el último enlace existente, borrar el propio fichero/directorio.
+
+    Funciones a las que llama:
+        + ficheros_basico.h - leer_inodo()
+        
+    Funciones desde donde es llamado:
+
+    Parámetros de entrada:
+        + const char *camino
+
+    Parámetros de salida:
+        + 0: Ejecución correcta
+        + (-1): Error
+*/
+int mi_unlink(const char *camino) {
+
+return 0;
+
 }
