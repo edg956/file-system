@@ -104,7 +104,6 @@ int extraer_camino(const char *camino, char *inicial, char *final, char *tipo) {
 
     Parámetros de salida:
         + 0: Ejecución correcta. 
-        + (-1): Error: Camino incorrecto. 
         + (-2): Error: El inodo no se ha podido leer correctamente. 
         + (-3): Error: Permiso denegado de lectura. 
         + (-4): Error: No existe el archivo o directorio. 
@@ -112,7 +111,8 @@ int extraer_camino(const char *camino, char *inicial, char *final, char *tipo) {
         + (-6): Error: No existe algún directorio intermedio. 
         + (-7): Error: EXIT_FAILURE.
         + (-8): Error: No se puede crear una entrada en un fichero. 
-        + (-9): Error: Entrada ya existente. 
+        + (-9): Error: Entrada ya existente.
+        + (-10): Error: Camino incorrecto.  
 
         ------------------------------------------------------------------------------------> falta decir que modifica los parametros que el entran
 */
@@ -855,7 +855,7 @@ int mi_link(const char *camino1, const char *camino2) {
     /*Comprobar el inodo*/
     //Lectura de inodo
     if (leer_inodo(p_inodo1, &inodo1) < 0) {
-        fprintf(stderr, "Error: lectura de inodo fallida. Función -> mi_link()");
+        fprintf(stderr, "Error: lectura de inodo fallida. Función -> mi_link()\n");
         return -1;
     }
 
@@ -889,7 +889,7 @@ int mi_link(const char *camino1, const char *camino2) {
     /*Comprobar el inodo*/
     //Lectura de inodo
     if (leer_inodo(p_inodo2, &inodo2) < 0) {
-        fprintf(stderr, "Error: lectura de inodo fallida. Función -> mi_link()");
+        fprintf(stderr, "Error: lectura de inodo fallida. Función -> mi_link()\n");
         return -1;
     }
     
@@ -967,6 +967,86 @@ int mi_link(const char *camino1, const char *camino2) {
 */
 int mi_unlink(const char *camino) {
 
-return 0;
+    //Declaraciones
+    unsigned int p_inodo_dir = 0, p_inodo = 0, p_entrada = 0; 
+    int buscar_ent; 
+    struct inodo inodo, inodo2, inodo3; 
+    int nentradas;
+    struct entrada entrada; 
+
+    buscar_ent = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 6);
+
+    //Errores de la función buscar_entrada. 
+    if (buscar_ent < -1) {
+        return buscar_ent; 
+    }
+
+    //Lectura del inodo. 
+    if (leer_inodo(p_inodo, &inodo)==-1) {
+        fprintf(stderr, "Error: La lectura del inodo ha fallado. Función -> mi_unlink()\n");
+        return -1;
+    }
+
+    //Comprobación de que sea directorio y no este vacío. 
+    if ((inodo.tipo=='d') && (inodo.tamEnBytesLog > 0)) {
+        fprintf(stderr, "Error: No se puede realizar el borrado. Función -> mi_link()\n");
+        return -1;
+    }
+
+    //Lectura de p_inodo_dir (inodo del directorio que contiene la entrada que 
+    //se desea eliminar). 
+
+    if (leer_inodo(p_inodo_dir, &inodo2)==-1) {
+        fprintf(stderr, "Error: La lectura del inodo padre ha fallado. Función -> mi_unlink()\n");
+        return -1;    
+    } 
+
+    //Calcular el número de entradas que tiene el directorio. 
+    nentradas = inodo2.tamEnBytesLog/sizeof(struct entrada); 
+
+    //Caso que la entrada a quitar sea la última. 
+    if (p_entrada == (nentradas -1)) {
+        
+        //Comprobación de errores de la función mi_truncar_f
+        if (mi_truncar_f(p_inodo_dir, inodo2.tamEnBytesLog-sizeof(struct entrada))==-1) {
+            fprintf(stderr, "Error: No se ha podido truncar el inodo. Función -> mi_unlink()\n");
+            return -1;
+        }
+
+    } else {
+
+        //Caso que la entrada a quitar no sea la última. 
+
+        //Se lee el inodo de la última entrada. 
+        if (leer_inodo(,&inodo3)==-1) {
+            fprintf(stderr, "Error: La lectura del inodo padre ha fallado. Función -> mi_unlink()\n");
+            return -1;             
+        }
+
+        //Se lee la última entrada
+        if (mi_read_f(, &entrada)==-1) {
+
+        }   
+
+        //Se coloca en la posición de la entrada que queremos eliminar. 
+
+        //Truncar el inodo en la última entrada. 
+     
+
+    }
+
+    //Lectura del inodo asociado a la entrada eliminada para decrementar nlinks. 
+
+    //Si no quedan enlaces libres se libera el inodo. 
+    if (nlinks == 0) {
+        //Librerar inodo. 
+    } else {
+        //Actualización de ctime.
+
+        //Escritura del inodo. 
+    
+    }
+
+    return 0;    
 
 }
