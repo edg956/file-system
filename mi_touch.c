@@ -1,5 +1,5 @@
 /*
-    PROGRAMA PARA CREAR NUEVOS DIRECTORIOS.
+    PROGRAMA PARA CREAR NUEVOS FICHEROS.
 */
 #include "bloques.h"
 #include "directorios.h"
@@ -8,8 +8,7 @@
 int main(int argc, char **argv) {
 
     int result = 0;
-    char errbuff[BLOCKSIZE]; //Buffer de errores.  
-
+    char errbuff[BLOCKSIZE]; //Buffer de errores. 
 
     //Comprobación de parámetros enviados al programa. 
     if (argc != 4) {
@@ -29,8 +28,8 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    //Llamada a mi_creat para crear directorio
-    result = mi_creat(argv[3], atoi(argv[2]));
+    //Llamada a mi_creat para crear fichero
+    result = mi_touch(argv[3], atoi(argv[2]));
 
     //Inicialización del buffer de errores. 
     memset(errbuff, 0, sizeof(errbuff));

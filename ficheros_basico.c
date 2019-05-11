@@ -672,6 +672,7 @@ int escribir_inodo(unsigned int ninodo, struct inodo inodo) {
 */
 int leer_inodo(unsigned int ninodo, struct inodo *inodo) {
     struct superbloque SB;
+    
     //Leemos el superbloque para obtener la localización del array de inodos
     if (bread(posSB,&SB) == -1) {
         perror("Error en lectura de superbloque."
