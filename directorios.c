@@ -971,13 +971,10 @@ int mi_unlink(const char *camino) {
     //Declaraciones
     unsigned int p_inodo_dir = 0, p_inodo = 0, p_entrada = 0; 
     int buscar_ent; 
-    struct inodo inodo, inodo2, inodo3; 
+    struct inodo inodo, inodo2;
     int nentradas;
-    struct entrada entrada;
-    int offset = 0; 
-    struct entrada entradas[BLOCKSIZE/sizeof(struct entrada)];
-    int max = sizeof(entradas)/sizeof(entradas[0]);
-
+    struct entrada entrada, entrada2;
+    
     buscar_ent = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 6);
 
     //Errores de la función buscar_entrada. 
@@ -1018,41 +1015,59 @@ int mi_unlink(const char *camino) {
         }
 
     } else {
-
         //Caso que la entrada a quitar no sea la última. 
 
-        //Lectura de la primera entrada. 
-        if (mi_read_f(p_inodo_dir, entradas, offset, sizeof(entradas))==-1) {
-            fprintf(stderr, "Error: No se ha podido leer la primera entrada del directorio.\n");
-            return -1; 
+        //Lectura de la última entrada. 
+        if (mi_read_f(p_inodo_dir, &entrada2, inodo2.tamEnBytesLog-sizeof(entrada), sizeof(entrada))==-1) {
+            fprintf(stderr, "Error: No se ha podido leer la última entrada. Función -> mi_unlink()\n");
+            return -1;
         }
 
-        //Se itera hasta la última entrada. 
-        for (int index = 1; entradas[index].ninodo != 0 && index < max; index++) {
-
-            
-
+        //Lectura de la entrada que se desea eliminar.
+        if (mi_read_f(p_inodo_dir, &entrada, p_entrada*sizeof(entrada), sizeof(entrada))==-1) {
+            fprintf(stderr, "Error: No se ha leer la entrada a eliminar. Función -> mi_unlink()\n");
+            return -1;
         }
-        
-        //Se coloca en la posición de la entrada que queremos eliminar. 
 
-        //Truncar el inodo en la última entrada. 
-     
+        //Intercambio de posiciones entre la última entrada y la que se desea 
+        //eliminar. 
+        if (mi_write_f(p_inodo_dir, &entrada, inodo2.tamEnBytesLog-sizeof(entrada), sizeof(entrada))==-1) {
+            fprintf(stderr, "Error: No se ha podido escribir la entrada. Función -> mi_unlink()\n");
+            return -1;
+        }
 
+        if (mi_write_f(p_inodo_dir, &entrada2, p_entrada*sizeof(entrada), sizeof(entrada))==-1) {
+            fprintf(stderr, "Error: No se ha podido escribir la entrada. Función -> mi_unlink()\n");
+            return -1;
+        }
+
+
+        //Truncar el inodo en la última entrada. (Tras el intercambio, la 
+        //entrada que se quiere eliminar esta en la última posición). 
+        if (mi_truncar_f(p_inodo_dir, inodo2.tamEnBytesLog-sizeof(struct entrada))==-1) {
+            fprintf(stderr, "Error: No se ha podido truncar el inodo. Función -> mi_unlink()\n");
+            return -1;
+        }
     }
-
-    //Lectura del inodo asociado a la entrada eliminada para decrementar nlinks. 
 
     //Si no quedan enlaces libres se libera el inodo. 
-    if (nlinks == 0) {
+    if (inodo.nlinks == 0) {
+
         //Librerar inodo. 
+        if (liberar_inodo(p_inodo)==-1) {
+            fprintf(stderr, "Error: No se ha podido liberar el inodo. Función -> mi_unlink()\n");
+            return -1;    
+        } 
+
     } else {
         //Actualización de ctime.
+        inodo.ctime = time(NULL);
 
         //Escritura del inodo. 
-    
+        if (escribir_inodo(p_inodo, inodo)==-1) {
+            fprintf(stderr, "Error: No se ha podido escribir el inodo. Función -> mi_unlink()\n");
+            return -1;    
+        } 
     }
-
-    return 0;    
-
+    return 0;
 }
