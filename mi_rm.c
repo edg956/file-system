@@ -9,7 +9,6 @@
 int main(int argc, char **argv) {
 
     //Declaraciones
-    int var = 0;
     char errbuff[BLOCKSIZE]; 
 
     //Inicialización del buffer de errores. 
@@ -22,7 +21,7 @@ int main(int argc, char **argv) {
     }
 
     //Comprobar que no se intente eliminar la raíz. 
-    if (argv[2]=='/') {
+    if (atoi(argv[2])=='/') {
         fprintf(stderr, "Error: No se puede eliminar el directorio raíz.\n");
         exit(-1);
     }

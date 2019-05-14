@@ -990,7 +990,7 @@ int mi_unlink(const char *camino) {
 
     //Comprobación que si es directorio no este vacío. 
     if ((inodo.tipo=='d') && (inodo.tamEnBytesLog > 0)) {
-        fprintf(stderr, "Error: No se puede realizar el borrado. Función -> mi_link()\n");
+        fprintf(stderr, "Error: El directorio no esta vacío. Función -> mi_unlink()\n");
         return -1;
     }
 
