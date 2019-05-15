@@ -11,3 +11,11 @@
 6. implementadas las mejoras de la cache de lectura y escritura del nivel 10 
 
 7. mi_escribir dice que ha escrito cuando se le pasa un fichero que no existe. 
+
+8. Formatear salida mi_ls
+
+9. Añadir parte opcional mi_ls (listar un fichero), colores diferentes para directorios y ficheros y parámetro para el formato extendido. 
+
+10. [mirmdir.c] Borrado de directorios con contenido.
+
+11. mi_cp

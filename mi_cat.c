@@ -63,7 +63,7 @@ int main (int argc, char **argv) {
     }
 
     //Mostrar por pantalla cantidad de bytes leídos. 
-    printf("Bytes Leidos: %i\n", totalBytesLeidos);
+    printf("\nBytes Leidos: %i\n", totalBytesLeidos);
     
     //Desmontaje del dispositivo virtual. 
     if (bumount() == -1) {

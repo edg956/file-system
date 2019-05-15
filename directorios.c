@@ -113,7 +113,6 @@ int extraer_camino(const char *camino, char *inicial, char *final, char *tipo) {
         + (-8): Error: No se puede crear una entrada en un fichero. 
         + (-9): Error: Entrada ya existente.
         + (-10): Error: Camino incorrecto.  
-
         ------------------------------------------------------------------------------------> falta decir que modifica los parametros que el entran
 */
 int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsigned int *p_inodo, unsigned int *p_entrada, char reservar, unsigned char permisos) {
@@ -287,7 +286,7 @@ int mi_creat(const char *camino, unsigned char permisos) {
     //Declaraciones
     struct superbloque SB;
     int result;
-    unsigned int posInodoRaiz, p_inodo, p_entrada;
+    unsigned int posInodoRaiz, p_inodo=0, p_entrada=0;
 
     //Comprobación de que el último carácter sea '/' (creación de fichero).
 
@@ -574,6 +573,8 @@ int mi_stat(const char *camino, struct STAT *p_stat) {
 
     //Obtener inodo correspondiente a directorio
     result = buscar_entrada(camino, &posInodoRaiz, &p_inodo, &p_entrada, 0, 7);
+        
+    printf("Nº inodo = %d\n", p_inodo);
 
     if (result < 0) {
         return result;  
@@ -732,19 +733,14 @@ int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nby
     if (strcmp(camino, UltimaEntradaLectura.camino)==0) {
 
         p_inodo = UltimaEntradaLectura.p_inodo;
-        /*COMENTARIOS NIVEL 10------------------------------------------------------------------------------------------->*/ 
-        printf("\n\033[0;31m[mi_read() → Utilizamos la caché de lectura en vez de llamar a buscar_entrada()]\033[0m\n");
 
     } else {
 
-        buscar_ent = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 6);//----------------------------------------------------------------> en el 6 de permisos antes habia un 0 e iba bien en niveles anteriores
+        buscar_ent = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 6);
 
         //Actualización de la caché de lectura. 
         UltimaEntradaLectura.p_inodo = p_inodo; 
         strcpy(UltimaEntradaLectura.camino, camino);
-    
-        /*COMENTARIOS NIVEL 10------------------------------------------------------------------------------------------->*/ 
-        printf("\n\033[0;31m[mi_read() → Actualizamos la caché de lectura]\033[0m\n");
     }
 
     //Error durante la lectura. Se pasa el error a la función origen. 
@@ -797,14 +793,11 @@ int mi_write (const char *camino, const void *buf, unsigned int offset, unsigned
         p_inodo = UltimaEntradaLectura.p_inodo;
 
     } else {
-
         buscar_ent = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 6);
 
         //Actualización de la caché de escritura. 
         UltimaEntradaLectura.p_inodo = p_inodo; 
         strcpy(UltimaEntradaLectura.camino, camino);
-        /*COMENTARIO NIVEL 10------------------------------------------------------------------------------------------->*/ 
-        printf("\n\033[0;31m[mi_write() → Actualizamos la caché de escritura]\033[0m\n");
     }
 
     //Algúin error ocurrido en buscar_entrada. Se tratará en la función origen. 
@@ -896,7 +889,6 @@ int mi_link(const char *camino1, const char *camino2) {
     //entrada. 
 
     if (buscar_ent < 0) {
-        puts("2");
         return buscar_ent;
     }
 
@@ -987,12 +979,15 @@ int mi_unlink(const char *camino) {
     struct inodo inodo, inodo2;
     int nentradas;
     struct entrada entrada;
+    char buff[256]; 
     
     buscar_ent = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 6);
 
     //Errores de la función buscar_entrada. 
     if (buscar_ent < 0) {
-        return buscar_ent; 
+        control_errores_buscar_entrada(buscar_ent, buff);
+        fprintf(stderr, "%s", buff);
+        exit(-1);
     }
 
     //Lectura del inodo. 
@@ -1007,12 +1002,8 @@ int mi_unlink(const char *camino) {
         return -1;
     }
 
-    //Reducir en una unidad el número de links del inodo del fichero
-    inodo.nlinks--;
-
     //Lectura de p_inodo_dir (inodo del directorio que contiene la entrada que 
     //se desea eliminar). 
-
     if (leer_inodo(p_inodo_dir, &inodo2)==-1) {
         fprintf(stderr, "Error: La lectura del inodo padre ha fallado. Función -> mi_unlink()\n");
         return -1;    
@@ -1034,13 +1025,13 @@ int mi_unlink(const char *camino) {
         //Caso que la entrada a quitar no sea la última. 
 
         //Lectura de la última entrada. 
-        if (mi_read_f(p_inodo_dir, &entrada, inodo2.tamEnBytesLog-sizeof(entrada), sizeof(entrada))==-1) {
+        if (mi_read_f(p_inodo_dir, &entrada, inodo2.tamEnBytesLog-sizeof(struct entrada), sizeof(struct entrada))==-1) {
             fprintf(stderr, "Error: No se ha podido leer la última entrada. Función -> mi_unlink()\n");
             return -1;
         }
 
         //Sobreescribir última entrada en la posición de la entrada a borrar
-        if (mi_write_f(p_inodo_dir, &entrada, p_entrada*sizeof(entrada), sizeof(entrada))==-1) {
+        if (mi_write_f(p_inodo_dir, &entrada, p_entrada*sizeof(struct entrada), sizeof(struct entrada))==-1) {
             fprintf(stderr, "Error: No se ha podido escribir la entrada. Función -> mi_unlink()\n");
             return -1;
         }
@@ -1052,6 +1043,9 @@ int mi_unlink(const char *camino) {
             return -1;
         }
     }
+
+    //Reducir en una unidad el número de links del inodo del fichero
+    inodo.nlinks--;
 
     //Si no quedan enlaces libres se libera el inodo. 
     if (inodo.nlinks == 0) {

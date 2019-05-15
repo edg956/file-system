@@ -1225,8 +1225,6 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
             }
 
             liberados++;
-            printf("liberar_bloque_inodo(): liberado BF: %i de datos del "
-            "BL %i\n", ptr, nblog);                       //MENSAJES NIVEL 5
 
             if (nRangoBL == 0){     //es un puntero directo
                 inodo.punterosDirectos[nblog] = 0;
@@ -1238,9 +1236,7 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
                     ptr = ptr_nivel[nivel_punteros];
                     if (memcmp(&bloques_punteros[nivel_punteros], &auxbuf, 
                     BLOCKSIZE) == 0) {
-                        printf("liberar_bloque_inodo(): liberado BF: %i de "
-                        "punteros nivel %i del BL %i\n", ptr, nivel_punteros+1, 
-                        nblog);                       //MENSAJES NIVEL 5
+
                         //No cuelgan bloques ocupados, hay que liberar el 
                         //bloque de punteros
                         if (liberar_bloque(ptr) < 0) {
@@ -1248,6 +1244,7 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
                             "-> liberar_bloques_inodo()");
                             return -1;
                         }
+                        
                         liberados++;
                         nivel_punteros++;
                         if (nivel_punteros == nRangoBL){

@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
     }
 
     //Comprobar que no se intente eliminar la raíz. 
-    if (atoi(argv[2])=='/') {
+    if (!strcmp(argv[2],"/")) {
         fprintf(stderr, "Error: No se puede eliminar el directorio raíz.\n");
         exit(-1);
     }
@@ -34,7 +34,6 @@ int main(int argc, char **argv) {
 
     //Llamada a la función mi_unlink. 
     if (mi_unlink(argv[2]) < 0) {
-        fprintf(stderr, "Ha ocurrido un error al eliminar el fichero o directorio\n");
         exit(-1);
     }
 

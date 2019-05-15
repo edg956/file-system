@@ -475,9 +475,9 @@ int mi_truncar_f(unsigned int ninodo, unsigned int nbytes){
     }
 
     //Recorrido desde nblogico hasta final de fichero/directorio. 
-    for(int i = nblogico; i < nblogicoL; i++) {
+    for(int i = nblogico; i <= nblogicoL; i++) {
 
-        aux = liberar_bloques_inodo(ninodo, nblogico);
+        aux = liberar_bloques_inodo(ninodo, i);
 
         if (aux==-1) {
             perror("Error: no se han podido liberar los bloques del inodo."
