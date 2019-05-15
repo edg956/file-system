@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
     }
 
     //Llamada a la función mi_unlink. 
-    if (mi_unlink(argv[2])==-1) {
+    if (mi_unlink(argv[2]) < 0) {
         fprintf(stderr, "Ha ocurrido un error al eliminar el fichero o directorio\n");
         exit(-1);
     }

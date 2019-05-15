@@ -40,6 +40,9 @@ int main(int argc, char **argv) {
         control_errores_buscar_entrada(cont, errbuff);
         fprintf(stderr, "%s", errbuff);    
         exit(-1);
+    } else if (cont == 0) {
+        puts("Total entradas: 0");
+        exit(0);
     }
 
     //Impresion por pantalla de cabecera
@@ -54,6 +57,7 @@ int main(int argc, char **argv) {
         if (buffer[cont] == '|') {
             printf("%s\n", buffer_aux);
             cont2 = -1;
+            memset(buffer_aux, 0, sizeof(buffer_aux));
         } else {
             //Seguir copiando del buffer al buffer auxiliar
             if (cont2 < AUX_BUF_SIZE) {
