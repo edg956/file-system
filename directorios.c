@@ -225,13 +225,20 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
                     }else{
                         //Es un fichero
                         ninodo = reservar_inodo('f', permisos); 
+
+                        if (ninodo == -1) {
+                            fprintf(stderr, "Error: No se ha podido reservar el inodo. Función -> buscar_entrada()\n"); 
+                        }
+
                         entradas[index].ninodo = ninodo; 
                     }
 
                     if (mi_write_f(*p_inodo_dir, &entradas[index], offset, sizeof(struct entrada))==-1) {
                         
                         if (entradas[index].ninodo!=-1) {
-                            liberar_inodo(entradas[index].ninodo);
+                            if (liberar_inodo(entradas[index].ninodo)==-1) {
+                                fprintf(stderr, "Error: No se ha podido liberar el inodo. Función -> buscar_entrada()\n");
+                            }
                         }
                         return -7;
                 }
@@ -723,7 +730,7 @@ int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nby
 
     } else {
 
-        buscar_ent = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0);
+        buscar_ent = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 6);//----------------------------------------------------------------> en el 6 de permisos antes habia un 0 e iba bien en niveles anteriores
 
         //Actualización de la caché de lectura. 
         UltimaEntradaLectura.p_inodo = p_inodo; 
@@ -849,7 +856,6 @@ int mi_link(const char *camino1, const char *camino2) {
     
     //Recuperación de errores de buscar entrada en el programa origen. 
     if (buscar_ent < -1) {
-        puts("1");
         return buscar_ent;
     }
 
@@ -876,13 +882,14 @@ int mi_link(const char *camino1, const char *camino2) {
 
     //Comprobar que el fichero al que apunta camino2 no exista
     printf("CAMINO 2: %s\n", camino2);
+    p_inodo_dir = 0;
     buscar_ent = buscar_entrada(camino2, &p_inodo_dir, &p_inodo2, &p_entrada2, 1, 6);
     
     //Recuperación de errores de buscar entrada en el programa origen. 
     // -4 es el código de error de fichero no existente de la función buscar 
     //entrada. 
 
-    if (buscar_ent != -4) {
+    if (buscar_ent < 0) {
         puts("2");
         return buscar_ent;
     }
@@ -944,7 +951,7 @@ int mi_link(const char *camino1, const char *camino2) {
         " Función -> mi_link()\n");
         return -1;
     }
-
+puts("yess");
     return 0;
 }
 
