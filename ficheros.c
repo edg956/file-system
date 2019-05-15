@@ -188,7 +188,6 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
        exit(-1);
     }
 
-    printf("Permisos: %d\n", inodo.permisos);
     //Comprobación inicial de los permisos de lectura del inodo. 
     if ((inodo.permisos & 4)!=4) { 
        fprintf(stderr, "Error: no se ha podido leer el inodo deseado. " 

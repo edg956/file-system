@@ -350,6 +350,7 @@ int mi_dir(const char *camino, char *buffer) {
     int index = 0;      //Iterar sobre buffer
     int limit = sizeof(entradas)/sizeof(entradas[0]);   //Limite de iterador
     int offset = 0;
+    int nentradas = 0;
 
     //Inicializar buffer a 0's
     memset(entradas, 0, sizeof(entradas));
@@ -364,7 +365,7 @@ int mi_dir(const char *camino, char *buffer) {
     posInodoRaiz = SB.posInodoRaiz;
 
     //Obtener inodo correspondiente a directorio
-    result = buscar_entrada(camino, &posInodoRaiz, &p_inodo, &p_entrada, 0, 7);
+    result = buscar_entrada(camino, &posInodoRaiz, &p_inodo, &p_entrada, 0, 6);
 
     if (result < 0) {
         return result;
@@ -376,6 +377,14 @@ int mi_dir(const char *camino, char *buffer) {
         "Función -> mi_dir()\n");
         return -1;
     }
+
+    //Comprobar que el directorio no esté vacío
+    if (stat.tamEnBytesLog == 0) {
+        return 0;   //No llena el buffer
+    }
+
+    //Obtener Nº de entradas del directorio
+    nentradas = stat.tamEnBytesLog/sizeof(struct entrada);
 
     //Comprobar que inodo sea de tipo directorio
     if (stat.tipo != 'd') {
@@ -400,7 +409,7 @@ int mi_dir(const char *camino, char *buffer) {
 
     result = 0; //Contador de entradas
     //Recorrido a buffer de entradas
-    while (entradas[index].ninodo != 0 && index < limit) {
+    while (result < nentradas && index < limit) {
         //Leer información sobre el inodo
         if (mi_stat_f(entradas[index].ninodo, &s_aux) == -1) {
             //Concatenar únicamente nombre de entrada
@@ -470,8 +479,6 @@ int mi_dir(const char *camino, char *buffer) {
                 return -1;
             }
             index = 0;
-            //Inicializar buffer a 0's
-            memset(entradas, 0, sizeof(entradas));
         }
     }
 
@@ -881,7 +888,6 @@ int mi_link(const char *camino1, const char *camino2) {
     }
 
     //Comprobar que el fichero al que apunta camino2 no exista
-    printf("CAMINO 2: %s\n", camino2);
     p_inodo_dir = 0;
     buscar_ent = buscar_entrada(camino2, &p_inodo_dir, &p_inodo2, &p_entrada2, 1, 6);
     
@@ -916,7 +922,7 @@ int mi_link(const char *camino1, const char *camino2) {
     }
 
     //Lectura de la entrada dentro del inodo
-    if (mi_read_f(p_inodo2, &entrada, p_entrada2*sizeof(struct entrada), 
+    if (mi_read_f(p_inodo_dir, &entrada, p_entrada2*sizeof(struct entrada), 
     sizeof(struct entrada)) == -1) {
         fprintf(stderr, "Error: imposible leer entrada de ruta a enlazar. "
         "Función -> mi_link()\n");
@@ -927,7 +933,7 @@ int mi_link(const char *camino1, const char *camino2) {
     entrada.ninodo = p_inodo1;
 
     //Escritura de la entrada dentro del inodo
-    if (mi_write_f(p_inodo2, &entrada, p_entrada2*sizeof(struct entrada),
+    if (mi_write_f(p_inodo_dir, &entrada, p_entrada2*sizeof(struct entrada),
     sizeof(struct entrada)) == -1) {
         fprintf(stderr, "Error: imposible escribir entrada de ruta a enlazar. "
         "Función -> mi_link()\n");
@@ -951,7 +957,7 @@ int mi_link(const char *camino1, const char *camino2) {
         " Función -> mi_link()\n");
         return -1;
     }
-puts("yess");
+
     return 0;
 }
 
@@ -980,12 +986,12 @@ int mi_unlink(const char *camino) {
     int buscar_ent; 
     struct inodo inodo, inodo2;
     int nentradas;
-    struct entrada entrada, entrada2;
+    struct entrada entrada;
     
     buscar_ent = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 6);
 
     //Errores de la función buscar_entrada. 
-    if (buscar_ent < -1) {
+    if (buscar_ent < 0) {
         return buscar_ent; 
     }
 
@@ -1000,6 +1006,9 @@ int mi_unlink(const char *camino) {
         fprintf(stderr, "Error: El directorio no esta vacío. Función -> mi_unlink()\n");
         return -1;
     }
+
+    //Reducir en una unidad el número de links del inodo del fichero
+    inodo.nlinks--;
 
     //Lectura de p_inodo_dir (inodo del directorio que contiene la entrada que 
     //se desea eliminar). 
@@ -1025,29 +1034,16 @@ int mi_unlink(const char *camino) {
         //Caso que la entrada a quitar no sea la última. 
 
         //Lectura de la última entrada. 
-        if (mi_read_f(p_inodo_dir, &entrada2, inodo2.tamEnBytesLog-sizeof(entrada), sizeof(entrada))==-1) {
+        if (mi_read_f(p_inodo_dir, &entrada, inodo2.tamEnBytesLog-sizeof(entrada), sizeof(entrada))==-1) {
             fprintf(stderr, "Error: No se ha podido leer la última entrada. Función -> mi_unlink()\n");
             return -1;
         }
 
-        //Lectura de la entrada que se desea eliminar.
-        if (mi_read_f(p_inodo_dir, &entrada, p_entrada*sizeof(entrada), sizeof(entrada))==-1) {
-            fprintf(stderr, "Error: No se ha leer la entrada a eliminar. Función -> mi_unlink()\n");
-            return -1;
-        }
-
-        //Intercambio de posiciones entre la última entrada y la que se desea 
-        //eliminar. 
-        if (mi_write_f(p_inodo_dir, &entrada, inodo2.tamEnBytesLog-sizeof(entrada), sizeof(entrada))==-1) {
+        //Sobreescribir última entrada en la posición de la entrada a borrar
+        if (mi_write_f(p_inodo_dir, &entrada, p_entrada*sizeof(entrada), sizeof(entrada))==-1) {
             fprintf(stderr, "Error: No se ha podido escribir la entrada. Función -> mi_unlink()\n");
             return -1;
         }
-
-        if (mi_write_f(p_inodo_dir, &entrada2, p_entrada*sizeof(entrada), sizeof(entrada))==-1) {
-            fprintf(stderr, "Error: No se ha podido escribir la entrada. Función -> mi_unlink()\n");
-            return -1;
-        }
-
 
         //Truncar el inodo en la última entrada. (Tras el intercambio, la 
         //entrada que se quiere eliminar esta en la última posición). 
