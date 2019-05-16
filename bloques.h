@@ -14,7 +14,13 @@
 
 #define BLOCKSIZE 1024 // bytes
 
+/*FUNCIONES DE NIVEL 1*/
+
 int bmount(const char *camino);
 int bumount();
 int bwrite(unsigned int nbloque, const void *buf);
 int bread(unsigned int nbloque, void *buf);
+
+/*FUNCIONES DE NIVEL 12*/
+void mi_waitSem();
+void mi_signalSem();
