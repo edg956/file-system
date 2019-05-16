@@ -181,12 +181,29 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     unsigned char auxBuff[BLOCKSIZE];
     int bfisico; 
     
+    //Mutex lock
+    mi_waitSem();
+
     //Lectura del inodo con el que se trabajará. 
     if (leer_inodo(ninodo, &inodo) == -1) {
        fprintf(stderr, "Error: no se ha podido leer el inodo deseado."
        "Función -> mi_read_f()\n");
+       mi_signalSem(); //Mutex unlock
        exit(-1);
     }
+
+    //Finalización.
+    inodo.atime = time(NULL);
+
+    if (escribir_inodo(ninodo, inodo) == -1) {
+        fprintf(stderr, "Error: no se ha podido escribir el inodo actualizado "
+        "Función -> mi_read_f()\n");
+        mi_signalSem(); //Mutex unlock
+        exit(-1);
+    }
+
+    //Mutex unlock
+    mi_signalSem();
 
     //Comprobación inicial de los permisos de lectura del inodo. 
     if ((inodo.permisos & 4)!=4) { 
@@ -295,7 +312,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
 
         leidos = leidos + desp2 + 1;
 
-    }else {
+    } else {
         //Se lee el bloque entero y se almacena en el buffer auxiliar. 
         if (bread(bfisico, auxBuff)==-1) {
             fprintf(stderr, "Error: no se ha podido leer el bloque deseado." 
@@ -310,8 +327,6 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
         leidos = leidos + desp2 + 1; 
     }
     }
-    //Finalización.
-    inodo.atime = time(NULL);
 
     return leidos; 
 }
@@ -385,10 +400,14 @@ int mi_chmod_f(unsigned int ninodo, unsigned char permisos){
     //Declaraciones
     struct inodo inodo; 
 
+    //Mutex lock
+    mi_waitSem();
+
     if (leer_inodo(ninodo, &inodo)==-1) {
-            perror("Error: no se ha podido leer el inodo deseado. "
+        perror("Error: no se ha podido leer el inodo deseado. "
                   "Función -> mi_chmod_f()");
-            exit(-1);        
+        mi_signalSem(); //Mutex unlock
+        exit(-1);        
     }
 
     //Cambiar los permisos. 
@@ -401,8 +420,12 @@ int mi_chmod_f(unsigned int ninodo, unsigned char permisos){
     if (escribir_inodo(ninodo, inodo)==-1) {
         perror("Error: no se ha podido escribir el inodo deseado. "
                   "Función -> mi_chmod_f()");
+        mi_signalSem(); //Mutex unlock
         exit(-1);
     }
+
+    //Mutex unlock
+    mi_signalSem();
     return 0;
 }
 
