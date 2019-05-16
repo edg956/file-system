@@ -994,6 +994,7 @@ int mi_link(const char *camino1, const char *camino2) {
 */
 int mi_unlink(const char *camino) {
 
+    //Mutex lock
     mi_waitSem();
 
     //Declaraciones
@@ -1010,21 +1011,21 @@ int mi_unlink(const char *camino) {
     if (buscar_ent < 0) {
         control_errores_buscar_entrada(buscar_ent, buff);
         fprintf(stderr, "%s", buff);
-        mi_signalSem();
+        mi_signalSem(); //mutex unlock
         exit(-1);
     }
 
     //Lectura del inodo. 
     if (leer_inodo(p_inodo, &inodo)==-1) {
         fprintf(stderr, "Error: La lectura del inodo ha fallado. Función -> mi_unlink()\n");
-        mi_signalSem();
+        mi_signalSem(); //mutex unlock
         return -1;
     }
 
     //Comprobación que si es directorio no este vacío. 
     if ((inodo.tipo=='d') && (inodo.tamEnBytesLog > 0)) {
         fprintf(stderr, "Error: El directorio no esta vacío. Función -> mi_unlink()\n");
-        mi_signalSem();
+        mi_signalSem(); //mutex unlock
         return -1;
     }
 
@@ -1032,7 +1033,7 @@ int mi_unlink(const char *camino) {
     //se desea eliminar). 
     if (leer_inodo(p_inodo_dir, &inodo2)==-1) {
         fprintf(stderr, "Error: La lectura del inodo padre ha fallado. Función -> mi_unlink()\n");
-        mi_signalSem();
+        mi_signalSem(); //mutex unlock
         return -1;    
     } 
 
@@ -1045,7 +1046,7 @@ int mi_unlink(const char *camino) {
         //Comprobación de errores de la función mi_truncar_f
         if (mi_truncar_f(p_inodo_dir, inodo2.tamEnBytesLog-sizeof(struct entrada))==-1) {
             fprintf(stderr, "Error: No se ha podido truncar el inodo. Función -> mi_unlink()\n");
-            mi_signalSem();
+            mi_signalSem(); //mutex unlock
             return -1;
         }
 
@@ -1055,14 +1056,14 @@ int mi_unlink(const char *camino) {
         //Lectura de la última entrada. 
         if (mi_read_f(p_inodo_dir, &entrada, inodo2.tamEnBytesLog-sizeof(struct entrada), sizeof(struct entrada))==-1) {
             fprintf(stderr, "Error: No se ha podido leer la última entrada. Función -> mi_unlink()\n");
-            mi_signalSem();
+            mi_signalSem(); //mutex unlock
             return -1;
         }
 
         //Sobreescribir última entrada en la posición de la entrada a borrar
         if (mi_write_f(p_inodo_dir, &entrada, p_entrada*sizeof(struct entrada), sizeof(struct entrada))==-1) {
             fprintf(stderr, "Error: No se ha podido escribir la entrada. Función -> mi_unlink()\n");
-            mi_signalSem();
+            mi_signalSem(); //mutex unlock
             return -1;
         }
 
@@ -1070,7 +1071,7 @@ int mi_unlink(const char *camino) {
         //entrada que se quiere eliminar esta en la última posición). 
         if (mi_truncar_f(p_inodo_dir, inodo2.tamEnBytesLog-sizeof(struct entrada))==-1) {
             fprintf(stderr, "Error: No se ha podido truncar el inodo. Función -> mi_unlink()\n");
-            mi_signalSem();
+            mi_signalSem(); //mutex unlock
             return -1;
         }
     }
@@ -1084,7 +1085,7 @@ int mi_unlink(const char *camino) {
         //Librerar inodo. 
         if (liberar_inodo(p_inodo)==-1) {
             fprintf(stderr, "Error: No se ha podido liberar el inodo. Función -> mi_unlink()\n");
-            mi_signalSem();
+            mi_signalSem(); //mutex unlock
             return -1;    
         } 
 
@@ -1095,11 +1096,11 @@ int mi_unlink(const char *camino) {
         //Escritura del inodo. 
         if (escribir_inodo(p_inodo, inodo)==-1) {
             fprintf(stderr, "Error: No se ha podido escribir el inodo. Función -> mi_unlink()\n");
-            mi_signalSem();
+            mi_signalSem(); //mutex unlock
             return -1;    
         } 
     }
-
+    //mutex unlock
     mi_signalSem();
     return 0;
 }
