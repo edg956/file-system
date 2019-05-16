@@ -1223,7 +1223,7 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
                     indice = indices[nivel_punteros];
                     bloques_punteros[nivel_punteros][indice] = 0;
                     ptr = ptr_nivel[nivel_punteros];
-                    if (memcmp(&bloques_punteros[nivel_punteros], &auxbuf, 
+                    if (memcmp(&bloques_punteros[nivel_punteros], auxbuf, 
                     BLOCKSIZE) == 0) {
 
                         liberados++;
