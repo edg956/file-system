@@ -1,7 +1,9 @@
 #include "bloques.h"
 
 //Variables globales.
-static int descriptor = 0; 
+static int descriptor = 0;
+static sem_t *mutex;
+static unsigned int inside_sc = 0;
 
 /*
     Descripción: 
@@ -28,6 +30,8 @@ int bmount(const char *camino) {
         return -1;
     }
 
+    mutex = initSem();
+
     return descriptor; 
 
 }
@@ -47,6 +51,7 @@ int bmount(const char *camino) {
 */
 int bumount() {
 
+    deleteSem();
     return close(descriptor); 
 
 }
