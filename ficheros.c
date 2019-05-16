@@ -54,7 +54,10 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
     //Desplazamiento en el bloque
 	int desp1 = offset % BLOCKSIZE;                         
 	
+    //Semáforo en traducir_bloque inodo porque reserva bloques.
+    mi_waitSem();
     bfisico = traducir_bloque_inodo(ninodo, bloqueI, 1);
+    mi_signalSem();
 
     //Si el bloque inicial y el bloque final coinciden
     if(bloqueI == bloqueF) {     
@@ -96,9 +99,13 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
     
         //Bloques Intermedios
         for(int i = bloqueI + 1; i < bloqueF; i++) {
+            //Semáforo en traducir_bloque inodo porque reserva bloques.
+            mi_waitSem();
             if((bfisico = traducir_bloque_inodo(ninodo, i, 1)) < 0) {
+                mi_signalSem();
                 return -1;                                  
             }
+            mi_signalSem();
 
             bytes += bwrite (bfisico, buf_original + (BLOCKSIZE - desp1) 
             + (i - bloqueI - 1) * BLOCKSIZE);
@@ -106,9 +113,13 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
 
         //Último Bloque
         int desp2 = (offset + nbytes - 1) % BLOCKSIZE;
+        
+        //Semáforo en traducir_bloque inodo porque reserva bloques.
+        mi_waitSem();
         if ((bfisico = traducir_bloque_inodo(ninodo, bloqueF, 1)) < 0){
             return -1;
         } 
+        mi_signalSem();
 
         if(bread(bfisico, bufBloque) < 0) {
             return -1; 
@@ -120,6 +131,8 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
 
         bytes += desp2 + 1;
     }
+
+    mi_waitSem();
 
     //Lectura del inodo
     if (leer_inodo(ninodo, &in) < 0) {
@@ -140,8 +153,11 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
     if (escribir_inodo(ninodo, in) < 0) {
         perror("Error: no se ha podido escribir inodo."
         "Función -> mi_write_f()");
+        mi_signalSem();
         return -1;
     }
+
+    mi_signalSem();
 
     return bytes;
 }

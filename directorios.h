@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "ficheros.h"
+#include "bloques.h"
 
 /*FUNCIONES NIVEL 8*/
 int extraer_camino(const char *camino, char *inicial, char *final, char *tipo);
