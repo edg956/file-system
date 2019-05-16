@@ -282,6 +282,8 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
 */
 int mi_creat(const char *camino, unsigned char permisos) {
 
+    mi_waitSem();
+
     //Declaraciones
     struct superbloque SB;
     int result;
@@ -290,6 +292,7 @@ int mi_creat(const char *camino, unsigned char permisos) {
     //Comprobación de que el último carácter sea '/' (creación de fichero).
     if (camino [strlen(camino) - 1] != '/'){    
     fprintf(stderr, "Error: Para crear ficheros se tiene que usar el comando mi_touch.\n");
+    mi_signalSem();
     exit(-1);
     }    
 
@@ -304,9 +307,12 @@ int mi_creat(const char *camino, unsigned char permisos) {
     result = buscar_entrada(camino, &posInodoRaiz, &p_inodo, &p_entrada, 1, permisos);
 
     if (result < 0) {
+        mi_signalSem();
         return result; 
     }
 
+    mi_signalSem();
+    
     return 0;
 }
 
@@ -841,6 +847,8 @@ int mi_write (const char *camino, const void *buf, unsigned int offset, unsigned
 */
 int mi_link(const char *camino1, const char *camino2) {
     
+    mi_waitSem();
+
     //Declaraciones
     struct inodo inodo1, inodo2;
     struct entrada entrada;
@@ -854,6 +862,7 @@ int mi_link(const char *camino1, const char *camino2) {
     
     //Recuperación de errores de buscar entrada en el programa origen. 
     if (buscar_ent < -1) {
+        mi_signalSem();
         return buscar_ent;
     }
 
@@ -861,6 +870,7 @@ int mi_link(const char *camino1, const char *camino2) {
     //Lectura de inodo
     if (leer_inodo(p_inodo1, &inodo1) < 0) {
         fprintf(stderr, "Error: lectura de inodo fallida. Función -> mi_link()\n");
+        mi_signalSem();
         return -1;
     }
 
@@ -868,6 +878,7 @@ int mi_link(const char *camino1, const char *camino2) {
     if (inodo1.tipo != 'f') {
         fprintf(stderr, "Error: no se puede enlazar una ruta a un directorio. "
         "Función -> mi_link()\n");
+        mi_signalSem();
         return -1;
     }
 
@@ -875,6 +886,7 @@ int mi_link(const char *camino1, const char *camino2) {
     if ((inodo1.permisos & 4) != 4) {
         fprintf(stderr, "Error: no se tiene permisos de lectura para la ruta "
         "a enlazar. Función -> mi_link()\n");
+        mi_signalSem();
         return -1;
     }
 
@@ -887,6 +899,7 @@ int mi_link(const char *camino1, const char *camino2) {
     //entrada. 
 
     if (buscar_ent < 0) {
+        mi_signalSem();
         return buscar_ent;
     }
 
@@ -894,6 +907,7 @@ int mi_link(const char *camino1, const char *camino2) {
     //Lectura de inodo
     if (leer_inodo(p_inodo2, &inodo2) < 0) {
         fprintf(stderr, "Error: lectura de inodo fallida. Función -> mi_link()\n");
+        mi_signalSem();
         return -1;
     }
     
@@ -901,6 +915,7 @@ int mi_link(const char *camino1, const char *camino2) {
     if (inodo2.tipo != 'f') {
         fprintf(stderr, "Error: no se puede enlazar una ruta de un directorio "
         "a la ruta origen. Función -> mi_link()\n");
+        mi_signalSem();
         return -1;
     }
 
@@ -908,6 +923,7 @@ int mi_link(const char *camino1, const char *camino2) {
     if ((inodo2.permisos & 4) != 4) {
         fprintf(stderr, "Error: no se tiene permisos de lectura para la ruta "
         "a enlazar. Función -> mi_link()\n");
+        mi_signalSem();
         return -1;
     }
 
@@ -916,6 +932,7 @@ int mi_link(const char *camino1, const char *camino2) {
     sizeof(struct entrada)) == -1) {
         fprintf(stderr, "Error: imposible leer entrada de ruta a enlazar. "
         "Función -> mi_link()\n");
+        mi_signalSem();
         return -1;
     }
 
@@ -927,6 +944,7 @@ int mi_link(const char *camino1, const char *camino2) {
     sizeof(struct entrada)) == -1) {
         fprintf(stderr, "Error: imposible escribir entrada de ruta a enlazar. "
         "Función -> mi_link()\n");
+        mi_signalSem();
         return -1;
     }
 
@@ -938,6 +956,7 @@ int mi_link(const char *camino1, const char *camino2) {
     if (escribir_inodo(p_inodo1, inodo1) == -1) {
         fprintf(stderr, "Error: imposible salvar inodo de ruta origen. "
         "Función -> mi_link()\n");
+        mi_signalSem();
         return -1;
     }
 
@@ -945,9 +964,11 @@ int mi_link(const char *camino1, const char *camino2) {
     if (liberar_inodo(p_inodo2) == -1) {
         fprintf(stderr, "Error: no se ha podido liberar el inodo de la ruta a enlazar."
         " Función -> mi_link()\n");
+        mi_signalSem();
         return -1;
     }
 
+    mi_signalSem();
     return 0;
 }
 
@@ -971,6 +992,8 @@ int mi_link(const char *camino1, const char *camino2) {
 */
 int mi_unlink(const char *camino) {
 
+    mi_waitSem();
+
     //Declaraciones
     unsigned int p_inodo_dir = 0, p_inodo = 0, p_entrada = 0; 
     int buscar_ent; 
@@ -985,18 +1008,21 @@ int mi_unlink(const char *camino) {
     if (buscar_ent < 0) {
         control_errores_buscar_entrada(buscar_ent, buff);
         fprintf(stderr, "%s", buff);
+        mi_signalSem();
         exit(-1);
     }
 
     //Lectura del inodo. 
     if (leer_inodo(p_inodo, &inodo)==-1) {
         fprintf(stderr, "Error: La lectura del inodo ha fallado. Función -> mi_unlink()\n");
+        mi_signalSem();
         return -1;
     }
 
     //Comprobación que si es directorio no este vacío. 
     if ((inodo.tipo=='d') && (inodo.tamEnBytesLog > 0)) {
         fprintf(stderr, "Error: El directorio no esta vacío. Función -> mi_unlink()\n");
+        mi_signalSem();
         return -1;
     }
 
@@ -1004,6 +1030,7 @@ int mi_unlink(const char *camino) {
     //se desea eliminar). 
     if (leer_inodo(p_inodo_dir, &inodo2)==-1) {
         fprintf(stderr, "Error: La lectura del inodo padre ha fallado. Función -> mi_unlink()\n");
+        mi_signalSem();
         return -1;    
     } 
 
@@ -1016,6 +1043,7 @@ int mi_unlink(const char *camino) {
         //Comprobación de errores de la función mi_truncar_f
         if (mi_truncar_f(p_inodo_dir, inodo2.tamEnBytesLog-sizeof(struct entrada))==-1) {
             fprintf(stderr, "Error: No se ha podido truncar el inodo. Función -> mi_unlink()\n");
+            mi_signalSem();
             return -1;
         }
 
@@ -1025,12 +1053,14 @@ int mi_unlink(const char *camino) {
         //Lectura de la última entrada. 
         if (mi_read_f(p_inodo_dir, &entrada, inodo2.tamEnBytesLog-sizeof(struct entrada), sizeof(struct entrada))==-1) {
             fprintf(stderr, "Error: No se ha podido leer la última entrada. Función -> mi_unlink()\n");
+            mi_signalSem();
             return -1;
         }
 
         //Sobreescribir última entrada en la posición de la entrada a borrar
         if (mi_write_f(p_inodo_dir, &entrada, p_entrada*sizeof(struct entrada), sizeof(struct entrada))==-1) {
             fprintf(stderr, "Error: No se ha podido escribir la entrada. Función -> mi_unlink()\n");
+            mi_signalSem();
             return -1;
         }
 
@@ -1038,6 +1068,7 @@ int mi_unlink(const char *camino) {
         //entrada que se quiere eliminar esta en la última posición). 
         if (mi_truncar_f(p_inodo_dir, inodo2.tamEnBytesLog-sizeof(struct entrada))==-1) {
             fprintf(stderr, "Error: No se ha podido truncar el inodo. Función -> mi_unlink()\n");
+            mi_signalSem();
             return -1;
         }
     }
@@ -1050,6 +1081,7 @@ int mi_unlink(const char *camino) {
         //Librerar inodo. 
         if (liberar_inodo(p_inodo)==-1) {
             fprintf(stderr, "Error: No se ha podido liberar el inodo. Función -> mi_unlink()\n");
+            mi_signalSem();
             return -1;    
         } 
 
@@ -1060,8 +1092,11 @@ int mi_unlink(const char *camino) {
         //Escritura del inodo. 
         if (escribir_inodo(p_inodo, inodo)==-1) {
             fprintf(stderr, "Error: No se ha podido escribir el inodo. Función -> mi_unlink()\n");
+            mi_signalSem();
             return -1;    
         } 
     }
+
+    mi_signalSem();
     return 0;
 }
