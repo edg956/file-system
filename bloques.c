@@ -154,7 +154,10 @@ int bread(unsigned int nbloque, void *buf) {
     Funciones desde dónde es llamado:         
 */
 void mi_waitSem() {
-    waitSem(mutex);
+    if (!inside_sc) {
+        waitSem(mutex);
+    }
+    inside_sc++;
 }
 
 /*  Descripción: 
@@ -163,5 +166,8 @@ void mi_waitSem() {
     Funciones desde dónde es llamado:         
 */
 void mi_signalSem() {
-    signalSem(mutex);
+    inside_sc--;
+    if (!inside_sc) {
+        signalSem(mutex);
+    }
 }
