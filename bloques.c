@@ -147,3 +147,21 @@ int bread(unsigned int nbloque, void *buf) {
 
     return bbread;
 }
+
+/*  Descripción: 
+        Método que ejecuta la función lock de un mutex
+    
+    Funciones desde dónde es llamado:         
+*/
+void mi_waitSem() {
+    waitSem(mutex);
+}
+
+/*  Descripción: 
+        Método que ejecuta la función unlock de un mutex
+    
+    Funciones desde dónde es llamado:         
+*/
+void mi_signalSem() {
+    signalSem(mutex);
+}
