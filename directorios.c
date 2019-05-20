@@ -286,10 +286,9 @@ int mi_creat(const char *camino, unsigned char permisos) {
     //Declaraciones
     struct superbloque SB;
     int result;
-    unsigned int posInodoRaiz, p_inodo=0, p_entrada=0;
+    unsigned int posInodoRaiz = 0, p_inodo=0, p_entrada=0;
 
     //Comprobación de que el último carácter sea '/' (creación de fichero).
-
     if (camino [strlen(camino) - 1] != '/'){    
     fprintf(stderr, "Error: Para crear ficheros se tiene que usar el comando mi_touch.\n");
     exit(-1);
@@ -302,8 +301,16 @@ int mi_creat(const char *camino, unsigned char permisos) {
     }
 
     posInodoRaiz = SB.posInodoRaiz;
+    printf("Bloques libres b4 buscar entrada @ mi_creat: %i\n", SB.cantBloquesLibres);
 
     result = buscar_entrada(camino, &posInodoRaiz, &p_inodo, &p_entrada, 1, permisos);
+
+    //Lectura de superbloque para obtener posición de inodo raiz
+    if(bread(posSB, &SB) == -1) {
+        fprintf(stderr, "Error en lectura de superbloque. "
+        "Función -> mi_creat()\n");
+    }
+    printf("Bloques libres after buscar entrada @ mi_creat: %i\n", SB.cantBloquesLibres);
 
     if (result < 0) {
         return result; 
@@ -340,7 +347,7 @@ int mi_dir(const char *camino, char *buffer) {
     //Declaraciones
     struct superbloque SB;
     int result;
-    unsigned int posInodoRaiz, p_inodo, p_entrada;
+    unsigned int posInodoRaiz = 0, p_inodo, p_entrada;
     struct STAT stat, s_aux;
     char str[12];
 
@@ -508,7 +515,7 @@ int mi_chmod(const char *camino, unsigned char permisos) {
     //Declaraciones
     struct superbloque SB;
     int result;
-    unsigned int posInodoRaiz, p_inodo, p_entrada;
+    unsigned int posInodoRaiz = 0, p_inodo, p_entrada;
 
     //Lectura de superbloque para obtener posición de inodo raiz
     if(bread(posSB, &SB) == -1) {
@@ -561,7 +568,7 @@ int mi_stat(const char *camino, struct STAT *p_stat) {
     //Declaraciones
     struct superbloque SB;
     int result;
-    unsigned int posInodoRaiz, p_inodo, p_entrada;
+    unsigned int posInodoRaiz = 0, p_inodo, p_entrada;
 
     //Lectura de superbloque para obtener posición de inodo raiz
     if(bread(posSB, &SB) == -1) {
@@ -614,7 +621,7 @@ int mi_touch(const char *camino, unsigned char permisos) {
     //Declaraciones
     struct superbloque SB;
     int result;
-    unsigned int posInodoRaiz, p_inodo, p_entrada;
+    unsigned int posInodoRaiz = 0, p_inodo, p_entrada;
    
     if (camino [strlen(camino) - 1] == '/'){    
     fprintf(stderr, "Error: Para crear directorios se tiene que usar el comando mi_mkdir.\n");

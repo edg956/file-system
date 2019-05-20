@@ -4,8 +4,6 @@ rm disco
 echo "$ ./mi_mkfs disco 100000"
 ./mi_mkfs disco 100000
 echo "######################################################################"
-echo "$ ./mi_mkdir disco 6 dir1/" #sintaxis incorrecta
-./mi_mkdir disco 6 dir1/
 echo "$ ./mi_mkdir disco 6 /dir1/"
 ./mi_mkdir disco 6 /dir1/
 echo "$ ./mi_mkdir disco 6 /dir1/dir11/"
