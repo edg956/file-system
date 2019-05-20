@@ -475,8 +475,7 @@ int mi_truncar_f(unsigned int ninodo, unsigned int nbytes){
     }
 
     //Recorrido desde nblogico hasta final de fichero/directorio. 
-    for(int i = nblogico; i <= nblogicoL; i++) {
-
+    for(int i = nblogico; i < nblogicoL; i++) {
         aux = liberar_bloques_inodo(ninodo, i);
 
         if (aux==-1) {
@@ -489,6 +488,12 @@ int mi_truncar_f(unsigned int ninodo, unsigned int nbytes){
 
     }
     
+    if (leer_inodo(ninodo, &inodo)==-1) {
+            perror("Error: no se ha podido leer el inodo deseado. "
+                  "Función -> mi_truncar_f()");
+            exit(-1);  
+    }
+
     //Actualizar mtime, ctime y tamaño en bytes lógicos del inodo. 
     inodo.ctime = time(NULL);
     inodo.mtime = time(NULL);

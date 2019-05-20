@@ -198,7 +198,6 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
 
             //Modo escritura. 
             case 1: 
-
                 if (inodo_dir.tipo == 'f') {
                     return -8;
                 }
@@ -211,7 +210,7 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
 
                     //Copiar inicial en el nombre de la entrada. 
                     strcpy(entradas[index].nombre, inicial);
-                    
+        
                     if (tipo == 'd') {
                         if(!strcmp(final, "/")) { //resultado esperado == 0
                             ninodo = reservar_inodo(tipo, permisos);
@@ -301,16 +300,8 @@ int mi_creat(const char *camino, unsigned char permisos) {
     }
 
     posInodoRaiz = SB.posInodoRaiz;
-    printf("Bloques libres b4 buscar entrada @ mi_creat: %i\n", SB.cantBloquesLibres);
 
     result = buscar_entrada(camino, &posInodoRaiz, &p_inodo, &p_entrada, 1, permisos);
-
-    //Lectura de superbloque para obtener posición de inodo raiz
-    if(bread(posSB, &SB) == -1) {
-        fprintf(stderr, "Error en lectura de superbloque. "
-        "Función -> mi_creat()\n");
-    }
-    printf("Bloques libres after buscar entrada @ mi_creat: %i\n", SB.cantBloquesLibres);
 
     if (result < 0) {
         return result; 
@@ -636,7 +627,16 @@ int mi_touch(const char *camino, unsigned char permisos) {
 
     posInodoRaiz = SB.posInodoRaiz;
 
+    printf("Bloques libres b4 buscar entrada @ mi_touch: %i\n", SB.cantBloquesLibres);
+
     result = buscar_entrada(camino, &posInodoRaiz, &p_inodo, &p_entrada, 1, permisos);
+
+    //Lectura de superbloque para obtener posición de inodo raiz
+    if(bread(posSB, &SB) == -1) {
+        fprintf(stderr, "Error en lectura de superbloque. "
+        "Función -> mi_creat()\n");
+    }
+    printf("Bloques libres after buscar entrada @ mi_touch: %i\n", SB.cantBloquesLibres);
 
     if (result < 0) {
         return result; 
@@ -987,7 +987,7 @@ int mi_unlink(const char *camino) {
     int nentradas;
     struct entrada entrada;
     char buff[256]; 
-    
+
     buscar_ent = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 6);
 
     //Errores de la función buscar_entrada. 
@@ -1056,7 +1056,6 @@ int mi_unlink(const char *camino) {
 
     //Si no quedan enlaces libres se libera el inodo. 
     if (inodo.nlinks == 0) {
-
         //Librerar inodo. 
         if (liberar_inodo(p_inodo)==-1) {
             fprintf(stderr, "Error: No se ha podido liberar el inodo. Función -> mi_unlink()\n");

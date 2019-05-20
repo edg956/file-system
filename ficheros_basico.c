@@ -314,7 +314,7 @@ int escribir_bit(unsigned int nbloque, unsigned int bit) {
     nbloqueabs = nbloqueMB + SB.posPrimerBloqueMB;
 
     //Comprobación de errores. 
-    if (bread(nbloqueabs, &bufferMB)== -1) {
+    if (bread(nbloqueabs, bufferMB)== -1) {
         perror("Error: imposible leer información del MB. "
         "Función -> escribir_bit()");
         return -1;
@@ -337,7 +337,7 @@ int escribir_bit(unsigned int nbloque, unsigned int bit) {
     }
 
     //Escribir buffer del MB en el dispositivo virtual
-    if (bwrite(nbloqueabs, &bufferMB) == -1) {
+    if (bwrite(nbloqueabs, bufferMB) == -1) {
         perror("Error: No se ha podido escribir en el array de inodos."
         " Función -> escribir_bit()");
         return -1;
@@ -424,8 +424,6 @@ unsigned char leer_bit(unsigned int nbloque) {
         + bloques.h - bwrite()
 
     Funciones desde donde es llamado:
-        + ficheros_basico.h - traducir_bloques_inodo()
-
     Parámetros de salida: 
         + int: El número de bloque reservado
         + int: (-1) en caso de error
@@ -455,7 +453,7 @@ int reservar_bloque() {
     int ultPosBloqueMB = SB.posUltimoBloqueMB + 1;
 
     //Miramos si hay error al leer el mapa de bits
-    if (bread(posBloqueMB,&bufferMB) < 0) {
+    if (bread(posBloqueMB,bufferMB) < 0) {
         perror("Error: no se ha podido leer del mapa de bits. "
         "Función -> reservar_bloque()");
         return -1;
@@ -463,10 +461,10 @@ int reservar_bloque() {
     
     /*Comparamos cada bloque leído del MB, bufferMB, 
     con ese buffer auxiliar inicializado a 1s*/
-    while (memcmp(bufferAux,bufferMB,BLOCKSIZE) == 0 && posBloqueMB < ultPosBloqueMB){
+    while ((memcmp(bufferAux,bufferMB,BLOCKSIZE) == 0) && (posBloqueMB < ultPosBloqueMB)) {
         posBloqueMB++;
         //Comprobamos que no haya error al leer el mapa de bits
-        if(bread(posBloqueMB,&bufferMB) < 0){
+        if(bread(posBloqueMB,bufferMB) < 0){
             perror("Error: no se ha podido leer del mapa de bits para comparar."
             " Función -> reservar_bloque()");
             return -1;
@@ -522,7 +520,7 @@ int reservar_bloque() {
         " Función -> reservar_bloque()");
         return -1;
     }
-
+    printf("bloque reservado: %i\n", nBloque);
     return nBloque;
 }
 
@@ -575,7 +573,7 @@ int liberar_bloque(unsigned int nbloque) {
         "Función -> liberar_bloque()");
         return -1;
     }
-
+    printf("bloque liberado: %i\n",nbloque);
     //Devolver el número de bloque liberado. 
     return nbloque; 
 }
@@ -1170,13 +1168,13 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
 
     //Obtener el útlimo bloque lógico del inodo
     if (inodo.tamEnBytesLog % BLOCKSIZE == 0) {
-        ultimoBL = (inodo.tamEnBytesLog / BLOCKSIZE) -1;
-    } else {
         ultimoBL = inodo.tamEnBytesLog / BLOCKSIZE;
+    } else {
+        ultimoBL = (inodo.tamEnBytesLog / BLOCKSIZE);
     }
 
     //Necesario para test de nivel 5 donde tamEnBytesLog == 0
-    ultimoBL = INDIRECTOS2 - 1;       
+    if (ultimoBL == 0) ultimoBL = INDIRECTOS2;      
 
     //Preparación de buffer auxiliar para comparar con bloques
     unsigned char auxbuf[BLOCKSIZE];
@@ -1212,19 +1210,10 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
             ptr_nivel[nivel_punteros-1] = ptr;
             indices[nivel_punteros-1] = indice;
             ptr = bloques_punteros[nivel_punteros-1][indice];
-            nivel_punteros--;
         }
 
         //si existen bloque de datos
         if (ptr > 0){
-            
-            if (liberar_bloque(ptr) < 0) {
-                perror("Error: liberar_bloque ha fallado. Función -> "
-                "liberar_bloques_inodo()");
-                return -1;
-            }
-
-            liberados++;
 
             if (nRangoBL == 0){     //es un puntero directo
                 inodo.punterosDirectos[nblog] = 0;
@@ -1237,14 +1226,6 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
                     if (memcmp(&bloques_punteros[nivel_punteros], &auxbuf, 
                     BLOCKSIZE) == 0) {
 
-                        //No cuelgan bloques ocupados, hay que liberar el 
-                        //bloque de punteros
-                        if (liberar_bloque(ptr) < 0) {
-                            perror("Error: liberar_bloque ha fallado. Función "
-                            "-> liberar_bloques_inodo()");
-                            return -1;
-                        }
-                        
                         liberados++;
                         nivel_punteros++;
                         if (nivel_punteros == nRangoBL){
@@ -1254,6 +1235,16 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
                             else if (nRangoBL - 1 == 2) nblog = INDIRECTOS2 - 1;
                             salvar_inodo = 1;
                         }
+
+                        //No cuelgan bloques ocupados, hay que liberar el 
+                        //bloque de punteros
+                        if (liberar_bloque(ptr) < 0) {
+                            perror("Error: liberar_bloque ha fallado. Función "
+                            "-> liberar_bloques_inodo()");
+                            return -1;
+                        }
+
+
                     } else {
                         //escribimos en el dispositivo el bloque de punteros 
                         //modificado
@@ -1267,6 +1258,14 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
                     }
                 }
             }
+
+            if (liberar_bloque(ptr) < 0) {
+                perror("Error: liberar_bloque ha fallado. Función -> "
+                "liberar_bloques_inodo()");
+                return -1;
+            }
+
+            liberados++;
         }
 
         /*
