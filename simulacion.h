@@ -5,6 +5,8 @@
 #include <signal.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/wait.h>
+#include <stdlib.h>
 
 #define REGMAX 500000
 
@@ -14,3 +16,5 @@ struct REGISTRO {
     int nEscritura; //Entero con el número de escritura (de 1 a 50)
     int nRegistro; //Entero con el número del registro dentro del fichero (de 0 a REGMAX-1) 
 };
+
+void reaper();
