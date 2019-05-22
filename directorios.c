@@ -627,16 +627,7 @@ int mi_touch(const char *camino, unsigned char permisos) {
 
     posInodoRaiz = SB.posInodoRaiz;
 
-    printf("Bloques libres b4 buscar entrada @ mi_touch: %i\n", SB.cantBloquesLibres);
-
     result = buscar_entrada(camino, &posInodoRaiz, &p_inodo, &p_entrada, 1, permisos);
-
-    //Lectura de superbloque para obtener posición de inodo raiz
-    if(bread(posSB, &SB) == -1) {
-        fprintf(stderr, "Error en lectura de superbloque. "
-        "Función -> mi_creat()\n");
-    }
-    printf("Bloques libres after buscar entrada @ mi_touch: %i\n", SB.cantBloquesLibres);
 
     if (result < 0) {
         return result; 

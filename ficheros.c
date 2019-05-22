@@ -313,6 +313,12 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     //Finalización.
     inodo.atime = time(NULL);
 
+    //Actualización de inodo
+    if (escribir_inodo(ninodo, inodo) == -1) {
+        fprintf(stderr, "Error: no se ha podido actualizar la información del inodo. "
+        "Función -> mi_read_f()\n");
+    }
+
     return leidos; 
 }
 

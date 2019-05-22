@@ -520,7 +520,7 @@ int reservar_bloque() {
         " Función -> reservar_bloque()");
         return -1;
     }
-    printf("bloque reservado: %i\n", nBloque);
+    
     return nBloque;
 }
 
@@ -573,7 +573,7 @@ int liberar_bloque(unsigned int nbloque) {
         "Función -> liberar_bloque()");
         return -1;
     }
-    printf("bloque liberado: %i\n",nbloque);
+
     //Devolver el número de bloque liberado. 
     return nbloque; 
 }
@@ -989,7 +989,7 @@ int obtener_nrangoBL(struct inodo inodo, unsigned int nblogico, unsigned int *pt
                     return 3;
                 }else{
                     *ptr = 0;
-                    perror("Bloque lógico fuera de rango");
+                    fprintf(stderr, "Bloque lógico fuera de rango (%i).\n", nblogico);
                     return -1;
                 }
                 
@@ -1174,7 +1174,7 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
     }
 
     //Necesario para test de nivel 5 donde tamEnBytesLog == 0
-    if (ultimoBL == 0) ultimoBL = INDIRECTOS2;      
+    if (ultimoBL == 0) ultimoBL = INDIRECTOS2-1;      
 
     //Preparación de buffer auxiliar para comparar con bloques
     unsigned char auxbuf[BLOCKSIZE];
