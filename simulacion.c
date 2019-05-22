@@ -7,19 +7,17 @@ int acabados = 0;
 int main(int argc, char ** argv) {
 
     //Declaraciones. 
-    int
-    const NPROC = 3;
-    int
-    const OP_ESCR = 10;
+    int const NPROC = 100;
+    int const OP_ESCR = 50;
     int pid;
     struct REGISTRO registro;
 
     time_t tiempo = time(0);
     struct tm * tlocal = localtime( & tiempo);
-    char formato_directorio_simulacion[128];
-    char formato_directorio_proceso[128];
+    char ruta_principal[128];
+    char ruta_aux[128];
 
-    strftime(formato_directorio_simulacion, 128, "/simul_%Y%m%d%H%M%S/", tlocal);
+    strftime(ruta_principal, 128, "/simul_%Y%m%d%H%M%S/", tlocal);
 
     //Comprobar el número de argumentos. 
     if (argc != 2) {
@@ -34,7 +32,7 @@ int main(int argc, char ** argv) {
     }
 
     //Crear directorio de simulación en la raíz /simul_aaaammddhhmmss/
-    if (mi_creat(formato_directorio_simulacion, 6) == -1) {
+    if (mi_creat(ruta_principal, 6) == -1) {
         fprintf(stderr, "Error: No se ha podido crear el directorio de simulación\n");
         if (bumount() == -1) {
             fprintf(stderr, "Error: no se ha podido cerrar el fichero.\n");
@@ -43,24 +41,23 @@ int main(int argc, char ** argv) {
     }
 
     //MENSAJES DE INFORMACIÓN DE EJECUCIÓN NIVEL 13------------------------------------------------------------>
-    printf("Directorio simulación: %s\n", formato_directorio_simulacion);
+    printf("Directorio simulación: %s\n", ruta_principal);
 
     //Asignar la función de enterrador (reaper) a la señal de finalización de 
     //un hijo (SIGCHLD). 
     signal(SIGCHLD, reaper);
-    printf("PID padre: %d\n", getpid());
+
     for (int proceso = 1; proceso <= NPROC; proceso++) {
 
         //Se crea un nuevo proceso. 
         pid = fork();
-        printf("PID: %d\n", getpid());
 
         if (pid == -1) {
            fprintf(stderr, "Error: no se ha podido crear el proceso.\n");
            exit(-1);
         }
-        
-        if (getpid()) {
+
+        if (!pid) {
 
             //Montar disco nuevamente. 
             if (bmount(argv[1]) == -1) {
@@ -68,88 +65,89 @@ int main(int argc, char ** argv) {
                 exit(-1);
             }
 
-            sprintf(formato_directorio_proceso, "proceso_%d/", pid);
+            //Construir directorio del proceso. 
+            sprintf(ruta_aux, "proceso_%d/", getpid());
 
-            // printf("FDP: %s\n", formato_directorio_proceso);
-            // printf("FDS: %s\n", formato_directorio_simulacion);
-
-            strcat(formato_directorio_simulacion, formato_directorio_proceso);
-
-            // printf("FDP: %s\n", formato_directorio_proceso);
-            // printf("FDS: %s\n", formato_directorio_simulacion);       
+            //Concatenar la ruta principal con la del directorio. 
+            strcat(ruta_principal, ruta_aux);
 
             //Crear el directorio del proceso.
-            if (mi_creat(formato_directorio_simulacion, 6) == -1) {
+            if (mi_creat(ruta_principal, 6) == -1) {
                 fprintf(stderr, "Error: No se ha podido crear el directorio del proceso.\n");
                 if (bumount() == -1) {
                     fprintf(stderr, "Error: no se ha podido cerrar el fichero.\n");
                 }
                 exit(-1);
             }
-
-            //printf("FDS: %s\n", formato_directorio_simulacion);
                 
-                strcat(formato_directorio_simulacion, "prueba.dat");
-                //Crear fichero prueba dentro del directorio del proceso. 
-                if (mi_touch(formato_directorio_simulacion, 6) == -1) {
-                    fprintf(stderr, "Error: No se ha podido crear el directorio de simulación\n");
-                    if (bumount() == -1) {
-                        fprintf(stderr, "Error: no se ha podido cerrar el fichero.\n");
-                    }
-                    exit(-1);
-                }
+            //Añadir el fichero prueba.dat a la ruta principal. 
+            strcat(ruta_principal, "prueba.dat");
 
-                //Inicializar la semilla para los números aleatorios. 
-
-                srand(time(NULL) + getpid());
-
-                for (int i = 0; i < OP_ESCR; i++) {
-
-                    //Inicializar el registro. 
-                    registro.fecha = time(NULL);
-                    registro.pid = getpid();
-                    registro.nEscritura = i + 1;
-                    registro.nRegistro = rand() % REGMAX;
-
-                    //Escribir registro. 
-                    strcat(formato_directorio_proceso, "prueba.dat");
-                    
-                    //MENSAJES DE INFORMACIÓN DE EJECUCIÓN NIVEL 13------------------------------------------------------------>
-                    printf("[simulación.c -> Escritura %d en %s]\n", i, formato_directorio_proceso);
-                   
-                    if (mi_write(formato_directorio_proceso, & registro, registro.nRegistro * sizeof(struct REGISTRO), sizeof(struct REGISTRO) == -1)) {
-                        fprintf(stderr, "Error: No se ha podido escribir el registro. \n");
-                        exit(-1);
-                    }
-
-                    //Esperar 0,05 segundos. (50ms = 50000us)
-                    usleep(50000);
-                }
-
-                //MENSAJES DE INFORMACIÓN DE EJECUCIÓN NIVEL 13------------------------------------------------------------>
-                printf("[Proceso %d: Completadas %d escrituras en %s]", proceso, OP_ESCR, strcat("prueba.dat", formato_directorio_proceso));
-
-                //Desmontar dispositivo virtual (proceso hijo).
+            //Crear fichero prueba dentro del directorio del proceso. 
+            if (mi_touch(ruta_principal, 6) == -1) {
+                fprintf(stderr, "Error: No se ha podido crear el directorio de simulación\n");
                 if (bumount() == -1) {
                     fprintf(stderr, "Error: no se ha podido cerrar el fichero.\n");
                 }
-                exit(0);
+                exit(-1);
             }
-            puts("endif");
-            //Esperar 0,2 seg
-            usleep(200000);
+
+            //Inicializar la semilla para los números aleatorios. 
+            srand(time(NULL) + getpid());
+
+            for (int i = 0; i < OP_ESCR; i++) {
+
+                //Inicializar el registro. 
+                registro.fecha = time(NULL);
+                registro.pid = getpid();
+                registro.nEscritura = i + 1;
+                registro.nRegistro = rand() % REGMAX;
+                    
+                //MENSAJES DE INFORMACIÓN DE EJECUCIÓN NIVEL 13------------------------------------------------------------>
+                //printf("[simulación.c -> Escritura %d en %s]\n", i+1, ruta_principal);
+                
+                strcpy(ruta_aux, ruta_principal);
+
+                if (mi_write(ruta_principal, &registro, registro.nRegistro * sizeof(struct REGISTRO), sizeof(struct REGISTRO)) == -1) {
+                    fprintf(stderr, "Error: No se ha podido escribir el registro. \n");
+                    exit(-1);
+                }
+
+                //Esperar 0,05 segundos. (50ms = 50000us)
+                usleep(50000);
+            }
+
+            //MENSAJES DE INFORMACIÓN DE EJECUCIÓN NIVEL 13------------------------------------------------------------>
+            printf("[Proceso %d: Completadas %d escrituras en %s]\n", proceso, OP_ESCR, ruta_principal);
+
+            //Desmontar dispositivo virtual (proceso hijo).
+            if (bumount() == -1) {
+                fprintf(stderr, "Error: no se ha podido cerrar el fichero.\n");
+            }
+
+            //Reiniciar strings. 
+            ruta_aux[0] = 0;
+            ruta_principal[0] = 0;
+
+            exit(0);
+
         }
 
-        //Permitir que el padre espere por todos los hijos: 
-        while (acabados < NPROC){
-            pause();
-        }
+        //Esperar 0,2 seg
+        usleep(200000);
+    }
 
-        //Desmontar dispositivo virtual
-        if (bumount() == -1) {
-            fprintf(stderr, "Error: no se ha podido cerrar el fichero(last).\n");
-        }
-        exit(0);
+    //Permitir que el padre espere por todos los hijos: 
+    while (acabados < NPROC){
+        pause();
+    }
+
+    //Desmontar dispositivo virtual
+    if (bumount() == -1) {
+        fprintf(stderr, "Error: no se ha podido cerrar el fichero(last).\n");
+    }
+    printf("Total de procesos terminados: %d.\n",acabados);
+    exit(0);
 }
 
 void reaper() {
@@ -159,7 +157,6 @@ void reaper() {
     while ((ended = waitpid(-1, NULL, WNOHANG)) > 0) {
         acabados++;
         //Podemos testear qué procesos van acabando:
-        fprintf(stderr, "acabado: %d total acabados: %d\n", ended, acabados);
+        //fprintf(stderr, "[simulación.c -> Acabado proceso con PID %d, total acabados: %d\n", ended, acabados);
     }
-
 }
