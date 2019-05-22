@@ -23,17 +23,21 @@ static unsigned int inside_sc = 0;
 */
 int bmount(const char *camino) {
 
-    //Obtener file descriptor
-    descriptor = open(camino, O_RDWR|O_CREAT, 0666);
-
-    if (descriptor == -1) {
-        return -1;
+    if (descriptor > 0) {
+       close(descriptor);
     }
-
-    mutex = initSem();
-
-    return descriptor; 
-
+    
+    if ((descriptor = open(camino, O_RDWR | O_CREAT, 0666)) == -1) {
+       fprintf(stderr, "Error: bloques.c → bmount() → open()\n");
+    }
+    
+    if (!mutex) { //el semáforo es único y sólo se ha de inicializar una vez en nuestro sistema
+        mutex = initSem();
+        if (mutex == SEM_FAILED) {
+           return -1;
+        }
+    }
+    return descriptor;
 }
 
 /*
@@ -51,9 +55,15 @@ int bmount(const char *camino) {
 */
 int bumount() {
 
-    deleteSem();
-    return close(descriptor); 
-
+ descriptor = close(descriptor); 
+   // hay que asignar el resultado de la operación a la variable ya que bmount() la utiliza
+   if (descriptor == -1) {
+       fprintf(stderr, "Error: bloques.c → bumount() → close(): %d: %s\n", errno, strerror(errno));
+       return -1;
+   }
+   deleteSem(); // borramos semaforo
+   return 0;
+   
 }
 
 /*
