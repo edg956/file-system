@@ -7,8 +7,6 @@ int acabados = 0;
 int main(int argc, char ** argv) {
 
     //Declaraciones. 
-    int const NPROC = 100;
-    int const OP_ESCR = 50;
     int pid;
     struct REGISTRO registro;
 
