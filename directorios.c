@@ -578,7 +578,7 @@ int mi_stat(const char *camino, struct STAT *p_stat) {
     //Obtener inodo correspondiente a directorio
     result = buscar_entrada(camino, &posInodoRaiz, &p_inodo, &p_entrada, 0, 7);
         
-    printf("Nº inodo = %d\n", p_inodo);
+    //printf("Nº inodo = %d\n", p_inodo);
 
     if (result < 0) {
         return result;  
