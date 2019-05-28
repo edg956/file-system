@@ -149,7 +149,6 @@ int main(int argc, char ** argv) {
 }
 
 void reaper() {
-
     pid_t ended;
     signal(SIGCHLD, reaper);
     while ((ended = waitpid(-1, NULL, WNOHANG)) > 0) {
