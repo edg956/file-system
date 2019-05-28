@@ -12,7 +12,7 @@ int main(int argc, char **argv) {
     struct REGISTRO buffRegistros[OP_ESCR*sizeof(struct REGISTRO)];
     struct INFORMACION info;
     int boolean = 0;
-    char *buffEscritura = "";
+    char buffEscritura[1024];
 
     //Comprobar el número de argumentos. 
     if (argc!=3) {
@@ -29,14 +29,19 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
+    printf("argv[2]: %s\n", argv[2]);
     //Realización del STAT. 
     if (mi_stat(argv[2], &stat)==-1) {
-        fprintf(stderr, "Error: El disco no se ha podido montar.\n");
+        fprintf(stderr, "Error: No se ha podido obtener el stat.\n");
         exit(-1);
     }
 
     //Calcular número de entradas del directorio. 
     nentradas = stat.tamEnBytesLog/sizeof(struct entrada);
+    printf("tamEnbyteslog: %d\n", stat.tamEnBytesLog);
+    printf("sizeof entrada: %ld\n", sizeof(struct entrada));
+    printf("Nentradas: %d\n", nentradas);
+    printf("NPROC: %d\n", NPROC);
 
     if (nentradas != NPROC) {
         fprintf(stderr, "Error: El número de entradas es diferente al número de procesos.\n");
@@ -45,12 +50,13 @@ int main(int argc, char **argv) {
 
     //Concatenar el nombre del informe a la ruta de simulación. 
     strcat(dirsimulacion, "informe.txt");
-
+puts("1");
     //Crear el fichero informe.txt dentro del directorio de simulación.
     if (mi_touch(dirsimulacion, 6)==-1) {
         fprintf(stderr, "Error: No se ha podido crear el informe.\n");
         exit(-1);
     }
+puts("2");
 
     //MEJORA
     //Lectura de todas las entradas entes de entrar al bucle para almacenarlas
@@ -60,6 +66,7 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Error: No se han podido leer las entradas.\n");
         exit(-1);
     }
+puts("3");
 
     for (int i=0; i<nentradas; i++) {
         
@@ -68,9 +75,7 @@ int main(int argc, char **argv) {
 
         //Extraer el PID a partir del nombre de la entrada y guardarlo en el registro info.        
         info.pid = atoi(&auxBuff[1]);
-        
-        /*Recorrer secuencialmente el fichero prueba.dat utilizando un buffer 
-        de N registros de escrituras*/
+
         //Copiar el directorio de simulación. 
         strcpy(dirsimulacion, argv[2]);
 
@@ -78,8 +83,11 @@ int main(int argc, char **argv) {
             fprintf(stderr, "Error: No se ha podido leer el fichero prueba.dat.\n");
             exit(-1);
         }
-
-        for (int j = 0; j < sizeof (buffRegistros)/sizeof(struct REGISTRO); j++) {
+puts("4");
+        
+        /*Recorrer secuencialmente el fichero prueba.dat utilizando un buffer 
+        de N registros de escrituras*/
+        for (int j = 0; j < sizeof(buffRegistros)/sizeof(struct REGISTRO); j++) {
 
             if (info.pid==buffRegistros[i].pid) {
 
@@ -89,9 +97,11 @@ int main(int argc, char **argv) {
                     info.UltimaEscritura = buffRegistros[i];
                     info.MenorPosicion = buffRegistros[i];
                     info.MayorPosicion = buffRegistros[i];
+                    puts("4,5");
                 }else{
 
                     if (difftime(buffRegistros[i].fecha, info.PrimeraEscritura.fecha) == 0) {
+puts("5");
 
                         if (buffRegistros[i].nEscritura < info.PrimeraEscritura.nEscritura) {
                             info.PrimeraEscritura = buffRegistros[i];
@@ -121,8 +131,10 @@ int main(int argc, char **argv) {
         //Copiar el directorio de simulación. 
         strcpy(dirsimulacion, argv[2]);
         strcat(dirsimulacion, "informe.txt");
+puts("6");
 
         mi_stat(dirsimulacion, &stat);
+puts("7");
 
         sprintf(buffEscritura, "PID: %d\n Número de escrituras: %d\n"
         "Primera escritura\t%d\t%d\t%s\nÚltima escritura\t%d\t%d\t%s\n"
@@ -132,14 +144,15 @@ int main(int argc, char **argv) {
         info.UltimaEscritura.nRegistro, asctime(localtime(&info.UltimaEscritura.fecha)), info.MenorPosicion.nEscritura, 
         info.MenorPosicion.nRegistro, asctime(localtime(&info.MenorPosicion.fecha)), info.MayorPosicion.nEscritura, 
         info.MayorPosicion.nRegistro, asctime(localtime(&info.MayorPosicion.fecha)));
-        
-        if (mi_write(dirsimulacion, buffEscritura, stat.tamEnBytesLog, sizeof(buffEscritura))) {
+puts("8");
+
+        if (mi_write(dirsimulacion, buffEscritura, stat.tamEnBytesLog, sizeof(buffEscritura))==-1) {
             fprintf(stderr, "Error: No se ha podido escribir el informe.\n");
             exit(-1);
         }
 
         //Reinciar buffEscritura.
-        buffEscritura = "";
+        buffEscritura[0] = 0;
     }
 
     //Desmontar dispositivo virtual
