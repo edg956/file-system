@@ -6,6 +6,7 @@ int main(int argc, char **argv) {
     //Declaraciones
     struct STAT stat; 
     int nentradas;
+    int offset = 0;
     int cant_registros_buffer_escrituras = 256;
     struct entrada buffentradas[NPROC*sizeof(struct entrada)];
     char dirsimulacion[128]; 
@@ -88,13 +89,17 @@ int main(int argc, char **argv) {
         //for (int j = 0; j < sizeof(buffRegistros)/sizeof(struct REGISTRO); j++) {
         //printf("info.nescrituras: %d\n",info.nEscrituras);
         //Resetear directorio de simulación.
+        memset(dirsimulacion, 0, sizeof(dirsimulacion));
 
-        printf("dirsimul: %s\n", dirsimulacion);  ---> output: dirsimul: /simul_20190528215606/informe.txt
+        //Cargar nuevo directorio.
+        sprintf(dirsimulacion, "%sproceso_%d/prueba.dat", argv[2], info.pid);
+
+        printf("dirsimul: %s\n", dirsimulacion);
 
 
         /*Recorrer secuencialmente el fichero prueba.dat utilizando un buffer 
         de N registros de escrituras*/
-        while (mi_read(dirsimulacion, buffRegistros, 0, sizeof(buffRegistros)) > 0) { 
+        while (mi_read(dirsimulacion, buffRegistros, offset+sizeof(struct REGISTRO), sizeof(buffRegistros)) > 0) { 
 
             if (info.pid==buffRegistros[info.nEscrituras].pid) {
                     puts("1");
@@ -106,7 +111,7 @@ int main(int argc, char **argv) {
                     info.MayorPosicion = buffRegistros[info.nEscrituras];
                     puts("2");
                 }else{
-
+                    puts("2,5");
                     if (difftime(buffRegistros[info.nEscrituras].fecha, info.PrimeraEscritura.fecha) == 0) {
                     puts("3");
 
@@ -137,7 +142,7 @@ int main(int argc, char **argv) {
         }
 
         boolean = 0;
-
+        puts("4");
         //Copiar el directorio de simulación. 
         strcpy(dirsimulacion, argv[2]);
         strcat(dirsimulacion, "informe.txt");
