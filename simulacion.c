@@ -9,7 +9,6 @@ int main(int argc, char ** argv) {
     //Declaraciones. 
     int pid;
     struct REGISTRO registro;
-
     time_t tiempo = time(0);
     struct tm * tlocal = localtime( & tiempo);
     char ruta_principal[128];
@@ -99,8 +98,8 @@ int main(int argc, char ** argv) {
                 registro.fecha = time(NULL);
                 registro.pid = getpid();
                 registro.nEscritura = i + 1;
-                registro.nRegistro = rand() % REGMAX;
-                    
+                registro.nRegistro = rand()  % REGMAX;
+
                 //MENSAJES DE INFORMACIÓN DE EJECUCIÓN NIVEL 13------------------------------------------------------------>
                 //printf("[simulación.c -> Escritura %d en %s]\n", i+1, ruta_principal);
                 

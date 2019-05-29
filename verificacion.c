@@ -4,7 +4,7 @@
 int main(int argc, char **argv) {
 
     //Declaraciones
-    struct STAT stat; 
+    struct STAT stat;
     int nentradas;
     int offset = 0;
     int cant_registros_buffer_escrituras = 256;
@@ -54,6 +54,9 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
+    //Limpiar buffer
+    memset(buffEscritura, 0, sizeof(buffEscritura));
+
     //MEJORA
     //Lectura de todas las entradas entes de entrar al bucle para almacenarlas
     //en un buffer. 
@@ -65,93 +68,74 @@ int main(int argc, char **argv) {
 
     for (int i=0; i<nentradas; i++) {
         
+        info.nEscrituras = 0;
         //Leer entrada del directorio. 
         auxBuff = strchr(buffentradas[i].nombre, '_');
 
         //Extraer el PID a partir del nombre de la entrada y guardarlo en el registro info.        
         info.pid = atoi(&auxBuff[1]);
 
-        // //Copiar el directorio de simulación. 
-        // strcpy(dirsimulacion, argv[2]);
-
-        // strcat(dirsimulacion, buffentradas[i].nombre);
-
-        // if (mi_read(strcat(dirsimulacion, "/"), buffRegistros, 0, sizeof(buffRegistros))==-1) {
-        //     fprintf(stderr, "Error: No se ha podido leer el fichero prueba.dat.\n");
-        //     exit(-1);
-        // }
-
-        //printf("dirsimul: %s\n", dirsimulacion);
-        
-        //printf("División: %ld\n",sizeof(buffRegistros)/sizeof(struct REGISTRO));
-        //nescrituras = sizeof(buffRegistros)/sizeof(struct REGISTRO);
-
-        //for (int j = 0; j < sizeof(buffRegistros)/sizeof(struct REGISTRO); j++) {
-        //printf("info.nescrituras: %d\n",info.nEscrituras);
         //Resetear directorio de simulación.
         memset(dirsimulacion, 0, sizeof(dirsimulacion));
 
         //Cargar nuevo directorio.
         sprintf(dirsimulacion, "%sproceso_%d/prueba.dat", argv[2], info.pid);
 
-        printf("dirsimul: %s\n", dirsimulacion);
-
-
         /*Recorrer secuencialmente el fichero prueba.dat utilizando un buffer 
         de N registros de escrituras*/
-        while (mi_read(dirsimulacion, buffRegistros, offset+sizeof(struct REGISTRO), sizeof(buffRegistros)) > 0) { 
 
-            if (info.pid==buffRegistros[info.nEscrituras].pid) {
-                    puts("1");
-                if (!boolean) {
-                    boolean = 1;
-                    info.PrimeraEscritura = buffRegistros[info.nEscrituras];
-                    info.UltimaEscritura = buffRegistros[info.nEscrituras];
-                    info.MenorPosicion = buffRegistros[info.nEscrituras];
-                    info.MayorPosicion = buffRegistros[info.nEscrituras];
-                    puts("2");
-                }else{
-                    puts("2,5");
-                    if (difftime(buffRegistros[info.nEscrituras].fecha, info.PrimeraEscritura.fecha) == 0) {
-                    puts("3");
+        while (mi_read(dirsimulacion, buffRegistros, offset, sizeof(buffRegistros)) > 0) { 
+            for (int j = 0; j < sizeof(buffRegistros)/sizeof(struct REGISTRO); j++) {
+                if (info.pid==buffRegistros[j].pid) {
+                    if (!boolean) {
+                        boolean = 1;
+                        info.PrimeraEscritura = buffRegistros[j];
+                        info.UltimaEscritura = buffRegistros[j];
+                        info.MenorPosicion = buffRegistros[j];
+                        info.MayorPosicion = buffRegistros[j];
+                    }else{
 
-                        if (buffRegistros[info.nEscrituras].nEscritura < info.PrimeraEscritura.nEscritura) {
-                            info.PrimeraEscritura = buffRegistros[info.nEscrituras];
-                        }
+                        // if (difftime(buffRegistros[j].fecha, info.PrimeraEscritura.fecha) == 0) {
+                        //     puts("3");
 
-                        if (buffRegistros[info.nEscrituras].nEscritura > info.UltimaEscritura.nEscritura) {
-                            info.UltimaEscritura = buffRegistros[info.nEscrituras];
-                        }
+                            if (buffRegistros[j].nEscritura < info.PrimeraEscritura.nEscritura) {
+                                info.PrimeraEscritura = buffRegistros[j];
+                            }
 
-                        if (buffRegistros[info.nEscrituras].nRegistro < info.MenorPosicion.nRegistro) {
-                            info.MenorPosicion = buffRegistros[info.nEscrituras];
-                        }
+                            if (buffRegistros[j].nEscritura > info.UltimaEscritura.nEscritura) {
+                                info.UltimaEscritura = buffRegistros[j];
+                            }
 
-                        if (buffRegistros[info.nEscrituras].nRegistro > info.MayorPosicion.nRegistro) {
-                            info.MayorPosicion = buffRegistros[info.nEscrituras];
-                        }
+                            if (buffRegistros[j].nRegistro < info.MenorPosicion.nRegistro) {
+                                info.MenorPosicion = buffRegistros[j];
+                            }
 
+                            if (buffRegistros[j].nRegistro > info.MayorPosicion.nRegistro) {
+                                info.MayorPosicion = buffRegistros[j];
+                            }
+                        // }
                     }
-
+                    info.nEscrituras++;
                 }
             }
-            info.nEscrituras++;
 
             //Limpiar buffer
             memset(buffRegistros, 0, sizeof(buffRegistros));
+            offset+=sizeof(buffRegistros);
         }
 
+        //Reiniciar variable booleana para siguiente entrada
         boolean = 0;
-        puts("4");
+
         //Copiar el directorio de simulación. 
         strcpy(dirsimulacion, argv[2]);
         strcat(dirsimulacion, "informe.txt");
 
         mi_stat(dirsimulacion, &stat);
 
-        sprintf(buffEscritura, "PID: %d\n Número de escrituras: %d\n"
-        "Primera escritura\t%d\t%d\t%s\nÚltima escritura\t%d\t%d\t%s\n"
-        "Menor posición\t%d\t%d\t%s\nMayor posición\t%d\t%d\t%s\n\n", 
+        sprintf(buffEscritura, "PID: %d\nNúmero de escrituras:\t%d\n"
+        "Primera escritura:\t%d\t%d\t%sÚltima escritura:\t%d\t%d\t%s"
+        "Menor posición:\t\t%d\t%d\t%sMayor posición:\t\t%d\t%d\t%s\n", 
         info.pid, info.nEscrituras, info.PrimeraEscritura.nEscritura, 
         info.PrimeraEscritura.nRegistro, asctime(localtime(&info.PrimeraEscritura.fecha)), info.UltimaEscritura.nEscritura, 
         info.UltimaEscritura.nRegistro, asctime(localtime(&info.UltimaEscritura.fecha)), info.MenorPosicion.nEscritura, 
@@ -164,7 +148,9 @@ int main(int argc, char **argv) {
         }
 
         //Reinciar buffEscritura.
-        buffEscritura[0] = 0;
+        //buffEscritura[0] = 0;
+        memset(buffEscritura, 0, sizeof(buffEscritura));
+        offset = 0;
     }
 
     //Desmontar dispositivo virtual
