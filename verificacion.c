@@ -13,8 +13,9 @@ int main(int argc, char **argv) {
     char *auxBuff;
     struct REGISTRO buffRegistros[cant_registros_buffer_escrituras];
     struct INFORMACION info;
-    int boolean = 0;
+    //int boolean = 0;
     char buffEscritura[1024];
+    int j;
 
     //Comprobar el número de argumentos. 
     if (argc!=3) {
@@ -85,37 +86,40 @@ int main(int argc, char **argv) {
         de N registros de escrituras*/
 
         while (mi_read(dirsimulacion, buffRegistros, offset, sizeof(buffRegistros)) > 0) { 
-            for (int j = 0; j < sizeof(buffRegistros)/sizeof(struct REGISTRO) && info.nEscrituras<OP_ESCR; j++) {
-                //printf("%d\t%d\n", buffRegistros[j].pid, info.pid);
+
+            for (j = 0; j < sizeof(buffRegistros)/sizeof(struct REGISTRO) && info.nEscrituras < OP_ESCR; j++) {
+                
+                //Comprobar que la escritura sea válida. 
                 if (info.pid==buffRegistros[j].pid) {
-                    if (!boolean) {
-                        boolean = 1;
+
+                    //Detección de la primera escritura validada. 
+                    if (info.nEscrituras==0) {
                         info.PrimeraEscritura = buffRegistros[j];
                         info.UltimaEscritura = buffRegistros[j];
                         info.MenorPosicion = buffRegistros[j];
                         info.MayorPosicion = buffRegistros[j];
-                    }else{
 
-                        // if (difftime(buffRegistros[j].fecha, info.PrimeraEscritura.fecha) == 0) {
-
+                    } else {
+                        
+                        //Comparación de la fecha de los registros. 
+                        if (difftime(buffRegistros[j].fecha, info.PrimeraEscritura.fecha) <= 0) {
+                            //Comparación del número de escritura del registro (en caso de fecha igual). 
                             if (buffRegistros[j].nEscritura < info.PrimeraEscritura.nEscritura) {
                                 info.PrimeraEscritura = buffRegistros[j];
                             }
+                       }
 
+                        if (difftime(buffRegistros[j].fecha, info.UltimaEscritura.fecha) >= 0) {
+                            //Comparación del número de escritura del registro (en caso de fecha igual). 
                             if (buffRegistros[j].nEscritura > info.UltimaEscritura.nEscritura) {
                                 info.UltimaEscritura = buffRegistros[j];
                             }
-
-                            // if (buffRegistros[j].nRegistro < info.MenorPosicion.nRegistro) {
-                            //     info.MenorPosicion = buffRegistros[j];
-                            // }
-
-                            if (buffRegistros[j].nRegistro > info.MayorPosicion.nRegistro) {
-                                info.MayorPosicion = buffRegistros[j];
-                            }
-                        // }
+                        }
                     }
                     info.nEscrituras++;
+
+                    //Obtener la escritura de la última posición.
+                    info.MayorPosicion = buffRegistros[j];
                 }
             }
 
@@ -124,10 +128,7 @@ int main(int argc, char **argv) {
             offset+=sizeof(buffRegistros);
         }
 
-        printf("%d escrituras validadas en %s\n", info.nEscrituras, dirsimulacion);
-
-        //Reiniciar variable booleana para siguiente entrada
-        boolean = 0;
+        printf("%d) %d escrituras validadas en %s\n", i+1, info.nEscrituras, dirsimulacion);
 
         //Copiar el directorio de simulación. 
         strcpy(dirsimulacion, argv[2]);
@@ -135,6 +136,7 @@ int main(int argc, char **argv) {
 
         mi_stat(dirsimulacion, &stat);
 
+        //Añadir información del struct info para imprimirla por pantalla. 
         sprintf(buffEscritura, "PID: %d\nNúmero de escrituras:\t%d\n"
         "Primera escritura:\t%d\t%d\t%sÚltima escritura:\t%d\t%d\t%s"
         "Menor posición:\t\t%d\t%d\t%sMayor posición:\t\t%d\t%d\t%s\n", 
@@ -144,13 +146,13 @@ int main(int argc, char **argv) {
         info.MenorPosicion.nRegistro, asctime(localtime(&info.MenorPosicion.fecha)), info.MayorPosicion.nEscritura, 
         info.MayorPosicion.nRegistro, asctime(localtime(&info.MayorPosicion.fecha)));
 
+        //Escribir el informe.txt
         if (mi_write(dirsimulacion, buffEscritura, stat.tamEnBytesLog, sizeof(buffEscritura))==-1) {
             fprintf(stderr, "Error: No se ha podido escribir el informe.\n");
             exit(-1);
         }
 
         //Reinciar buffEscritura.
-        //buffEscritura[0] = 0;
         memset(buffEscritura, 0, sizeof(buffEscritura));
         offset = 0;
     }

@@ -117,6 +117,7 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
         //Semáforo en traducir_bloque inodo porque reserva bloques.
         mi_waitSem();
         if ((bfisico = traducir_bloque_inodo(ninodo, bloqueF, 1)) < 0){
+            mi_signalSem();
             return -1;
         } 
         mi_signalSem();
@@ -138,6 +139,7 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
     if (leer_inodo(ninodo, &in) < 0) {
         perror("Error: no se ha podido leer el inodo."
         "Función -> mi_write_f()");
+        mi_signalSem();
         return -1;
     }
 

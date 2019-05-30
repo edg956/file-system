@@ -98,6 +98,7 @@ int main(int argc, char ** argv) {
                 //Inicializar el registro. 
                 registro.fecha = time(NULL);
                 registro.pid = getpid();
+                //printf("PID: %d\n", registro.pid);
                 registro.nEscritura = i + 1;
                 registro.nRegistro = rand()  % REGMAX;
 
@@ -106,6 +107,7 @@ int main(int argc, char ** argv) {
                 
                 strcpy(ruta_aux, ruta_principal);
 
+                //printf("ruta: %s \n",ruta_principal);
                 if (mi_write(ruta_principal, &registro, registro.nRegistro * sizeof(struct REGISTRO), sizeof(struct REGISTRO)) == -1) {
                     fprintf(stderr, "Error: No se ha podido escribir el registro. \n");
                     exit(-1);

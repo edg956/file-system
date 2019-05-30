@@ -783,7 +783,7 @@ int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nby
         + <0: Algún error ocurrido. 
 */
 int mi_write (const char *camino, const void *buf, unsigned int offset, unsigned int nbytes) {
-    
+
     //Declaraciones.
     int bytesEscritos;    
     unsigned int p_inodo_dir = 0;
@@ -817,7 +817,6 @@ int mi_write (const char *camino, const void *buf, unsigned int offset, unsigned
     }
 
     return bytesEscritos;
-
 }
 
 /*----------------------------FUNCIONES NIVEL 11------------------------------*/
