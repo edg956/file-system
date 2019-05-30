@@ -13,6 +13,7 @@ int main(int argc, char ** argv) {
     struct tm * tlocal = localtime( & tiempo);
     char ruta_principal[128];
     char ruta_aux[128];
+    int i;
 
     strftime(ruta_principal, 128, "/simul_%Y%m%d%H%M%S/", tlocal);
 
@@ -92,7 +93,7 @@ int main(int argc, char ** argv) {
             //Inicializar la semilla para los números aleatorios. 
             srand(time(NULL) + getpid());
 
-            for (int i = 0; i < OP_ESCR; i++) {
+            for (i = 0; i < OP_ESCR; i++) {
 
                 //Inicializar el registro. 
                 registro.fecha = time(NULL);
@@ -115,7 +116,7 @@ int main(int argc, char ** argv) {
             }
 
             //MENSAJES DE INFORMACIÓN DE EJECUCIÓN NIVEL 13------------------------------------------------------------>
-            printf("[Proceso %d: Completadas %d escrituras en %s]\n", proceso, OP_ESCR, ruta_principal);
+            printf("[Proceso %d: Completadas %d escrituras en %s]\n", proceso, i, ruta_principal);
 
             //Desmontar dispositivo virtual (proceso hijo).
             if (bumount() == -1) {

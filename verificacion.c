@@ -85,7 +85,8 @@ int main(int argc, char **argv) {
         de N registros de escrituras*/
 
         while (mi_read(dirsimulacion, buffRegistros, offset, sizeof(buffRegistros)) > 0) { 
-            for (int j = 0; j < sizeof(buffRegistros)/sizeof(struct REGISTRO); j++) {
+            for (int j = 0; j < sizeof(buffRegistros)/sizeof(struct REGISTRO) && info.nEscrituras<OP_ESCR; j++) {
+                //printf("%d\t%d\n", buffRegistros[j].pid, info.pid);
                 if (info.pid==buffRegistros[j].pid) {
                     if (!boolean) {
                         boolean = 1;
@@ -96,7 +97,6 @@ int main(int argc, char **argv) {
                     }else{
 
                         // if (difftime(buffRegistros[j].fecha, info.PrimeraEscritura.fecha) == 0) {
-                        //     puts("3");
 
                             if (buffRegistros[j].nEscritura < info.PrimeraEscritura.nEscritura) {
                                 info.PrimeraEscritura = buffRegistros[j];
@@ -106,9 +106,9 @@ int main(int argc, char **argv) {
                                 info.UltimaEscritura = buffRegistros[j];
                             }
 
-                            if (buffRegistros[j].nRegistro < info.MenorPosicion.nRegistro) {
-                                info.MenorPosicion = buffRegistros[j];
-                            }
+                            // if (buffRegistros[j].nRegistro < info.MenorPosicion.nRegistro) {
+                            //     info.MenorPosicion = buffRegistros[j];
+                            // }
 
                             if (buffRegistros[j].nRegistro > info.MayorPosicion.nRegistro) {
                                 info.MayorPosicion = buffRegistros[j];
@@ -123,6 +123,8 @@ int main(int argc, char **argv) {
             memset(buffRegistros, 0, sizeof(buffRegistros));
             offset+=sizeof(buffRegistros);
         }
+
+        printf("%d escrituras validadas en %s\n", info.nEscrituras, dirsimulacion);
 
         //Reiniciar variable booleana para siguiente entrada
         boolean = 0;
@@ -157,5 +159,5 @@ int main(int argc, char **argv) {
     if (bumount() == -1) {
         fprintf(stderr, "Error: no se ha podido cerrar el fichero(last).\n");
     }
-
+return 0;
 }
