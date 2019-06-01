@@ -1168,9 +1168,9 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
 
     //Obtener el útlimo bloque lógico del inodo
     if (inodo.tamEnBytesLog % BLOCKSIZE == 0) {
-        ultimoBL = inodo.tamEnBytesLog / BLOCKSIZE;
+        ultimoBL = (inodo.tamEnBytesLog / BLOCKSIZE)-1;
     } else {
-        ultimoBL = (inodo.tamEnBytesLog / BLOCKSIZE);
+        ultimoBL = inodo.tamEnBytesLog / BLOCKSIZE;
     }
 
     //Necesario para test de nivel 5 donde tamEnBytesLog == 0
@@ -1191,7 +1191,6 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
             return -1;
         }
         nivel_punteros = nRangoBL; //el nivel_punteros + alto cuelga del inodo
-
         //cuelgan bloques de punteros
         while(ptr > 0 && nivel_punteros > 0) {
             /*Verifica que el puntero actual sea el mismo que el bloque que
@@ -1210,15 +1209,13 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
             ptr_nivel[nivel_punteros-1] = ptr;
             indices[nivel_punteros-1] = indice;
             ptr = bloques_punteros[nivel_punteros-1][indice];
+            nivel_punteros--;
         }
-
         //si existen bloque de datos
         if (ptr > 0){
-
             if (nRangoBL == 0){     //es un puntero directo
                 inodo.punterosDirectos[nblog] = 0;
                 salvar_inodo = 1;
-
                 if (liberar_bloque(ptr) < 0) {
                     perror("Error: liberar_bloque ha fallado. Función -> "
                     "liberar_bloques_inodo()");
@@ -1232,7 +1229,6 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
                     ptr = ptr_nivel[nivel_punteros];
                     if (memcmp(&bloques_punteros[nivel_punteros], auxbuf, 
                     BLOCKSIZE) == 0) {
-
                         liberados++;
                         nivel_punteros++;
                         if (nivel_punteros == nRangoBL){

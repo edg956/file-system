@@ -990,7 +990,6 @@ int mi_link(const char *camino1, const char *camino2) {
         + (-1): Error
 */
 int mi_unlink(const char *camino) {
-
     //Mutex lock
     mi_waitSem();
 
@@ -1039,7 +1038,6 @@ int mi_unlink(const char *camino) {
 
     //Caso que la entrada a quitar sea la última. 
     if (p_entrada == (nentradas -1)) {
-        
         //Comprobación de errores de la función mi_truncar_f
         if (mi_truncar_f(p_inodo_dir, inodo2.tamEnBytesLog-sizeof(struct entrada))==-1) {
             fprintf(stderr, "Error: No se ha podido truncar el inodo. Función -> mi_unlink()\n");

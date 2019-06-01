@@ -470,8 +470,7 @@ int mi_truncar_f(unsigned int ninodo, unsigned int nbytes){
     //Declaraciones.
     struct inodo inodo; 
     int bliberados = 0; 
-    int nblogico, nblogicoL;
-    int aux; 
+    int nblogico;
 
     //Leer inodo. 
     if (leer_inodo(ninodo, &inodo)==-1) {
@@ -508,25 +507,11 @@ int mi_truncar_f(unsigned int ninodo, unsigned int nbytes){
 
     }
 
-    //Determinar último bloque lógico
-    if (inodo.tamEnBytesLog % BLOCKSIZE == 0) {
-        nblogicoL = inodo.tamEnBytesLog/BLOCKSIZE;
-    } else {
-        nblogicoL = inodo.tamEnBytesLog/BLOCKSIZE + 1;
-    }
+    bliberados = liberar_bloques_inodo(ninodo, nblogico);
 
-    //Recorrido desde nblogico hasta final de fichero/directorio. 
-    for(int i = nblogico; i < nblogicoL; i++) {
-        aux = liberar_bloques_inodo(ninodo, i);
-
-        if (aux==-1) {
-            perror("Error: no se han podido liberar los bloques del inodo."
-           "Función -> mi_truncar_f()");
-            exit(-1);
-        }
-
-       bliberados += aux;
-
+    if (bliberados < 0) {
+        fprintf(stderr, "Error: no se ha podido liberar el inodo %i\n", ninodo);
+        return -1;
     }
     
     if (leer_inodo(ninodo, &inodo)==-1) {
@@ -547,6 +532,6 @@ int mi_truncar_f(unsigned int ninodo, unsigned int nbytes){
               "Función -> mi_truncar_f()");
               exit(-1);
     }
-
+    
     return bliberados; 
 }
