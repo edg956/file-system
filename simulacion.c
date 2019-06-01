@@ -10,12 +10,12 @@ int main(int argc, char ** argv) {
     int pid;
     struct REGISTRO registro;
     time_t tiempo = time(0);
-    struct tm * tlocal = localtime( & tiempo);
+    struct tm *tlocal = localtime(&tiempo);
     char ruta_principal[128];
     char ruta_aux[128];
     int i;
 
-    strftime(ruta_principal, 128, "/simul_%Y%m%d%H%M%S/", tlocal);
+
 
     //Comprobar el número de argumentos. 
     if (argc != 2) {
@@ -29,6 +29,7 @@ int main(int argc, char ** argv) {
         exit(-1);
     }
 
+    strftime(ruta_principal, 128, "/simul_%Y%m%d%H%M%S/", tlocal);
     //Crear directorio de simulación en la raíz /simul_aaaammddhhmmss/
     if (mi_creat(ruta_principal, 6) == -1) {
         fprintf(stderr, "Error: No se ha podido crear el directorio de simulación\n");
@@ -100,14 +101,8 @@ int main(int argc, char ** argv) {
                 registro.pid = getpid();
                 //printf("PID: %d\n", registro.pid);
                 registro.nEscritura = i + 1;
-                registro.nRegistro = rand()  % REGMAX;
+                registro.nRegistro = rand()%REGMAX;
 
-                //MENSAJES DE INFORMACIÓN DE EJECUCIÓN NIVEL 13------------------------------------------------------------>
-                //printf("[simulación.c -> Escritura %d en %s]\n", i+1, ruta_principal);
-                
-                strcpy(ruta_aux, ruta_principal);
-
-                //printf("ruta: %s \n",ruta_principal);
                 if (mi_write(ruta_principal, &registro, registro.nRegistro * sizeof(struct REGISTRO), sizeof(struct REGISTRO)) == -1) {
                     fprintf(stderr, "Error: No se ha podido escribir el registro. \n");
                     exit(-1);
@@ -124,10 +119,6 @@ int main(int argc, char ** argv) {
             if (bumount() == -1) {
                 fprintf(stderr, "Error: no se ha podido cerrar el fichero.\n");
             }
-
-            //Reiniciar strings. 
-            ruta_aux[0] = 0;
-            ruta_principal[0] = 0;
 
             exit(0);
 
@@ -146,6 +137,7 @@ int main(int argc, char ** argv) {
     if (bumount() == -1) {
         fprintf(stderr, "Error: no se ha podido cerrar el fichero(last).\n");
     }
+
     printf("Total de procesos terminados: %d.\n",acabados);
     exit(0);
 }

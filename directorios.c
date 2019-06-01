@@ -185,9 +185,7 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
             }
         }
     }
-
     if (nentrada==numentradas) { //Se ha recorrido el total de entradas
-
         switch (reservar) {
 
             //Modo consulta. Como no existe retornamos error. 
@@ -223,7 +221,6 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
                     }else{
                         //Es un fichero
                         ninodo = reservar_inodo('f', permisos); 
-
                         if (ninodo == -1) {
                             fprintf(stderr, "Error: No se ha podido reservar el inodo. Función -> buscar_entrada()\n"); 
                         }
@@ -291,9 +288,9 @@ int mi_creat(const char *camino, unsigned char permisos) {
 
     //Comprobación de que el último carácter sea '/' (creación de fichero).
     if (camino [strlen(camino) - 1] != '/'){    
-    fprintf(stderr, "Error: Para crear ficheros se tiene que usar el comando mi_touch.\n");
-    mi_signalSem();
-    exit(-1);
+        fprintf(stderr, "Error: Para crear ficheros se tiene que usar el comando mi_touch.\n");
+        mi_signalSem();
+        exit(-1);
     }    
 
     //Lectura de superbloque para obtener posición de inodo raiz
@@ -303,7 +300,7 @@ int mi_creat(const char *camino, unsigned char permisos) {
     }
 
     posInodoRaiz = SB.posInodoRaiz;
-
+                                                    //debug
     result = buscar_entrada(camino, &posInodoRaiz, &p_inodo, &p_entrada, 1, permisos);
 
     if (result < 0) {
@@ -614,30 +611,35 @@ int mi_stat(const char *camino, struct STAT *p_stat) {
         + (-1): Error
 */
 int mi_touch(const char *camino, unsigned char permisos) {
-
+    mi_waitSem();
     //Declaraciones
     struct superbloque SB;
     int result;
     unsigned int posInodoRaiz = 0, p_inodo, p_entrada;
    
-    if (camino [strlen(camino) - 1] == '/'){    
-    fprintf(stderr, "Error: Para crear directorios se tiene que usar el comando mi_mkdir.\n");
-    exit(-1);
+    if (camino [strlen(camino) - 1] == '/'){
+        mi_signalSem();
+        fprintf(stderr, "Error: Para crear directorios se tiene que usar el comando mi_mkdir.\n");
+        exit(-1);
     }    
 
     //Lectura de superbloque para obtener posición de inodo raiz
     if(bread(posSB, &SB) == -1) {
+        mi_signalSem();
         fprintf(stderr, "Error en lectura de superbloque. "
         "Función -> mi_creat()\n");
     }
 
     posInodoRaiz = SB.posInodoRaiz;
-
+    
     result = buscar_entrada(camino, &posInodoRaiz, &p_inodo, &p_entrada, 1, permisos);
 
     if (result < 0) {
+        mi_signalSem();
         return result; 
     }
+
+    mi_signalSem();
     return 0;
 }
 
@@ -725,7 +727,6 @@ int control_errores_buscar_entrada(int nerror, char *buffer) {
         + <0: Algún error ocurrido. 
 */
 int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nbytes) {
-
     //Declaraciones. 
     int bytesleidos;
     unsigned int p_inodo_dir = 0;
@@ -782,8 +783,7 @@ int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nby
         + Número de bytes escritos. 
         + <0: Algún error ocurrido. 
 */
-int mi_write (const char *camino, const void *buf, unsigned int offset, unsigned int nbytes) {
-
+int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned int nbytes) {
     //Declaraciones.
     int bytesEscritos;    
     unsigned int p_inodo_dir = 0;

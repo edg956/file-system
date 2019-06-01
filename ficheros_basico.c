@@ -1218,6 +1218,13 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
             if (nRangoBL == 0){     //es un puntero directo
                 inodo.punterosDirectos[nblog] = 0;
                 salvar_inodo = 1;
+
+                if (liberar_bloque(ptr) < 0) {
+                    perror("Error: liberar_bloque ha fallado. Función -> "
+                    "liberar_bloques_inodo()");
+                    return -1;
+                }
+
             } else {
                 while (nivel_punteros < nRangoBL){
                     indice = indices[nivel_punteros];
@@ -1244,7 +1251,6 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
                             return -1;
                         }
 
-
                     } else {
                         //escribimos en el dispositivo el bloque de punteros 
                         //modificado
@@ -1257,12 +1263,6 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
                         nivel_punteros = nRangoBL;
                     }
                 }
-            }
-
-            if (liberar_bloque(ptr) < 0) {
-                perror("Error: liberar_bloque ha fallado. Función -> "
-                "liberar_bloques_inodo()");
-                return -1;
             }
 
             liberados++;
