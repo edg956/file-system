@@ -136,15 +136,22 @@ int main(int argc, char **argv) {
 
         mi_stat(dirsimulacion, &stat);
 
+        char str1[26], str2[26], str3[26], str4[26];
+
+        asctime_r(localtime(&info.PrimeraEscritura.fecha), str1);
+        asctime_r(localtime(&info.UltimaEscritura.fecha), str2);
+        asctime_r(localtime(&info.MenorPosicion.fecha), str3);
+        asctime_r(localtime(&info.MayorPosicion.fecha), str4);
+
         //Añadir información del struct info para imprimirla por pantalla. 
         sprintf(buffEscritura, "PID: %d\nNúmero de escrituras:\t%d\n"
         "Primera escritura:\t%d\t%d\t%sÚltima escritura:\t%d\t%d\t%s"
         "Menor posición:\t\t%d\t%d\t%sMayor posición:\t\t%d\t%d\t%s\n", 
         info.pid, info.nEscrituras, info.PrimeraEscritura.nEscritura, 
-        info.PrimeraEscritura.nRegistro, asctime(localtime(&info.PrimeraEscritura.fecha)), info.UltimaEscritura.nEscritura, 
-        info.UltimaEscritura.nRegistro, asctime(localtime(&info.UltimaEscritura.fecha)), info.MenorPosicion.nEscritura, 
-        info.MenorPosicion.nRegistro, asctime(localtime(&info.MenorPosicion.fecha)), info.MayorPosicion.nEscritura, 
-        info.MayorPosicion.nRegistro, asctime(localtime(&info.MayorPosicion.fecha)));
+        info.PrimeraEscritura.nRegistro, str1, info.UltimaEscritura.nEscritura, 
+        info.UltimaEscritura.nRegistro, str2, info.MenorPosicion.nEscritura, 
+        info.MenorPosicion.nRegistro, str3, info.MayorPosicion.nEscritura, 
+        info.MayorPosicion.nRegistro, str4);
 
         //Escribir el informe.txt
         if (mi_write(dirsimulacion, buffEscritura, stat.tamEnBytesLog, sizeof(buffEscritura))==-1) {
@@ -154,6 +161,7 @@ int main(int argc, char **argv) {
 
         //Reinciar buffEscritura.
         memset(buffEscritura, 0, sizeof(buffEscritura));
+        memset(buffRegistros, 0, sizeof(buffRegistros));
         offset = 0;
     }
 
