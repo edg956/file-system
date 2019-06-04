@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
     struct REGISTRO buffRegistros[cant_registros_buffer_escrituras];
     struct INFORMACION info;
     //int boolean = 0;
-    char buffEscritura[1024];
+    char buffEscritura[1024], str1[26], str2[26], str3[26], str4[26]; //Buffers
     int j;
 
     //Comprobar el número de argumentos. 
@@ -136,8 +136,7 @@ int main(int argc, char **argv) {
 
         mi_stat(dirsimulacion, &stat);
 
-        char str1[26], str2[26], str3[26], str4[26];
-
+        //Preparar strings de fecas para buffer de escritura
         asctime_r(localtime(&info.PrimeraEscritura.fecha), str1);
         asctime_r(localtime(&info.UltimaEscritura.fecha), str2);
         asctime_r(localtime(&info.MenorPosicion.fecha), str3);
