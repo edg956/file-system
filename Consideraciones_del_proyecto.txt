@@ -1,0 +1,23 @@
+1. ¿Hay que tratar los errores de las funciones tipo memcpy? Habría que revisarlo. 
+
+2. Si se intenta leer un inodo sin los permisos adecuados, ¿Hay que devolver -1 de la función que lo intenta leer con el correspondiente mensaje de perror, o hay que romper el programa con un exit(-1)?
+
+3. Deberíamos actualizar todos los comentarios de las funciones desde nivel 1 hasta nivel 7 una vez este todo funcionando. 
+
+4. Definición de estructura inodo (Consultar solución voluntaria para el padding en el Nivel 2).
+
+5. Poner en documentación que hemos implementado la funciòn opcional del nivel 9
+
+6. implementadas las mejoras de la cache de lectura y escritura del nivel 10 
+
+7. mi_escribir dice que ha escrito cuando se le pasa un fichero que no existe. 
+
+8. Formatear salida mi_ls
+
+9. Añadir parte opcional mi_ls (listar un fichero), colores diferentes para directorios y ficheros y parámetro para el formato extendido. 
+
+10. [mirmdir.c] Borrado de directorios con contenido.
+
+11. mi_cp
+
+12. Tenemos una mejora en verificación en el read.

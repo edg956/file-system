@@ -12,14 +12,18 @@
 
 #define BLOCKSIZE 1024 // bytes
 #define INODOSIZE 128  // bytes
-#define NUMINPRBLQ BLOCKSIZE / INODOSIZE    //Nº de inodos por bloque
-#define posSB 0        //el superbloque se escribe en el primer bloque de nuestro FS
+#define NUMINPRBLQ (BLOCKSIZE / INODOSIZE)    //Nº de inodos por bloque
+#define posSB 0 //el superbloque se escribe en el primer bloque de nuestro FS
 
 #define NPUNTEROS (BLOCKSIZE / sizeof(unsigned int))
 #define DIRECTOS 12
 #define INDIRECTOS0 (NPUNTEROS + DIRECTOS)
 #define INDIRECTOS1 (NPUNTEROS * NPUNTEROS + INDIRECTOS0)
 #define INDIRECTOS2 (NPUNTEROS * NPUNTEROS * NPUNTEROS + INDIRECTOS1)
+
+#define T_INODO_LIBRE 'l'
+#define T_INODO_DIRECTORIO 'd'
+#define T_INODO_FICHERO 'f'
 
 struct superbloque{
 	unsigned int posPrimerBloqueMB; //Posición del primer bloque del mapa de bits 
@@ -38,9 +42,9 @@ struct superbloque{
 };
 
 /*
-    Definición de estructura inodo (Consultar solución voluntaria para el padding en el Nivel 2).
+    Definición de estructura inodo.
 */
-struct inodo {     // comprobar que ocupa 128 bytes haciendo un sizeof(inodo)!!!
+struct inodo { 
    char tipo;     // Tipo ('l':libre, 'd':directorio o 'f':fichero)
    char permisos; // Permisos (lectura y/o escritura y/o ejecución)
    char reservado_alineacion1[6];
@@ -75,3 +79,7 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos);
 int obtener_nrangoBL(struct inodo inodo, unsigned int nblogico, unsigned int *ptr);
 int obtener_indice(int nblogico, int nivel_punteros); 
 int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, char reservar);
+
+/*FUNCIONES NIVEL 5*/
+int liberar_inodo(unsigned int ninodo);
+int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico);

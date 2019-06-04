@@ -41,12 +41,12 @@ int main(int argc, char **argv) {
     //Comprobar si se ha realizado la llamada correctamente. 
     if ((argv[1]==NULL)||(argv[2]==NULL)) {
 
-        perror("ERROR: La ejecución del programa no se ha realizado correctamente.\n");
-        perror("Requisitos para la ejecución del programa: \n");
-        perror("Primer parámetro -> nombre_del_dispositivo.\n");
-        perror("Segundo parámetro -> número_de_bloques.\n"); 
-        perror("Ejemplo: \n");
-        perror("./mi_mkfs nombre_del_dispositivo número_de_bloques\n");
+        fprintf(stderr, "ERROR: La ejecución del programa no se ha realizado correctamente.\n");
+        fprintf(stderr, "Requisitos para la ejecución del programa: \n");
+        fprintf(stderr, "Primer parámetro -> nombre_del_dispositivo.\n");
+        fprintf(stderr, "Segundo parámetro -> número_de_bloques.\n");
+        fprintf(stderr, "\nEjemplo: \n");
+        fprintf(stderr, "./mi_mkfs nombre_del_dispositivo número_de_bloques\n");
         exit(-1);
     }
 
