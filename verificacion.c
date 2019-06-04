@@ -70,6 +70,7 @@ int main(int argc, char **argv) {
     for (int i=0; i<nentradas; i++) {
         
         info.nEscrituras = 0;
+
         //Leer entrada del directorio. 
         auxBuff = strchr(buffentradas[i].nombre, '_');
 
@@ -84,7 +85,6 @@ int main(int argc, char **argv) {
 
         /*Recorrer secuencialmente el fichero prueba.dat utilizando un buffer 
         de N registros de escrituras*/
-
         while (mi_read(dirsimulacion, buffRegistros, offset, sizeof(buffRegistros)) > 0) { 
 
             for (j = 0; j < sizeof(buffRegistros)/sizeof(struct REGISTRO) && info.nEscrituras < OP_ESCR; j++) {
@@ -122,6 +122,7 @@ int main(int argc, char **argv) {
                     info.MayorPosicion = buffRegistros[j];
                 }
             }
+       //printf("PID: %d\n %s\n%s\n%s\n%s\n", info.pid, asctime(localtime(&info.PrimeraEscritura.fecha)), asctime(localtime(&info.UltimaEscritura.fecha)), asctime(localtime(&info.MenorPosicion.fecha)), asctime(localtime(&info.MayorPosicion.fecha)));
 
             //Limpiar buffer
             memset(buffRegistros, 0, sizeof(buffRegistros));

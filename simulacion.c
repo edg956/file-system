@@ -15,8 +15,6 @@ int main(int argc, char ** argv) {
     char ruta_aux[128];
     int i;
 
-
-
     //Comprobar el número de argumentos. 
     if (argc != 2) {
         fprintf(stderr, "Error: Sintaxis: ./nombre_de_programa <disco>\n");
@@ -99,6 +97,7 @@ int main(int argc, char ** argv) {
                 //Inicializar el registro. 
                 registro.fecha = time(NULL);
                 registro.pid = getpid();
+
                 //printf("PID: %d\n", registro.pid);
                 registro.nEscritura = i + 1;
                 registro.nRegistro = rand()%REGMAX;

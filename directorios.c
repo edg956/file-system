@@ -410,6 +410,7 @@ int mi_dir(const char *camino, char *buffer) {
     result = 0; //Contador de entradas
     //Recorrido a buffer de entradas
     while (result < nentradas && index < limit) {
+
         //Leer información sobre el inodo
         if (mi_stat_f(entradas[index].ninodo, &s_aux) == -1) {
             //Concatenar únicamente nombre de entrada

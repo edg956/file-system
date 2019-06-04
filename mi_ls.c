@@ -9,11 +9,11 @@
 
 int main(int argc, char **argv) {
 
-    char buffer[BLOCKSIZE];
     char buffer_aux[AUX_BUF_SIZE];
     int cont = 0;
     int cont2 = 0;
     char errbuff[BLOCKSIZE]; //Buffer de errores. 
+    struct STAT stat; 
 
     //Comprobación de parámetros enviados al programa. 
     if (argc != 3) {
@@ -27,9 +27,18 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
+    //Comprobar tamaño del directorio para definir el tamaño del buffer 
+    //para mi_dir. 
+    if (mi_stat(argv[2], &stat)==-1) {
+        fprintf(stderr, "Error: mi_ls -> El stat no se ha podido realizar\n");        
+    }
+
+    //Declaración del buffer. 
+    char buffer[stat.tamEnBytesLog];
+
     //Limpiar buffers
-    memset(buffer, 0, BLOCKSIZE);
-    memset(buffer_aux, 0, BLOCKSIZE);
+    memset(buffer, 0, sizeof(buffer));
+    memset(buffer_aux, 0, sizeof(buffer_aux));
 
     //Inicialización del buffer de errores.
     memset(errbuff, 0, sizeof(errbuff));
