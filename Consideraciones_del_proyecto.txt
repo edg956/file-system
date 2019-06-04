@@ -19,3 +19,5 @@
 10. [mirmdir.c] Borrado de directorios con contenido.
 
 11. mi_cp
+
+12. Tenemos una mejora en verificación en el read.
