@@ -1166,16 +1166,19 @@ int liberar_bloques_inodo(unsigned int ninodo, unsigned int nblogico){
         return -1;
     }
 
-    //Obtener el útlimo bloque lógico del inodo
+    //Inodo vacío
+    if (inodo.tamEnBytesLog == 0) return 0;
+
+    //Obtener el último bloque lógico del inodo
     if (inodo.tamEnBytesLog % BLOCKSIZE == 0) {
         ultimoBL = (inodo.tamEnBytesLog / BLOCKSIZE)-1;
+        
+        //Verificar que ultimoBL != -1
+        if (ultimoBL == -1) ultimoBL = 0;
     } else {
         ultimoBL = inodo.tamEnBytesLog / BLOCKSIZE;
     }
-
-    //Necesario para test de nivel 5 donde tamEnBytesLog == 0
-    if (ultimoBL == 0) ultimoBL = INDIRECTOS2-1;      
-
+  
     //Preparación de buffer auxiliar para comparar con bloques
     unsigned char auxbuf[BLOCKSIZE];
     memset(&auxbuf, 0,BLOCKSIZE);

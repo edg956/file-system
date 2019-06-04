@@ -61,7 +61,6 @@ int main(int argc, char **argv) {
     //MEJORA
     //Lectura de todas las entradas entes de entrar al bucle para almacenarlas
     //en un buffer. 
-    
     if (mi_read(argv[2], buffentradas, 0, stat.tamEnBytesLog)==-1) {
         fprintf(stderr, "Error: No se han podido leer las entradas.\n");
         exit(-1);
@@ -161,7 +160,6 @@ int main(int argc, char **argv) {
 
         //Reinciar buffEscritura.
         memset(buffEscritura, 0, sizeof(buffEscritura));
-        memset(buffRegistros, 0, sizeof(buffRegistros));
         offset = 0;
     }
 
