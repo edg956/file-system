@@ -21,3 +21,9 @@
 11. mi_cp
 
 12. Tenemos una mejora en verificación en el read.
+
+13. IMPORTANTE: Aumentar cantidad de cachés de directorios en mi_read y mi_write
+
+14. IMPORTANTE: Agregar comandos adicionales como cp, cp_r, mv, rn, rm_r
+
+15. IMPORTANTE: Precisión en microsegundos en la ejecución de verificacion y simulacion
