@@ -1099,3 +1099,93 @@ int mi_unlink(const char *camino) {
     mi_signalSem();
     return 0;
 }
+
+/*----------------------------FUNCIONES DE MEJORAS----------------------------*/
+
+/*
+    Descripción: 
+        Copia el contenido de la ruta src en el directorio dst
+
+    Funciones a las que llama:
+        +
+        
+    Funciones desde donde es llamado:
+
+    Parámetros de entrada:
+        + const char *src: ruta de directorio/fichero a copiar
+        + const char *dest: ruta de directorio destino
+
+    Parámetros de salida:
+        + 0: Ejecución correcta
+        + (-1): Error
+*/
+int mi_cp(const char *src, const char *dest) {
+    struct inodo i_src;
+    struct inodo i_dest;
+    struct inodo i_srccp;
+    struct entrada entrada_src;
+    unsigned int ninodo_scr, p_inodo_dir = 0, p_inodosrc, p_inododest, p_entrada;
+    unsigned char ruta_copia[BLOCKSIZE];
+
+    //Inicializar ruta a 0's
+    memset(ruta_copia, 0, BLOCKSIZE);
+
+    //Obtener inodo de ruta de destino y comprobar que sea un directorio
+    if (buscar_entrada(dest, &p_inodo_dir, &p_inododest, &p_entrada, 0, 6)== -1) {
+        fprintf(stderr, "Error: no se ha podido conseguir la entrada destino. "
+        "Función -> mi_cp()\n");
+        return -1;
+    }
+
+    if (leer_inodo(p_inododest, &i_dest) == -1) {
+        fprintf(stderr, "Error: no se ha podido leer el inodo correspondiente "
+        "al directorio destino. Función -> mi_cp()\n");
+        return -1;
+    }
+
+    //Comprobar que sea directorio
+    if (i_dest.tipo != T_INODO_DIRECTORIO) {
+        fprintf(stderr, "Error: no se puede copiar un directorio/fichero a un "
+        "fichero.\n");
+        return -1;
+    }
+
+    //Obtener Nº inodo a copiar
+    p_inodo_dir = 0;
+    if (buscar_entrada(src, &p_inodo_dir, &p_inodosrc, &p_entrada, 0, 6)== -1) {
+        fprintf(stderr, "Error: no se ha podido conseguir la entrada origen. "
+        "Función -> mi_cp()\n");
+        return -1;
+    }
+
+    /*Crear inodo destino dentro del directorio destino*/
+    strcat(ruta_copia, dest);
+    
+    //Obtener nombre de entrada de origen
+    if (mi_read_f(p_inodo_dir, &entrada_src, p_entrada*sizeof(struct entrada),
+         sizeof(struct entrada))==-1) {
+        fprintf(stderr, "Error: no se ha podido leer la entrada correspondiente"
+        " al directorio/fichero origen. Función -> mi_cp()\n");
+        return -1;
+    }
+
+    strcat(ruta_copia, entrada_src.nombre);
+
+    //Crear ruta de la copia
+    p_inodo_dir = 0;
+    if (buscar_entrada(ruta_copia, &p_inodo_dir, &p_inododest, &p_entrada, 1, 6)== -1) {
+        fprintf(stderr, "Error: no se ha podido conseguir la entrada origen. "
+        "Función -> mi_cp()\n");
+        return -1;
+    } 
+
+    //Copiar inodo fuente al inodo destino
+    if (mi_copy_f(p_inodosrc, p_inododest) == -1) {
+        fprintf(stderr, "Error: no se ha podido copiar de la ruta origen al "
+        "destino. Función -> mi_cp()\n");
+        return -1;
+    }
+
+    return 0;
+
+}

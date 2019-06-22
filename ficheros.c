@@ -535,3 +535,71 @@ int mi_truncar_f(unsigned int ninodo, unsigned int nbytes){
     
     return bliberados; 
 }
+
+/*
+    Descripción: 
+    Copia la información del inodo src en el inodo dest
+
+    Funciones a las que llama:
+
+    Parámetros de entrada:
+        + unsigned int ninodo_src
+        + unsigned int ninodo_dest
+
+    Parámetros de salida:
+        + 0: Ejecución correcta
+        + (-1): algún error ocurrido.
+*/
+int mi_copy_f(unsigned int ninodo_src, unsigned int ninodo_dest) {
+    struct inodo src;
+    struct inodo dest;
+    unsigned char buffer[BLOCKSIZE];
+    unsigned int offset = 0;
+    unsigned int nbytes = BLOCKSIZE;
+
+    //Leer inodo origen
+    if (leer_inodo(ninodo_src, &src) == -1) {
+        fprintf(stderr, "Error: No se ha podido leer inodo origen. "
+        "Función -> mi_copy_f()\n");
+        return -1;
+    }
+
+    //Copiar atributos del inodo origen al inodo destino
+    dest.permisos = src.permisos;
+    dest.tipo = src.tipo;
+    dest.mtime = src.mtime;
+    dest.ctime = src.ctime;
+
+    //Escribir inodo
+    if (escribir_inodo(ninodo_dest, dest) == -1) {
+        fprintf(stderr, "Error: no se ha podido escribir el inodo destino "
+        "en disco. Función -> mi_copy_f()\n");
+        return -1;
+    }
+
+    //Inicializar buffer a 0's
+    memset(buffer, 0, BLOCKSIZE);
+
+    //Copiar zona de datos del inodo origen al inodo destino
+    while (offset < src.tamEnBytesLog) {
+        if (BLOCKSIZE + offset > src.tamEnBytesLog) {
+            nbytes = src.tamEnBytesLog - offset;
+        }
+        if (mi_read_f(ninodo_src, buffer, offset, nbytes) == -1) {
+            fprintf(stderr, "Error: imposible leer zona de datos de inodo origen. "
+            "Función -> mi_copy_f()\n");
+            return -1;
+        }
+
+        if (mi_write_f(ninodo_dest, buffer, offset, nbytes) == -1) {
+            fprintf(stderr, "Error: imposible escribir en zona de datos del "
+            "inodo destino. Función -> mi_copy_f()\n");
+            return -1;
+        }
+
+        offset += BLOCKSIZE;
+        memset(buffer, 0, BLOCKSIZE);
+    }
+
+    return 0;
+}
