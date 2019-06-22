@@ -19,6 +19,9 @@ int mi_write (const char *camino, const void *buf, unsigned int offset, unsigned
 int mi_link(const char *camino1, const char *camino2);
 int mi_unlink(const char *camino);
 
+/*FUNCIONES DE MEJORAS*/
+int mi_cp(const char *src, const char *dest);
+
 /*ESTRUCTURAS DE CAPA DE DIRECTORIO*/
 struct entrada {
     char nombre[60];

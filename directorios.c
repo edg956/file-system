@@ -213,6 +213,10 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
                         if(!strcmp(final, "/")) { //resultado esperado == 0
                             ninodo = reservar_inodo(tipo, permisos);
                             entradas[index].ninodo = ninodo; 
+
+                            struct inodo i;
+                            leer_inodo(ninodo, &i);
+                            printf("nlinks: %i\n", i.nlinks);
                         }else{
                             //Cuelgan más directorios o ficheros. 
                              return -6; 
@@ -221,6 +225,9 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
                     }else{
                         //Es un fichero
                         ninodo = reservar_inodo('f', permisos); 
+                        struct inodo i;
+                            leer_inodo(ninodo, &i);
+                            printf("nlinks: %i\n", i.nlinks);
                         if (ninodo == -1) {
                             fprintf(stderr, "Error: No se ha podido reservar el inodo. Función -> buscar_entrada()\n"); 
                         }
@@ -1120,12 +1127,10 @@ int mi_unlink(const char *camino) {
         + (-1): Error
 */
 int mi_cp(const char *src, const char *dest) {
-    struct inodo i_src;
     struct inodo i_dest;
-    struct inodo i_srccp;
     struct entrada entrada_src;
-    unsigned int ninodo_scr, p_inodo_dir = 0, p_inodosrc, p_inododest, p_entrada;
-    unsigned char ruta_copia[BLOCKSIZE];
+    unsigned int p_inodo_dir = 0, p_inodosrc, p_inododest, p_entrada;
+    char ruta_copia[BLOCKSIZE];
 
     //Inicializar ruta a 0's
     memset(ruta_copia, 0, BLOCKSIZE);
@@ -1179,12 +1184,19 @@ int mi_cp(const char *src, const char *dest) {
         return -1;
     } 
 
+    struct inodo i;
+    leer_inodo(p_inododest, &i);
+    printf("Nlinks cp: %i\n", i.nlinks);
+
     //Copiar inodo fuente al inodo destino
     if (mi_copy_f(p_inodosrc, p_inododest) == -1) {
         fprintf(stderr, "Error: no se ha podido copiar de la ruta origen al "
         "destino. Función -> mi_cp()\n");
         return -1;
     }
+
+    leer_inodo(p_inododest, &i);
+    printf("Nlinks cp: %i\n", i.nlinks);
 
     return 0;
 

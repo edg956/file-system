@@ -564,6 +564,13 @@ int mi_copy_f(unsigned int ninodo_src, unsigned int ninodo_dest) {
         return -1;
     }
 
+    //Leer inodo destino
+    if (leer_inodo(ninodo_dest, &dest) == -1) {
+        fprintf(stderr, "Error: no se ha podido leer el inodo destino. "
+        "Función -> mi_copy_f()\n");
+        return -1;
+    }
+
     //Copiar atributos del inodo origen al inodo destino
     dest.permisos = src.permisos;
     dest.tipo = src.tipo;
