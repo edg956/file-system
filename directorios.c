@@ -212,11 +212,12 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
                     if (tipo == 'd') {
                         if(!strcmp(final, "/")) { //resultado esperado == 0
                             ninodo = reservar_inodo(tipo, permisos);
+                            if (ninodo == -1) {
+                                fprintf(stderr, "Error: No se ha podido "
+                                "reservar el inodo. Función -> "
+                                "buscar_entrada()\n"); 
+                            }
                             entradas[index].ninodo = ninodo; 
-
-                            struct inodo i;
-                            leer_inodo(ninodo, &i);
-                            printf("nlinks: %i\n", i.nlinks);
                         }else{
                             //Cuelgan más directorios o ficheros. 
                              return -6; 
@@ -225,17 +226,16 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
                     }else{
                         //Es un fichero
                         ninodo = reservar_inodo('f', permisos); 
-                        struct inodo i;
-                            leer_inodo(ninodo, &i);
-                            printf("nlinks: %i\n", i.nlinks);
                         if (ninodo == -1) {
-                            fprintf(stderr, "Error: No se ha podido reservar el inodo. Función -> buscar_entrada()\n"); 
+                            fprintf(stderr, "Error: No se ha podido reservar el"
+                            " inodo. Función -> buscar_entrada()\n"); 
                         }
 
                         entradas[index].ninodo = ninodo; 
                     }
 
-                    if (mi_write_f(*p_inodo_dir, &entradas[index], offset, sizeof(struct entrada))==-1) {
+                    if (mi_write_f(*p_inodo_dir, &entradas[index], offset, 
+                        sizeof(struct entrada))==-1) {
                         
                         if (entradas[index].ninodo!=-1) {
                             if (liberar_inodo(entradas[index].ninodo)==-1) {
@@ -261,7 +261,8 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     }else{
 
         *p_inodo_dir = entradas[index].ninodo; 
-        return buscar_entrada(final, p_inodo_dir, p_inodo, p_entrada, reservar, permisos);
+        return buscar_entrada(final, p_inodo_dir, p_inodo, p_entrada, reservar, 
+            permisos);
     
     }
 }
@@ -1127,7 +1128,7 @@ int mi_unlink(const char *camino) {
         + (-1): Error
 */
 int mi_cp(const char *src, const char *dest) {
-    struct inodo i_dest;
+    struct inodo i_dest, i_src;
     struct entrada entrada_src;
     unsigned int p_inodo_dir = 0, p_inodosrc, p_inododest, p_entrada;
     char ruta_copia[BLOCKSIZE];
@@ -1163,6 +1164,18 @@ int mi_cp(const char *src, const char *dest) {
         return -1;
     }
 
+    //Comprobar que fuente sea un fichero
+    if (leer_inodo(p_inodosrc, &i_src) == -1) {
+        fprintf(stderr, "Error: no se ha podido leer el inodo fuente. "
+        "Función -> mi_cp()\n");
+        return -1;
+    }
+
+    if (i_src.tipo != T_INODO_FICHERO) {
+        fprintf(stderr, "Error: sólo se puede copiar ficheros con esta función."
+        " Función -> mi_cp()\n");
+        return -1;
+    }
     /*Crear inodo destino dentro del directorio destino*/
     strcat(ruta_copia, dest);
     
@@ -1184,10 +1197,6 @@ int mi_cp(const char *src, const char *dest) {
         return -1;
     } 
 
-    struct inodo i;
-    leer_inodo(p_inododest, &i);
-    printf("Nlinks cp: %i\n", i.nlinks);
-
     //Copiar inodo fuente al inodo destino
     if (mi_copy_f(p_inodosrc, p_inododest) == -1) {
         fprintf(stderr, "Error: no se ha podido copiar de la ruta origen al "
@@ -1195,9 +1204,105 @@ int mi_cp(const char *src, const char *dest) {
         return -1;
     }
 
-    leer_inodo(p_inododest, &i);
-    printf("Nlinks cp: %i\n", i.nlinks);
-
     return 0;
 
+}
+
+/*
+    Descripción: 
+        Cambia el nombre de la entrada de la ruta src por el nombre indicado
+        en dest
+
+    Funciones a las que llama:
+        +
+        
+    Funciones desde donde es llamado:
+
+    Parámetros de entrada:
+        + const char *src: ruta de directorio/fichero a cambiar nombre
+        + const char *dest: nueva ruta
+
+    Parámetros de salida:
+        + 0: Ejecución correcta
+        + (-1): Error
+        + (-2): Ruta destino ya existe
+*/
+int mi_rn(const char *src, const char *dest) {
+    struct entrada entrada;
+    struct inodo inodo_src;
+    unsigned int p_inodosrc_dir = 0, p_inododest_dir = 0, p_inodo, p_entrada;
+    size_t index, i = 0;
+
+    //Comprobar que ruta dest no exista
+    if (buscar_entrada(dest, &p_inododest_dir, &p_inodo, &p_entrada, 0, 6) == -1) {
+        return -2;
+    }
+
+    //Buscar inodo del directorio padre a la ruta src
+    if (buscar_entrada(src, &p_inodosrc_dir, &p_inodo, &p_entrada, 0, 6) == -1) {
+        fprintf(stderr, "Error: no se ha podido conseguir la entrada correspon"
+        "diente a la ruta fuente. Función -> mi_rn()\n");
+        return -1;
+    }
+
+    //Comprobar que ambas nuevas rutas esten contenidos en el mismo directorio
+    //padre
+    if (p_inodosrc_dir != p_inododest_dir) {
+        fprintf(stderr, "Error: las rutas no se corresponden con el mismo "
+        "directorio padre. Función -> mi_rn()\n");
+        return -1;
+    }
+
+    //Leer el inodo del directorio padre
+    if (mi_read_f(p_inodosrc_dir, &entrada, p_entrada*sizeof(struct entrada), 
+        sizeof(struct entrada)) == -1) {
+        fprintf(stderr, "Error: no se ha podido leer el directorio padre de la"
+        " entrada correspondiente a la fuente. Función -> mi_rn()\n");
+        return -1;
+    }
+
+    //Obtención del nombre en dest
+    index = strlen(dest) - 1;
+    if (dest[index] == '/') {
+        index--;
+    }
+    while (dest[index] != '/') {
+        index--;
+    }
+    index++;
+
+    //Copiar nueva ruta a nombre de entrada
+    while (i < sizeof(entrada.nombre)/sizeof(entrada.nombre[0]) && 
+        dest[index] != '/' && dest[index] != '\0') {
+        entrada.nombre[i] = dest[index];
+        index++;
+        i++;
+    }
+
+    entrada.nombre[i] = '\0';
+
+    //Actualizar entrada en inodo padre
+    if (mi_write_f(p_inodosrc_dir, &entrada, p_entrada*sizeof(struct entrada),
+        sizeof(struct entrada)) == -1) {
+            fprintf(stderr, "Error: no se ha podido actualizar la entrada en el"
+            " directorio padre. Función -> mi_rn()\n");
+            return -1;
+    }
+
+    //Actualizar ctime del inodo
+    if (leer_inodo(p_inodo, &inodo_src) == -1) {
+        fprintf(stderr, "Error: no se ha podido leer el inodo fuente. "
+        "Función -> mi_rn()\n");
+        return -1;
+    }
+
+    inodo_src.ctime = time(NULL);
+
+    if (escribir_inodo(p_inodo, inodo_src) == -1) {
+        fprintf(stderr, "Error: no se ha podido escribir el inodo actualizado. "
+        "Función -> mi_rn()\n");
+        return -1;
+    }
+
+    return 0;
 }

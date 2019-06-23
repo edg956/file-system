@@ -21,6 +21,7 @@ int mi_unlink(const char *camino);
 
 /*FUNCIONES DE MEJORAS*/
 int mi_cp(const char *src, const char *dest);
+int mi_rn(const char *src, const char *dest);
 
 /*ESTRUCTURAS DE CAPA DE DIRECTORIO*/
 struct entrada {

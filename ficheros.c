@@ -574,8 +574,6 @@ int mi_copy_f(unsigned int ninodo_src, unsigned int ninodo_dest) {
     //Copiar atributos del inodo origen al inodo destino
     dest.permisos = src.permisos;
     dest.tipo = src.tipo;
-    dest.mtime = src.mtime;
-    dest.ctime = src.ctime;
 
     //Escribir inodo
     if (escribir_inodo(ninodo_dest, dest) == -1) {
