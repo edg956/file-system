@@ -1,5 +1,5 @@
 /*
-    PROGRAMA PARA COPIAR UN FICHERO/DIRECTORIO DENTRO DE OTRO DIRECTORIO 
+    PROGRAMA PARA CAMBIAR DE NOMBRE A UN FICHERO/DIRECTORIO 
 */
 
 #include "bloques.h"
@@ -7,6 +7,10 @@
 #include <string.h>
 
 int main(int argc, char **argv) {
+
+    char errbuff[BLOCKSIZE]; //Buffer de errores.
+    memset(errbuff, 0, sizeof(errbuff));
+    int nerror;
 
     //Comprobación de parámetros enviados al programa. 
     if (argc != 4) {
@@ -20,8 +24,10 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    //Llamada a la función mi_unlink. 
-    if (mi_rn(argv[2], argv[3]) < 0) {
+    //Llamada a la función mi_rn. 
+    if ((nerror = mi_rn(argv[2], argv[3])) < 0) {
+        control_errores_buscar_entrada(nerror, errbuff);
+        fprintf(stderr, "%s", errbuff);
         exit(-1);
     }
 

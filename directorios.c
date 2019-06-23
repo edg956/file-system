@@ -1132,15 +1132,15 @@ int mi_cp(const char *src, const char *dest) {
     struct entrada entrada_src;
     unsigned int p_inodo_dir = 0, p_inodosrc, p_inododest, p_entrada;
     char ruta_copia[BLOCKSIZE];
+    int nerror;
 
     //Inicializar ruta a 0's
     memset(ruta_copia, 0, BLOCKSIZE);
 
     //Obtener inodo de ruta de destino y comprobar que sea un directorio
-    if (buscar_entrada(dest, &p_inodo_dir, &p_inododest, &p_entrada, 0, 6)== -1) {
-        fprintf(stderr, "Error: no se ha podido conseguir la entrada destino. "
-        "Función -> mi_cp()\n");
-        return -1;
+    if ((nerror = buscar_entrada(dest, &p_inodo_dir, &p_inododest, 
+        &p_entrada, 0, 6)) < 0) {
+        return nerror;
     }
 
     if (leer_inodo(p_inododest, &i_dest) == -1) {
@@ -1158,10 +1158,9 @@ int mi_cp(const char *src, const char *dest) {
 
     //Obtener Nº inodo a copiar
     p_inodo_dir = 0;
-    if (buscar_entrada(src, &p_inodo_dir, &p_inodosrc, &p_entrada, 0, 6)== -1) {
-        fprintf(stderr, "Error: no se ha podido conseguir la entrada origen. "
-        "Función -> mi_cp()\n");
-        return -1;
+    if ((nerror = buscar_entrada(src, &p_inodo_dir, &p_inodosrc, 
+        &p_entrada, 0, 6)) < 0) {
+        return nerror;
     }
 
     //Comprobar que fuente sea un fichero
@@ -1191,10 +1190,10 @@ int mi_cp(const char *src, const char *dest) {
 
     //Crear ruta de la copia
     p_inodo_dir = 0;
-    if (buscar_entrada(ruta_copia, &p_inodo_dir, &p_inododest, &p_entrada, 1, 6)== -1) {
-        fprintf(stderr, "Error: no se ha podido conseguir la entrada origen. "
-        "Función -> mi_cp()\n");
-        return -1;
+    if ((nerror = buscar_entrada(ruta_copia, &p_inodo_dir, &p_inododest, 
+        &p_entrada, 1, 6)) < 0) {
+
+        return nerror;
     } 
 
     //Copiar inodo fuente al inodo destino
@@ -1232,17 +1231,18 @@ int mi_rn(const char *src, const char *dest) {
     struct inodo inodo_src;
     unsigned int p_inodosrc_dir = 0, p_inododest_dir = 0, p_inodo, p_entrada;
     size_t index, i = 0;
+    int nerror;
 
     //Comprobar que ruta dest no exista
-    if (buscar_entrada(dest, &p_inododest_dir, &p_inodo, &p_entrada, 0, 6) == -1) {
-        return -2;
+    if ((nerror = buscar_entrada(dest, &p_inododest_dir, &p_inodo, 
+        &p_entrada, 0, 6)) != -4 && nerror < 0) { //-4 error si ruta no existe
+        return nerror;
     }
 
     //Buscar inodo del directorio padre a la ruta src
-    if (buscar_entrada(src, &p_inodosrc_dir, &p_inodo, &p_entrada, 0, 6) == -1) {
-        fprintf(stderr, "Error: no se ha podido conseguir la entrada correspon"
-        "diente a la ruta fuente. Función -> mi_rn()\n");
-        return -1;
+    if ((nerror = buscar_entrada(src, &p_inodosrc_dir, &p_inodo, 
+        &p_entrada, 0, 6)) < 0) {
+        return nerror;
     }
 
     //Comprobar que ambas nuevas rutas esten contenidos en el mismo directorio
@@ -1303,6 +1303,30 @@ int mi_rn(const char *src, const char *dest) {
         "Función -> mi_rn()\n");
         return -1;
     }
+
+    return 0;
+}
+
+/*
+    Descripción: 
+        Mueve el directorio/fichero src en el directorio apuntado por dest
+
+    Funciones a las que llama:
+        +
+        
+    Funciones desde donde es llamado:
+
+    Parámetros de entrada:
+        + const char *src: ruta de directorio/fichero a cambiar nombre
+        + const char *dest: nueva ruta
+
+    Parámetros de salida:
+        + 0: Ejecución correcta
+        + (-1): Error
+        + (-2): Ruta destino ya existe
+*/
+int mi_mv(const char *src, const char *dest) {
+    
 
     return 0;
 }
