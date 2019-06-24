@@ -1128,6 +1128,9 @@ int mi_unlink(const char *camino) {
         + (-1): Error
 */
 int mi_cp(const char *src, const char *dest) {
+    //Mutex lock
+    mi_waitSem();
+
     struct inodo i_dest, i_src;
     struct entrada entrada_src;
     unsigned int p_inodo_dir = 0, p_inodosrc, p_inododest, p_entrada;
@@ -1140,12 +1143,14 @@ int mi_cp(const char *src, const char *dest) {
     //Obtener inodo de ruta de destino y comprobar que sea un directorio
     if ((nerror = buscar_entrada(dest, &p_inodo_dir, &p_inododest, 
         &p_entrada, 0, 6)) < 0) {
+        mi_signalSem(); //mutex unlock
         return nerror;
     }
 
     if (leer_inodo(p_inododest, &i_dest) == -1) {
         fprintf(stderr, "Error: no se ha podido leer el inodo correspondiente "
         "al directorio destino. Función -> mi_cp()\n");
+        mi_signalSem(); //mutex unlock
         return -1;
     }
 
@@ -1153,6 +1158,7 @@ int mi_cp(const char *src, const char *dest) {
     if (i_dest.tipo != T_INODO_DIRECTORIO) {
         fprintf(stderr, "Error: no se puede copiar un directorio/fichero a un "
         "fichero.\n");
+        mi_signalSem(); //mutex unlock
         return -1;
     }
 
@@ -1160,6 +1166,7 @@ int mi_cp(const char *src, const char *dest) {
     p_inodo_dir = 0;
     if ((nerror = buscar_entrada(src, &p_inodo_dir, &p_inodosrc, 
         &p_entrada, 0, 6)) < 0) {
+        mi_signalSem(); //mutex unlock
         return nerror;
     }
 
@@ -1167,12 +1174,14 @@ int mi_cp(const char *src, const char *dest) {
     if (leer_inodo(p_inodosrc, &i_src) == -1) {
         fprintf(stderr, "Error: no se ha podido leer el inodo fuente. "
         "Función -> mi_cp()\n");
+        mi_signalSem(); //mutex unlock
         return -1;
     }
 
     if (i_src.tipo != T_INODO_FICHERO) {
         fprintf(stderr, "Error: sólo se puede copiar ficheros con esta función."
         " Función -> mi_cp()\n");
+        mi_signalSem(); //mutex unlock
         return -1;
     }
     /*Crear inodo destino dentro del directorio destino*/
@@ -1183,6 +1192,7 @@ int mi_cp(const char *src, const char *dest) {
          sizeof(struct entrada))==-1) {
         fprintf(stderr, "Error: no se ha podido leer la entrada correspondiente"
         " al directorio/fichero origen. Función -> mi_cp()\n");
+        mi_signalSem(); //mutex unlock
         return -1;
     }
 
@@ -1192,7 +1202,7 @@ int mi_cp(const char *src, const char *dest) {
     p_inodo_dir = 0;
     if ((nerror = buscar_entrada(ruta_copia, &p_inodo_dir, &p_inododest, 
         &p_entrada, 1, 6)) < 0) {
-
+        mi_signalSem(); //mutex unlock
         return nerror;
     } 
 
@@ -1200,9 +1210,11 @@ int mi_cp(const char *src, const char *dest) {
     if (mi_copy_f(p_inodosrc, p_inododest) == -1) {
         fprintf(stderr, "Error: no se ha podido copiar de la ruta origen al "
         "destino. Función -> mi_cp()\n");
+        mi_signalSem(); //mutex unlock
         return -1;
     }
 
+    mi_signalSem(); //mutex unlock
     return 0;
 
 }
@@ -1227,6 +1239,8 @@ int mi_cp(const char *src, const char *dest) {
         + (-2): Ruta destino ya existe
 */
 int mi_rn(const char *src, const char *dest) {
+    //Mutex lock
+    mi_waitSem();
     struct entrada entrada;
     struct inodo inodo_src;
     unsigned int p_inodosrc_dir = 0, p_inododest_dir = 0, p_inodo, p_entrada;
@@ -1236,12 +1250,14 @@ int mi_rn(const char *src, const char *dest) {
     //Comprobar que ruta dest no exista
     if ((nerror = buscar_entrada(dest, &p_inododest_dir, &p_inodo, 
         &p_entrada, 0, 6)) != -4 && nerror < 0) { //-4 error si ruta no existe
+        mi_signalSem(); //mutex unlock
         return nerror;
     }
 
     //Buscar inodo del directorio padre a la ruta src
     if ((nerror = buscar_entrada(src, &p_inodosrc_dir, &p_inodo, 
         &p_entrada, 0, 6)) < 0) {
+        mi_signalSem(); //mutex unlock
         return nerror;
     }
 
@@ -1250,6 +1266,7 @@ int mi_rn(const char *src, const char *dest) {
     if (p_inodosrc_dir != p_inododest_dir) {
         fprintf(stderr, "Error: las rutas no se corresponden con el mismo "
         "directorio padre. Función -> mi_rn()\n");
+        mi_signalSem(); //mutex unlock
         return -1;
     }
 
@@ -1258,6 +1275,7 @@ int mi_rn(const char *src, const char *dest) {
         sizeof(struct entrada)) == -1) {
         fprintf(stderr, "Error: no se ha podido leer el directorio padre de la"
         " entrada correspondiente a la fuente. Función -> mi_rn()\n");
+        mi_signalSem(); //mutex unlock
         return -1;
     }
 
@@ -1286,6 +1304,7 @@ int mi_rn(const char *src, const char *dest) {
         sizeof(struct entrada)) == -1) {
             fprintf(stderr, "Error: no se ha podido actualizar la entrada en el"
             " directorio padre. Función -> mi_rn()\n");
+            mi_signalSem(); //mutex unlock
             return -1;
     }
 
@@ -1293,6 +1312,7 @@ int mi_rn(const char *src, const char *dest) {
     if (leer_inodo(p_inodo, &inodo_src) == -1) {
         fprintf(stderr, "Error: no se ha podido leer el inodo fuente. "
         "Función -> mi_rn()\n");
+        mi_signalSem(); //mutex unlock
         return -1;
     }
 
@@ -1301,9 +1321,11 @@ int mi_rn(const char *src, const char *dest) {
     if (escribir_inodo(p_inodo, inodo_src) == -1) {
         fprintf(stderr, "Error: no se ha podido escribir el inodo actualizado. "
         "Función -> mi_rn()\n");
+        mi_signalSem(); //mutex unlock
         return -1;
     }
 
+    mi_signalSem(); //mutex unlock
     return 0;
 }
 
@@ -1326,6 +1348,9 @@ int mi_rn(const char *src, const char *dest) {
         + (-2): Ruta destino ya existe
 */
 int mi_mv(const char *src, const char *dest) {
+    //Mutex lock
+    mi_waitSem();
+
     struct entrada entrada;
     unsigned int p_inodo_dir = 0, p_inododest, p_inodosrc, p_entrada;
     struct inodo i_dest, i_src_dir;
@@ -1334,6 +1359,7 @@ int mi_mv(const char *src, const char *dest) {
     //Obtener directorio destino y verificar que sea un directorio
     if ((nerror = buscar_entrada(dest, &p_inodo_dir, &p_inododest, &p_entrada, 
         0, 6)) < 0) {
+        mi_signalSem(); //mutex unlock
         return nerror;
     }
 
@@ -1341,12 +1367,14 @@ int mi_mv(const char *src, const char *dest) {
     if (leer_inodo(p_inododest, &i_dest) == -1) {
         fprintf(stderr, "Error: no se ha podido leer el inodo del directorio "
         "destino. Función -> mi_mv()\n");
+        mi_signalSem(); //mutex unlock
         return -1;
     }
 
     if (i_dest.tipo != T_INODO_DIRECTORIO) {
         fprintf(stderr, "Error: inodo destino no es de tipo directorio. "
         "Función -> mi_mv()\n");
+        mi_signalSem(); //mutex unlock
         return -1;
     }
 
@@ -1354,6 +1382,7 @@ int mi_mv(const char *src, const char *dest) {
     p_inodo_dir = 0;
     if ((nerror = buscar_entrada(src, &p_inodo_dir, &p_inodosrc, &p_entrada, 
         0, 6)) < 0) {
+        mi_signalSem(); //mutex unlock
         return nerror;
     }
 
@@ -1383,6 +1412,7 @@ int mi_mv(const char *src, const char *dest) {
         sizeof(entrada)) == -1) {
         fprintf(stderr, "Error: no se ha podido escribir entrada en inodo "
             "destino. Función -> mi_mv()\n");
+        mi_signalSem(); //mutex unlock
         return -1;
     }
 
@@ -1391,6 +1421,7 @@ int mi_mv(const char *src, const char *dest) {
     if (leer_inodo(p_inodo_dir, &i_src_dir) == -1) {
         fprintf(stderr, "Error: no se ha podido leer el inodo que contiene la "
         "entrada fuente. Función -> mi_mv()\n");
+        mi_signalSem(); //mutex unlock
         return -1;
     }
     //Obtención de nentradas
@@ -1402,6 +1433,7 @@ int mi_mv(const char *src, const char *dest) {
             entrada)) == -1) {
             fprintf(stderr, "Error: no se ha podido truncar el inodo fuente. "
             "Función -> mi_mv()\n");
+            mi_signalSem(); //mutex unlock
             return -1;
         }
 
@@ -1412,6 +1444,7 @@ int mi_mv(const char *src, const char *dest) {
             sizeof(entrada)) == -1) {
             fprintf(stderr, "Error: no se ha podido del inodo directorio fuente"
             ". Función -> mi_mv()\n");
+            mi_signalSem(); //mutex unlock
             return -1;
         }
 
@@ -1419,6 +1452,7 @@ int mi_mv(const char *src, const char *dest) {
             sizeof(entrada)) == -1) {
             fprintf(stderr, "Error: no se ha podido escribir en directorio "
             "fuente. Función -> mi_mv()\n");
+            mi_signalSem(); //mutex unlock
             return 1;
         }
 
@@ -1426,26 +1460,31 @@ int mi_mv(const char *src, const char *dest) {
         if (mi_truncar_f(p_inodo_dir, i_src_dir.tamEnBytesLog-sizeof(entrada)) == -1) {
             fprintf(stderr, "Error: no se ha podido truncar directorio fuente. "
             "Función -> mi_mv()\n");
+            mi_signalSem(); //mutex unlock
             return -1;
         }
     }
 
+    mi_signalSem(); //mutex unlock
     return 0;
 }
 
 int mi_unlink_r(const char *camino) {
+    //Mutex lock
+    mi_waitSem();
+
     struct entrada buffer_entradas[BLOCKSIZE/sizeof(struct entrada)];
-    char *aux_path;
+    char aux_p = "";
+    char *aux_path = aux_p;
     unsigned int p_inodo_dir = 0, p_inodo, p_entrada;
     struct inodo inodo;
     int nerror;
     int nentradas; //Variables para recorrido de entradas
 
-    aux_path = malloc(1);
-
     //Comprobar que camino inicial sea borrable (caso básico)
     if ((nerror = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 
         0, 6)) < 0) {
+        mi_signalSem(); //mutex unlock
         return nerror;
     }
 
@@ -1453,6 +1492,7 @@ int mi_unlink_r(const char *camino) {
     if (leer_inodo(p_inodo, &inodo) == -1) {
         fprintf(stderr, "Error: no se ha podido leer el inodo a borrar. "
         "Función -> mi_unlink_r()\n");
+        mi_signalSem(); //mutex unlock
         return -1;
     }
 
@@ -1460,9 +1500,11 @@ int mi_unlink_r(const char *camino) {
     if (inodo.tipo == T_INODO_DIRECTORIO) {
         //Borrar directorio vacío
         if (inodo.tamEnBytesLog == 0) {
+            mi_signalSem(); //mutex unlock
             return mi_unlink(camino);
         }
     } else {
+        mi_signalSem(); //mutex unlock
         return mi_unlink(camino);
     }
 
@@ -1478,6 +1520,7 @@ int mi_unlink_r(const char *camino) {
     if (mi_read_f(p_inodo, buffer_entradas, 0, sizeof(buffer_entradas)) == -1) {
         fprintf(stderr, "Error: no se ha podido leer al buffer de entradas. "
         "Función -> mi_unlink_r()\n");
+        mi_signalSem(); //mutex unlock
         return -1;
     }
     //Recorrido a las entradas del inodo
@@ -1501,12 +1544,14 @@ int mi_unlink_r(const char *camino) {
             if (mi_read_f(p_inodo, buffer_entradas, 0, sizeof(buffer_entradas)) == -1) {
                 fprintf(stderr, "Error: no se ha podido leer al buffer de entradas. "
                 "Función -> mi_unlink_r()\n");
+                mi_signalSem(); //mutex unlock
                 return -1;
             }
             i=-1;
         }
     }
 
+    mi_signalSem(); //mutex unlock
     //Una vez eliminadas todas las entradas, eliminar directorio vacío
     return mi_unlink(camino);
 
