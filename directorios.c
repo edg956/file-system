@@ -1278,7 +1278,7 @@ int mi_rn(const char *src, const char *dest) {
         index++;
         i++;
     }
-
+    if (i == sizeof(entrada.nombre)/sizeof(entrada.nombre[0])) i--;
     entrada.nombre[i] = '\0';
 
     //Actualizar entrada en inodo padre
@@ -1326,7 +1326,109 @@ int mi_rn(const char *src, const char *dest) {
         + (-2): Ruta destino ya existe
 */
 int mi_mv(const char *src, const char *dest) {
-    
+    struct entrada entrada;
+    unsigned int p_inodo_dir = 0, p_inododest, p_inodosrc, p_entrada;
+    struct inodo i_dest, i_src_dir;
+    int nerror, index, i = 0, nentradas;
+
+    //Obtener directorio destino y verificar que sea un directorio
+    if ((nerror = buscar_entrada(dest, &p_inodo_dir, &p_inododest, &p_entrada, 
+        0, 6)) < 0) {
+        return nerror;
+    }
+
+    //Verificar tipo de inodo
+    if (leer_inodo(p_inododest, &i_dest) == -1) {
+        fprintf(stderr, "Error: no se ha podido leer el inodo del directorio "
+        "destino. Función -> mi_mv()\n");
+        return -1;
+    }
+
+    if (i_dest.tipo != T_INODO_DIRECTORIO) {
+        fprintf(stderr, "Error: inodo destino no es de tipo directorio. "
+        "Función -> mi_mv()\n");
+        return -1;
+    }
+
+    //Obtener inodo y numero de entrada de la fuente
+    p_inodo_dir = 0;
+    if ((nerror = buscar_entrada(src, &p_inodo_dir, &p_inodosrc, &p_entrada, 
+        0, 6)) < 0) {
+        return nerror;
+    }
+
+    /* Rellenar entrada en nueva dirección */
+    //Obtener final de fuente
+    index = strlen(src) - 1;
+    if (src[index] == '/') index--;
+    while (src[index] != '/') index--;
+    index++;
+
+    //Copiar nombre del src al nombre de la nueva entrada en dest
+    while (i < sizeof(entrada.nombre)/sizeof(entrada.nombre[0]) && 
+            src[index] != '/' && src[index] != '\0') {
+        entrada.nombre[i] = src[index];
+        index++;
+        i++;
+    }
+    //Eliminar último caracter si este sobrepasa el tamaño del nombre de entrada
+    if (i == sizeof(entrada.nombre)/sizeof(entrada.nombre[0])) i--;
+    entrada.nombre[i] = '\0';
+
+    //Agregar inodo src a nueva entrada en dest
+    entrada.ninodo = p_inodosrc;
+
+    //Escribir entrada en inodo dest
+    if (mi_write_f(p_inododest, &entrada, i_dest.tamEnBytesLog, 
+        sizeof(entrada)) == -1) {
+        fprintf(stderr, "Error: no se ha podido escribir entrada en inodo "
+            "destino. Función -> mi_mv()\n");
+        return -1;
+    }
+
+    /* Eliminar entrada desde inodo src */
+    //Leer inodo del directorio que contiene la entrada de src
+    if (leer_inodo(p_inodo_dir, &i_src_dir) == -1) {
+        fprintf(stderr, "Error: no se ha podido leer el inodo que contiene la "
+        "entrada fuente. Función -> mi_mv()\n");
+        return -1;
+    }
+    //Obtención de nentradas
+    nentradas = i_src_dir.tamEnBytesLog/sizeof(struct entrada);
+
+    if (p_entrada == nentradas - 1) {
+        //Si la entrada se corresponde a la última 
+        if (mi_truncar_f(p_inodo_dir, i_src_dir.tamEnBytesLog - sizeof(struct 
+            entrada)) == -1) {
+            fprintf(stderr, "Error: no se ha podido truncar el inodo fuente. "
+            "Función -> mi_mv()\n");
+            return -1;
+        }
+
+    } else {
+        //Hay que coger la última entrada, sobreescribir la entrada a borrar con
+        //esta última y truncar el fichero por el final.
+        if (mi_read_f(p_inodo_dir, &entrada, i_src_dir.tamEnBytesLog-sizeof(entrada),
+            sizeof(entrada)) == -1) {
+            fprintf(stderr, "Error: no se ha podido del inodo directorio fuente"
+            ". Función -> mi_mv()\n");
+            return -1;
+        }
+
+        if (mi_write_f(p_inodo_dir, &entrada, p_entrada*sizeof(entrada),
+            sizeof(entrada)) == -1) {
+            fprintf(stderr, "Error: no se ha podido escribir en directorio "
+            "fuente. Función -> mi_mv()\n");
+            return 1;
+        }
+
+        //Truncar fichero
+        if (mi_truncar_f(p_inodo_dir, i_src_dir.tamEnBytesLog-sizeof(entrada)) == -1) {
+            fprintf(stderr, "Error: no se ha podido truncar directorio fuente. "
+            "Función -> mi_mv()\n");
+            return -1;
+        }
+    }
 
     return 0;
 }
