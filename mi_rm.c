@@ -22,7 +22,15 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    //Si se llama a rm con el flag -r, verificar sintaxis correcta
+    //Comprobar que no se intente eliminar la raíz. 
+    if (!strcmp(argv[argc-1],"/")) {
+        fprintf(stderr, "Error: No se puede eliminar el directorio raíz.\n");
+        exit(-1);
+    }
+
+    /*
+        Si se llama a rm con el flag -r, verificar sintaxis correcta
+    */
     if (argc == 4) {
         if (strlen(argv[1]) != 2) {
             fprintf(stderr, "Error: Nº de flags sobre el límite. Intentar -r\n");
@@ -54,36 +62,26 @@ int main(int argc, char **argv) {
         }
     }
 
-    
-
-    //Comprobar que no se intente eliminar la raíz. 
-    if (!strcmp(argv[argc-1],"/")) {
-        fprintf(stderr, "Error: No se puede eliminar el directorio raíz.\n");
-        exit(-1);
-    }
-
     //Montaje del disco virtual. 
     if (bmount(argv[argc-2]) == -1) {
         fprintf(stderr, "Error: no se ha podido abrir el directorio indicado.\n");
         exit(-1);
     }
 
-    //Llamada a la función mi_unlink. 
+    //Llamada a la función mi_unlink o mi_unlink_r. 
     if (answer == 'Y' || answer == 'y') {
-        if ((nerror = mi_unlink_r(argv[argc-1])) < 0) {
-            control_errores_buscar_entrada(nerror, errbuff);
-            fprintf(stderr, "%s", errbuff);
-            exit(-1);
-        }
+        nerror = mi_unlink_r(argv[argc-1]);
     } else {
-        if ((nerror = mi_unlink(argv[argc-1])) < 0) {
-            control_errores_buscar_entrada(nerror, errbuff);
-            fprintf(stderr, "%s", errbuff);
-            exit(-1);
-        }
+        nerror = mi_unlink(argv[argc-1]); 
+    }
+
+    //Si ha habido error, visualizar mensaje correspondiente.
+    if (nerror < 0) {
+        control_errores_buscar_entrada(nerror, errbuff);
+        fprintf(stderr, "%s", errbuff);
+        exit(-1);
     }
     
-
     //Desmontaje del dispositivo virtual. 
     if (bumount() == -1) {
         fprintf(stderr, "Error: no se ha podido cerrar el fichero.\n");

@@ -1,5 +1,5 @@
 /*
-    PROGRAMA PARA COPIAR UN FICHERO/DIRECTORIO DENTRO DE OTRO DIRECTORIO 
+    PROGRAMA PARA COPIAR UN FICHERO DENTRO DE OTRO DIRECTORIO 
 */
 
 #include "bloques.h"
@@ -11,6 +11,7 @@ int main(int argc, char **argv) {
     char errbuff[BLOCKSIZE]; //Buffer de errores.
     memset(errbuff, 0, sizeof(errbuff));
     int nerror;
+    struct STAT stat;
 
     //Comprobación de parámetros enviados al programa. 
     if (argc != 4) {
@@ -18,21 +19,31 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
+    //Montaje del disco virtual. 
+    if (bmount(argv[1]) == -1) {
+        fprintf(stderr, "Error: no se ha podido abrir el directorio indicado.\n");
+        exit(-1);
+    }
+
     //Verificar que fuente sea un fichero
-    if (argv[2][strlen(argv[2])-1] == '/') {
+    if (mi_stat(argv[2], &stat) == -1) {
+        fprintf(stderr, "Error: no se ha podido obtener el stat de la ruta fuente\n");
+        exit(-1);
+    }
+
+    if (stat.tipo != T_INODO_FICHERO) {
         fprintf(stderr, "Error: ruta origen ha de ser un fichero.\n");
         exit(-1);
     }
 
     //Verificar que destino sea un directorio
-    if (argv[3][strlen(argv[3]) - 1] != '/') {
-        fprintf(stderr, "Error: ruta de destino ha de ser un directorio.\n");
+    if (mi_stat(argv[3], &stat) == -1) {
+        fprintf(stderr, "Error: no se ha podido obtener el stat de la ruta destino\n");
         exit(-1);
     }
 
-    //Montaje del disco virtual. 
-    if (bmount(argv[1]) == -1) {
-        fprintf(stderr, "Error: no se ha podido abrir el directorio indicado.\n");
+    if (stat.tipo != T_INODO_DIRECTORIO) {
+        fprintf(stderr, "Error: ruta de destino ha de ser un directorio.\n");
         exit(-1);
     }
 
