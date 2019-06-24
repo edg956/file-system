@@ -23,6 +23,7 @@ int mi_unlink(const char *camino);
 int mi_cp(const char *src, const char *dest);
 int mi_rn(const char *src, const char *dest);
 int mi_mv(const char *src, const char *dest);
+int mi_unlink_r(const char *camino);
 
 
 /*ESTRUCTURAS DE CAPA DE DIRECTORIO*/

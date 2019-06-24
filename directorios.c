@@ -1029,7 +1029,7 @@ int mi_unlink(const char *camino) {
 
     //Comprobación que si es directorio no este vacío. 
     if ((inodo.tipo=='d') && (inodo.tamEnBytesLog > 0)) {
-        fprintf(stderr, "Error: El directorio no esta vacío. Función -> mi_unlink()\n");
+        fprintf(stderr, "Error: El directorio no esta vacío. Pruebe con el flag -r\n");
         mi_signalSem(); //mutex unlock
         return -1;
     }
@@ -1431,4 +1431,83 @@ int mi_mv(const char *src, const char *dest) {
     }
 
     return 0;
+}
+
+int mi_unlink_r(const char *camino) {
+    struct entrada buffer_entradas[BLOCKSIZE/sizeof(struct entrada)];
+    char *aux_path;
+    unsigned int p_inodo_dir = 0, p_inodo, p_entrada;
+    struct inodo inodo;
+    int nerror;
+    int nentradas; //Variables para recorrido de entradas
+
+    aux_path = malloc(1);
+
+    //Comprobar que camino inicial sea borrable (caso básico)
+    if ((nerror = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 
+        0, 6)) < 0) {
+        return nerror;
+    }
+
+    //Leer inodo
+    if (leer_inodo(p_inodo, &inodo) == -1) {
+        fprintf(stderr, "Error: no se ha podido leer el inodo a borrar. "
+        "Función -> mi_unlink_r()\n");
+        return -1;
+    }
+
+    //Comprobar que sea fichero o directorio vacío
+    if (inodo.tipo == T_INODO_DIRECTORIO) {
+        //Borrar directorio vacío
+        if (inodo.tamEnBytesLog == 0) {
+            return mi_unlink(camino);
+        }
+    } else {
+        return mi_unlink(camino);
+    }
+
+    /*
+        Camino pertenece a un directorio no vacío.
+        Borrar recursivamente cada una de sus entradas y luego borrar directorio
+    */
+    //Copiar camino original
+    aux_path = strcpy(aux_path, camino);
+
+    //Leer buffer de entradas desde inodo
+    nentradas = inodo.tamEnBytesLog/sizeof(struct entrada);
+    if (mi_read_f(p_inodo, buffer_entradas, 0, sizeof(buffer_entradas)) == -1) {
+        fprintf(stderr, "Error: no se ha podido leer al buffer de entradas. "
+        "Función -> mi_unlink_r()\n");
+        return -1;
+    }
+    //Recorrido a las entradas del inodo
+    for (int i = 0; nentradas > 0; i++) {
+        //Agregar barra cuando sea necesario
+        if (aux_path[strlen(aux_path) - 1] != '/') {
+            aux_path = strcat(aux_path, "/");
+        }
+        aux_path = strcat(aux_path, buffer_entradas[i].nombre);
+
+        //Eliminar recursivamente entradas
+        if ((nerror = mi_unlink_r(aux_path)) < 0) return nerror;
+        nentradas--;
+
+        //Recuperar camino inicial
+        aux_path = strcpy(aux_path, camino);
+
+        //Verificar fin de buffer
+        if ((i+1)*sizeof(struct entrada) == BLOCKSIZE) {
+            //Si se ha recorrido el buffer entero, leer siguiente
+            if (mi_read_f(p_inodo, buffer_entradas, 0, sizeof(buffer_entradas)) == -1) {
+                fprintf(stderr, "Error: no se ha podido leer al buffer de entradas. "
+                "Función -> mi_unlink_r()\n");
+                return -1;
+            }
+            i=-1;
+        }
+    }
+
+    //Una vez eliminadas todas las entradas, eliminar directorio vacío
+    return mi_unlink(camino);
+
 }
