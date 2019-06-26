@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
 
     //Comprobación de parámetros enviados al programa. 
     if (argc != 4) {
-        fprintf(stderr, "Error: Sintaxis: /mi_cp <nombre_disco> /ruta_original /ruta_nueva/\n");
+        fprintf(stderr, "Error: Sintaxis: /mi_rn <nombre_disco> /ruta_original /ruta_nueva/\n");
         exit(-1);
     }
 
